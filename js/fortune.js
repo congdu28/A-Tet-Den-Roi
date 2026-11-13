@@ -1118,7 +1118,9 @@ class FortuneSystem {
 
         if (window.tetAudio) {
             window.tetAudio.init();
-            window.tetAudio.playFortuneShake();
+            if (typeof window.tetAudio.playBambooShake === 'function') {
+                window.tetAudio.playBambooShake();
+            }
         }
 
         if (cupEl) cupEl.classList.add('shaking');
@@ -1215,6 +1217,10 @@ class FortuneSystem {
 
         if (window.fireworks) {
             window.fireworks.explodeAt(window.innerWidth / 2, window.innerHeight * 0.3);
+        }
+
+        if (window.tetAudio && typeof window.tetAudio.playLuckyChime === 'function') {
+            window.tetAudio.playLuckyChime();
         }
     }
 
