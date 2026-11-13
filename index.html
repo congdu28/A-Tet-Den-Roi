@@ -557,23 +557,26 @@
                 </div>
 
                 <div class="card-maker-grid card-studio-grid">
-                    <!-- CỘT TRÁI: STUDIO 3 TAB GỌN GÀNG, KHOA HỌC -->
+                    <!-- CỘT TRÁI: STUDIO 4 TAB GỌN GÀNG, DỄ HIỂU -->
                     <div class="card-form card-studio-controls">
 
                         <!-- Thanh Chuyển Tab Nhanh -->
                         <div class="studio-tabs-nav" role="tablist">
                             <button type="button" class="studio-tab-btn active" data-studio-tab="content" role="tab">
-                                <span>✍️</span> Nội Dung & Cỡ Chữ
+                                <span>✍️</span> Nội Dung
+                            </button>
+                            <button type="button" class="studio-tab-btn" data-studio-tab="typo" role="tab">
+                                <span>🔠</span> Chữ & Căn Lề
                             </button>
                             <button type="button" class="studio-tab-btn" data-studio-tab="style" role="tab">
-                                <span>🎨</span> Màu, Khung & Họa Tiết
+                                <span>🎨</span> Màu & Khung
                             </button>
                             <button type="button" class="studio-tab-btn" data-studio-tab="layout" role="tab">
-                                <span>🖼️</span> Khổ Ảnh & Nền
+                                <span>🖼️</span> Khổ & Nền
                             </button>
                         </div>
 
-                        <!-- TAB 1: NỘI DUNG LỜI CHÚC, AI & CỠ CHỮ -->
+                        <!-- TAB 1: NỘI DUNG THIỆP & AI SÁNG TẠO -->
                         <div id="studio-pane-content" class="studio-tab-pane active">
                             <div class="studio-step-panel">
                                 <div class="sender-recipient-grid">
@@ -585,6 +588,22 @@
                                         <label for="card-recipient-input">💌 Người nhận:</label>
                                         <input type="text" id="card-recipient-input" class="form-control" value="Cha Mẹ Yêu Quý" placeholder="VD: Cha Mẹ / Anh em / Bạn thân...">
                                     </div>
+                                </div>
+
+                                <div class="card-custom-header-grid">
+                                    <div class="form-group">
+                                        <label for="card-title-input">🏷️ Tiêu đề lớn trên thiệp:</label>
+                                        <input type="text" id="card-title-input" class="form-control" value="CHÚC MỪNG NĂM MỚI" maxlength="36" placeholder="VD: AN KHANG THỊNH VƯỢNG...">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="card-seal-input">🏮 Chữ trên con dấu triện:</label>
+                                        <input type="text" id="card-seal-input" class="form-control" value="ĐINH MÙI • CÁT TƯỜNG" maxlength="24" placeholder="VD: XUÂN BÌNH AN...">
+                                    </div>
+                                </div>
+
+                                <div class="form-group" style="margin-top: 10px;">
+                                    <label for="card-header-input">✨ Dòng tiêu đề nhỏ phía trên:</label>
+                                    <input type="text" id="card-header-input" class="form-control" value="🌸 XUÂN ĐINH MÙI 2027 • TÂN NIÊN ĐẠI CÁT 🌸" maxlength="64" placeholder="VD: 🌸 TẾT SUM VẦY 2027 🌸">
                                 </div>
 
                                 <!-- Trợ Lý AI Sáng Tạo Lời Chúc -->
@@ -652,9 +671,67 @@
                                     <label for="card-custom-wish">📝 Nội dung lời chúc (Có thể chỉnh sửa trực tiếp):</label>
                                     <textarea id="card-custom-wish" class="form-control" rows="3" placeholder="Nhập lời chúc Tết của bạn...">Chúc mừng năm mới Đinh Mùi 2027! Kính chúc gia đình an khang thịnh vượng, vạn sự như ý, dồi dào sức khỏe và ngập tràn niềm vui!</textarea>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB 2: KIỂU CHỮ, MÀU CHỮ, CĂN LỀ & CỠ CHỮ -->
+                        <div id="studio-pane-typo" class="studio-tab-pane">
+                            <div class="studio-step-panel">
+                                <div class="form-group">
+                                    <label for="card-font-select">✒️ Kiểu chữ (Font) riêng cho thiệp:</label>
+                                    <select id="card-font-select" class="form-control">
+                                        <option value="Playfair Display" selected>👑 Playfair Display (Cung đình cổ điển - Mặc định)</option>
+                                        <option value="Dancing Script">🌸 Dancing Script (Thư pháp mềm mại)</option>
+                                        <option value="Lora">📜 Lora (Thanh lịch trang nhã)</option>
+                                        <option value="Merriweather">🏛️ Merriweather (Trang trọng cổ kính)</option>
+                                        <option value="Montserrat">✨ Montserrat (Hiện đại tinh gọn)</option>
+                                        <option value="Plus Jakarta Sans">💎 Plus Jakarta Sans (Trẻ trung sắc nét)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" style="margin-top: 14px;">
+                                    <label>🎨 Tông màu chữ trên thiệp:</label>
+                                    <div class="card-theme-chips" id="card-text-color-chips">
+                                        <button type="button" class="card-theme-chip active" data-text-color="gold-cream">
+                                            <span class="theme-dot" style="background: linear-gradient(135deg, #FFFDF0, #FFE082);"></span>
+                                            <span>Vàng Kem Hoàng Gia</span>
+                                        </button>
+                                        <button type="button" class="card-theme-chip" data-text-color="pure-white">
+                                            <span class="theme-dot" style="background: #FFFFFF;"></span>
+                                            <span>Trắng Tinh Khôi</span>
+                                        </button>
+                                        <button type="button" class="card-theme-chip" data-text-color="bright-gold">
+                                            <span class="theme-dot" style="background: linear-gradient(135deg, #FDE047, #F59E0B);"></span>
+                                            <span>Vàng Rực Tài Lộc</span>
+                                        </button>
+                                        <button type="button" class="card-theme-chip" data-text-color="blossom-pink">
+                                            <span class="theme-dot" style="background: linear-gradient(135deg, #FFE4EC, #F472B6);"></span>
+                                            <span>Hồng Đào Dịu Dàng</span>
+                                        </button>
+                                        <button type="button" class="card-theme-chip" data-text-color="dark-ink">
+                                            <span class="theme-dot" style="background: linear-gradient(135deg, #3B0D14, #7F1D1D);"></span>
+                                            <span>Mực Tàu (Cho nền sáng)</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" style="margin-top: 14px;">
+                                    <label>📐 Căn lề đoạn lời chúc:</label>
+                                    <div class="card-frame-chips" id="card-align-chips">
+                                        <button type="button" class="card-frame-chip active" data-align="center">
+                                            <span>↔️</span> Căn Giữa
+                                        </button>
+                                        <button type="button" class="card-frame-chip" data-align="left">
+                                            <span>⬅️</span> Căn Trái
+                                        </button>
+                                        <button type="button" class="card-frame-chip" data-align="right">
+                                            <span>➡️</span> Căn Phải
+                                        </button>
+                                    </div>
+                                </div>
 
                                 <!-- Tinh Chỉnh Cỡ Chữ Trực Quan -->
-                                <div class="font-size-controls-box">
+                                <div class="font-size-controls-box" style="margin-top: 16px;">
                                     <div class="font-box-header">
                                         <span class="font-box-title">🔠 Tinh chỉnh cỡ chữ trên thiệp</span>
                                         <button type="button" id="btn-reset-card-fonts" class="btn-quick-random" title="Khôi phục cỡ chữ mặc định">
@@ -688,7 +765,7 @@
                             </div>
                         </div>
 
-                        <!-- TAB 2: MÀU SẮC, KHUNG VIỀN & HỌA TIẾT -->
+                        <!-- TAB 3: MÀU SẮC, KHUNG VIỀN & HỌA TIẾT -->
                         <div id="studio-pane-style" class="studio-tab-pane">
                             <div class="studio-step-panel">
                                 <!-- Bảng Sắc Thái Màu Tết -->
@@ -782,12 +859,27 @@
                                         <button type="button" class="card-motif-chip" data-motif="envelope">
                                             <span>🧧</span> Bao Lì Xì
                                         </button>
+                                        <button type="button" class="card-motif-chip" data-motif="none" title="Ẩn biểu tượng để nhìn rõ ảnh nền">
+                                            <span>🚫</span> Ẩn biểu tượng
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Bật/Tắt Con Dấu Triện Đỏ -->
+                                <div class="card-toggle-row">
+                                    <div class="card-toggle-info">
+                                        🏮 Hiện con dấu Triện Đỏ góc dưới trái
+                                        <small>Tắt nếu muốn ảnh nền thoáng hơn</small>
+                                    </div>
+                                    <div class="switch-control">
+                                        <input type="checkbox" id="toggle-card-seal" checked>
+                                        <span class="switch-slider"></span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- TAB 3: KHỔ ẢNH & ẢNH NỀN -->
+                        <!-- TAB 4: KHỔ ẢNH & ẢNH NỀN -->
                         <div id="studio-pane-layout" class="studio-tab-pane">
                             <div class="studio-step-panel">
                                 <!-- Tỉ Lệ Thiệp Xuất Ra -->
@@ -837,6 +929,18 @@
                                             <span class="overlay-label">🔆 Làm tối nền giúp chữ rõ nét: <strong id="overlay-value-text">45%</strong></span>
                                             <input type="range" id="card-bg-overlay-range" min="0.1" max="0.85" step="0.05" value="0.45" class="slider-overlay">
                                         </div>
+                                    </div>
+                                </div>
+
+                                <!-- Bật/Tắt Hạt Kim Tuyến Vàng -->
+                                <div class="card-toggle-row">
+                                    <div class="card-toggle-info">
+                                        ✨ Phủ hạt kim tuyến vàng lấp lánh
+                                        <small>Tạo điểm nhấn lung linh trên nền thiệp</small>
+                                    </div>
+                                    <div class="switch-control">
+                                        <input type="checkbox" id="toggle-card-sparkles" checked>
+                                        <span class="switch-slider"></span>
                                     </div>
                                 </div>
                             </div>

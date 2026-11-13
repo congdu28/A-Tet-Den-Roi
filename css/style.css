@@ -3175,11 +3175,11 @@ body.light-mode .cup-pedestal-base {
     gap: 16px;
 }
 
-/* Studio 3-Tab Navigation */
+/* Studio 4-Tab Navigation */
 .studio-tabs-nav {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
     padding: 6px;
     border-radius: 14px;
     background: rgba(18, 8, 12, 0.55);
@@ -3333,11 +3333,49 @@ body.light-mode .font-slider-label span:last-child {
     cursor: pointer;
 }
 
+.card-custom-header-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.card-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(255, 215, 0, 0.05);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    margin-top: 14px;
+}
+
+body.light-mode .card-toggle-row {
+    background: rgba(190, 30, 60, 0.04);
+    border-color: rgba(190, 30, 60, 0.2);
+}
+
+.card-toggle-info {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-main);
+}
+
+.card-toggle-info small {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--color-text-sub);
+}
+
 @media (max-width: 620px) {
     .studio-tabs-nav {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 
+    .card-custom-header-grid,
     .font-sliders-grid {
         grid-template-columns: 1fr;
     }
