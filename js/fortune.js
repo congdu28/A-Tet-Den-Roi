@@ -1112,9 +1112,23 @@ class FortuneSystem {
         if (this.isShaking) return;
         this.isShaking = true;
 
-        const cupEl = document.getElementById('fortune-cup-element');
+        const cup = document.getElementById('fortune-cup-element');
+        const stick = document.getElementById('fortune-bamboo-stick');
+        const bundle = cup ? cup.querySelector('.bamboo-sticks-bundle') : null;
         const shakeBtn = document.getElementById('btn-shake-fortune');
         const config = this.intentConfigs[this.selectedCategory] || this.intentConfigs['all'];
+
+        if (shakeBtn) {
+            shakeBtn.disabled = true;
+            shakeBtn.style.opacity = '0.7';
+            shakeBtn.style.pointerEvents = 'none';
+            shakeBtn.replaceChildren();
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'spin-icon';
+            iconSpan.textContent = '🎋';
+            shakeBtn.appendChild(iconSpan);
+            shakeBtn.appendChild(document.createTextNode(` Đang Thành Tâm Xóc Quẻ ${config.name}...`));
+        }
 
         if (window.tetAudio) {
             window.tetAudio.init();
@@ -1123,25 +1137,38 @@ class FortuneSystem {
             }
         }
 
-        if (cupEl) cupEl.classList.add('shaking');
-        if (shakeBtn) {
-            shakeBtn.disabled = true;
-            shakeBtn.innerHTML = `<span class="spin-icon">🎋</span> Đang Thành Tâm Xóc Quẻ ${config.name}...`;
+        if (cup) cup.classList.add('shake-animation-3d');
+        if (bundle) bundle.classList.add('sticks-clatter-animation');
+
+        // Hiệu ứng tia sáng vàng tinh tú phát ra từ miệng ống khi xóc
+        if (window.fireworks && cup) {
+            const rect = cup.getBoundingClientRect();
+            const sparkX = rect.left + rect.width / 2;
+            const sparkY = rect.top + 25;
+            setTimeout(() => {
+                if (window.fireworks) window.fireworks.explodeAt(sparkX, sparkY, ['#ffd700', '#fff8dc']);
+            }, 300);
+            setTimeout(() => {
+                if (window.fireworks) window.fireworks.explodeAt(sparkX, sparkY, ['#ffaa00', '#ffd700']);
+            }, 650);
         }
 
-        if (window.fireworks && cupEl) {
-            const rect = cupEl.getBoundingClientRect();
-            window.fireworks.explodeAt(rect.left + rect.width / 2, rect.top + 20);
-            setTimeout(() => {
-                window.fireworks.explodeAt(rect.left + rect.width / 2 - 40, rect.top);
-                window.fireworks.explodeAt(rect.left + rect.width / 2 + 40, rect.top);
-            }, 600);
-        }
+        // Thẻ xăm phóng bay vút lên với hào quang kim sắc
+        setTimeout(() => {
+            if (stick) stick.classList.add('stick-fly-out-3d');
+            if (window.tetAudio && typeof window.tetAudio.playLuckyChime === 'function') {
+                window.tetAudio.playLuckyChime();
+            }
+        }, 850);
 
         setTimeout(() => {
-            if (cupEl) cupEl.classList.remove('shaking');
+            if (cup) cup.classList.remove('shake-animation-3d');
+            if (bundle) bundle.classList.remove('sticks-clatter-animation');
+            if (stick) stick.classList.remove('stick-fly-out-3d');
             if (shakeBtn) {
                 shakeBtn.disabled = false;
+                shakeBtn.style.opacity = '1';
+                shakeBtn.style.pointerEvents = 'auto';
                 this.updateIntentUI(this.selectedCategory);
             }
             this.isShaking = false;
