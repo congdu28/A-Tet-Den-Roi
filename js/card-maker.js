@@ -394,20 +394,25 @@ class CardMaker {
                 const file = e.target.files && e.target.files[0];
                 if (!file) return;
 
+                const maxImgBytes = 15 * 1024 * 1024;
+                if (!file.type.startsWith('image/') || file.type === 'image/svg+xml' || file.size > maxImgBytes) {
+                    this.showToastMessage('⚠️ Vui lòng chọn ảnh JPG/PNG/WebP hợp lệ (tối đa 15MB).', 3000);
+                    customBgInput.value = '';
+                    return;
+                }
+
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     const img = new Image();
                     img.onload = () => {
                         this.customBgImage = img;
                         if (removeBgBtn) removeBgBtn.style.display = 'inline-flex';
-                        this.renderCard();
-
-                        const toast = document.getElementById('tet-toast');
-                        if (toast) {
-                            toast.innerHTML = '🖼️ Đã tải lên ảnh nền cá nhân thành công!';
-                            toast.classList.remove('hidden');
-                            setTimeout(() => toast.classList.add('hidden'), 2500);
-                        }
+                        this.scheduleRender();
+                        this.showToastMessage('🖼️ Đã tải lên ảnh nền cá nhân thành công!', 2500);
+                    };
+                    img.onerror = () => {
+                        this.showToastMessage('⚠️ Không thể đọc tệp ảnh này, vui lòng thử ảnh khác.', 2800);
+                        customBgInput.value = '';
                     };
                     img.src = event.target.result;
                 };
@@ -616,21 +621,25 @@ class CardMaker {
         if (window.tetAudio) window.tetAudio.playLuckyChime();
         if (window.fireworks) fireworks.explodeAt(window.innerWidth / 2, window.innerHeight * 0.4);
 
+        const toneNames = {
+            'warm': 'Ấm Áp & Tri Ân',
+            'genz': 'Hài Hước Gen Z',
+            'luxury': 'Sang Trọng Đẳng Cấp',
+            'poem': 'Thơ Xuân 4 Câu',
+            'wealth': 'Bội Thu Tài Lộc',
+            'love': 'Lãng Mạn Tình Duyên'
+        };
+        const tName = toneNames[tone] || 'Độc Quyền';
+        this.showToastMessage(`✨ AI đang viết lời chúc [${tName}] dành riêng cho bạn!`, 2800);
+    }
+
+    showToastMessage(text, duration = 2800) {
         const toast = document.getElementById('tet-toast');
-        if (toast) {
-            const toneNames = {
-                'warm': 'Ấm Áp & Tri Ân',
-                'genz': 'Hài Hước Gen Z',
-                'luxury': 'Sang Trọng Đẳng Cấp',
-                'poem': 'Thơ Xuân 4 Câu',
-                'wealth': 'Bội Thu Tài Lộc',
-                'love': 'Lãng Mạn Tình Duyên'
-            };
-            const tName = toneNames[tone] || 'Độc Quyền';
-            toast.innerHTML = `✨ AI đang viết lời chúc [<strong>${tName}</strong>] dành riêng cho bạn!`;
-            toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 2800);
-        }
+        if (!toast) return;
+        toast.textContent = String(text ?? '');
+        toast.classList.remove('hidden');
+        if (window.toastTimer) clearTimeout(window.toastTimer);
+        window.toastTimer = setTimeout(() => toast.classList.add('hidden'), duration);
     }
 
     /**
@@ -1740,18 +1749,13 @@ class CardMaker {
             window.fireworks.explodeAt(window.innerWidth * 0.3, window.innerHeight * 0.5);
         }
 
-        const toast = document.getElementById('tet-toast');
-        if (toast) {
-            const qualityLabels = {
-                'hd': 'Chuẩn HD (1x)',
-                '2k': 'Sắc Nét 2K (2x)',
-                '4k': 'Siêu Nét 4K (3x)'
-            };
-            const label = qualityLabels[this.selectedQuality] || '2K';
-            toast.innerHTML = `📥 Đã tải thiệp Tết <strong>${label}</strong> thành công!`;
-            toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 3000);
-        }
+        const qualityLabels = {
+            'hd': 'Chuẩn HD (1x)',
+            '2k': 'Sắc Nét 2K (2x)',
+            '4k': 'Siêu Nét 4K (3x)'
+        };
+        const label = qualityLabels[this.selectedQuality] || '2K';
+        this.showToastMessage(`📥 Đã tải thiệp Tết ${label} thành công!`, 3000);
     }
 
     copyWish() {
@@ -1762,12 +1766,7 @@ class CardMaker {
         const text = `🌸 CHÚC MỪNG NĂM MỚI 2027 - ĐINH MÙI 🌸\n\nKính gửi: ${recipient}\n${wish}\n\nThân chúc,\n${sender}`;
 
         navigator.clipboard.writeText(text).then(() => {
-            const toast = document.getElementById('tet-toast');
-            if (toast) {
-                toast.innerHTML = '📋 Đã sao chép toàn bộ lời chúc Tết vào bộ nhớ tạm!';
-                toast.classList.remove('hidden');
-                setTimeout(() => toast.classList.add('hidden'), 2500);
-            }
+            this.showToastMessage('📋 Đã sao chép toàn bộ lời chúc Tết vào bộ nhớ tạm!', 2500);
         });
     }
 }

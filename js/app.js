@@ -656,11 +656,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadMusicBtn = document.getElementById('btn-upload-music');
     const userMusicInput = document.getElementById('user-music-input');
 
-    // Toast notification
+    // Toast notification (safe text rendering, prevents DOM XSS)
     const showToast = (message, duration = 3500) => {
         const toast = document.getElementById('tet-toast');
         if (!toast) return;
-        toast.innerHTML = message;
+        toast.textContent = String(message ?? '');
         toast.classList.remove('hidden');
         if (window.toastTimer) clearTimeout(window.toastTimer);
         window.toastTimer = setTimeout(() => {
@@ -703,40 +703,65 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (allSongs.length === 0) {
-            container.innerHTML = `<div class="custom-songs-empty">Chưa có bài hát nào trong danh sách. Hãy bấm nút trên để thêm bài hát Tết yêu thích của bạn!</div>`;
+            container.textContent = '';
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'custom-songs-empty';
+            emptyDiv.textContent = 'Chưa có bài hát nào trong danh sách. Hãy bấm nút trên để thêm bài hát Tết yêu thích của bạn!';
+            container.appendChild(emptyDiv);
             return;
         }
 
-        container.innerHTML = '';
+        container.textContent = '';
         allSongs.forEach(song => {
             const isCurrent = (window.tetAudio.currentSongIndex === song.index);
             const isPlaying = isCurrent && window.tetAudio.bgmPlaying;
 
             const item = document.createElement('div');
             item.className = 'custom-song-item' + (isCurrent ? ' active-song' : '');
-            
-            const artistPart = song.artist ? ` - ${song.artist}` : '';
-            const defaultBadge = song.isDefault ? `<span class="default-song-badge" title="Bài hát Tết mặc định của trang">Mặc định</span>` : '';
-            const deleteBtnHtml = song.isDefault 
-                ? '' 
-                : `<button class="btn-song-delete-mini" title="Xóa khỏi danh sách phát">🗑️</button>`;
 
-            item.innerHTML = `
-                <div class="custom-song-name" title="${song.name}${artistPart}">
-                    <span>🎤</span>
-                    <span class="custom-song-name-text">${song.name}${artistPart}</span>
-                    ${defaultBadge}
-                </div>
-                <div class="custom-song-actions">
-                    <button class="btn-song-play-mini" title="Phát bài này">
-                        ${isPlaying ? '⏸️ Tạm Dừng' : '▶️ Phát'}
-                    </button>
-                    ${deleteBtnHtml}
-                </div>
-            `;
+            const fullTitle = song.artist ? `${song.name} - ${song.artist}` : song.name;
 
-            const playBtn = item.querySelector('.btn-song-play-mini');
-            const deleteBtn = item.querySelector('.btn-song-delete-mini');
+            const nameWrap = document.createElement('div');
+            nameWrap.className = 'custom-song-name';
+            nameWrap.title = fullTitle;
+
+            const micIcon = document.createElement('span');
+            micIcon.textContent = '🎤';
+            nameWrap.appendChild(micIcon);
+
+            const nameText = document.createElement('span');
+            nameText.className = 'custom-song-name-text';
+            nameText.textContent = fullTitle;
+            nameWrap.appendChild(nameText);
+
+            if (song.isDefault) {
+                const badge = document.createElement('span');
+                badge.className = 'default-song-badge';
+                badge.title = 'Bài hát Tết mặc định của trang';
+                badge.textContent = 'Mặc định';
+                nameWrap.appendChild(badge);
+            }
+
+            const actionsWrap = document.createElement('div');
+            actionsWrap.className = 'custom-song-actions';
+
+            const playBtn = document.createElement('button');
+            playBtn.className = 'btn-song-play-mini';
+            playBtn.title = 'Phát bài này';
+            playBtn.textContent = isPlaying ? '⏸️ Tạm Dừng' : '▶️ Phát';
+            actionsWrap.appendChild(playBtn);
+
+            let deleteBtn = null;
+            if (!song.isDefault) {
+                deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-song-delete-mini';
+                deleteBtn.title = 'Xóa khỏi danh sách phát';
+                deleteBtn.textContent = '🗑️';
+                actionsWrap.appendChild(deleteBtn);
+            }
+
+            item.appendChild(nameWrap);
+            item.appendChild(actionsWrap);
 
             playBtn.addEventListener('click', () => {
                 if (isCurrent) {
@@ -894,16 +919,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         userMusicInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const addedSong = await window.tetAudio.addUserAudioFile(file, true);
-                updateMusicUI();
-                renderSongDropdown(window.tetAudio.playlist);
-                renderCustomSongsSettingsList();
-                fireworks.explodeAt(window.innerWidth / 2, window.innerHeight * 0.35);
-                showToast(`🎶 Đã thêm "${addedSong.name}" vào danh sách phát nhạc Tết!`);
-                userMusicInput.value = ''; // Reset input to allow selecting same file again
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+
+            const maxAudioBytes = 25 * 1024 * 1024;
+            const validAudioExt = /\.(mp3|wav|ogg|m4a|aac)$/i.test(file.name);
+            if ((!file.type.startsWith('audio/') && !validAudioExt) || file.size > maxAudioBytes) {
+                showToast('⚠️ Vui lòng chọn tệp âm thanh hợp lệ (.mp3, .wav, .ogg, .m4a) tối đa 25MB.');
+                userMusicInput.value = '';
+                return;
             }
+
+            const addedSong = await window.tetAudio.addUserAudioFile(file, true);
+            updateMusicUI();
+            renderSongDropdown(window.tetAudio.playlist);
+            renderCustomSongsSettingsList();
+            fireworks.explodeAt(window.innerWidth / 2, window.innerHeight * 0.35);
+            showToast(`🎶 Đã thêm "${addedSong.name}" vào danh sách phát nhạc Tết!`);
+            userMusicInput.value = ''; // Reset input to allow selecting same file again
         });
     }
 

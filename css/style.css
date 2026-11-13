@@ -6680,6 +6680,13 @@ body.light-mode .hd-pill {
     margin-bottom: 6px;
 }
 
+.footer-copyright {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    letter-spacing: 0.4px;
+    opacity: 0.85;
+}
+
 /* ==========================================================
    RESPONSIVE DESIGN (CHỐNG LỖI TRÀN MÀN HÌNH DI ĐỘNG)
    ========================================================== */
