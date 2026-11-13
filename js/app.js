@@ -599,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fontSelect = document.getElementById('font-picker-select');
     let savedFont = localStorage.getItem('tet-font');
     if (!savedFont || savedFont === 'font-vietnam') {
-        savedFont = 'font-playfair';
+        savedFont = 'font-uvn-thuphap';
     }
 
     const allFonts = [
