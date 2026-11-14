@@ -47,9 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
         ) {
             return;
         }
-        const types = ['chrysanthemum', 'willow', 'ring', 'heart', 'strobe'];
+        const types = ['chrysanthemum', 'willow', 'ring', 'heart', 'strobe', 'flower', 'double_burst', 'starburst'];
         const randomType = types[Math.floor(Math.random() * types.length)];
-        fireworks.explodeAt(e.clientX, e.clientY, null, randomType, 1.45);
+        fireworks.explodeAt(e.clientX, e.clientY, null, randomType, 1.5);
     });
 
     // Auto-unlock Web AudioContext on first user interaction

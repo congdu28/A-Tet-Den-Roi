@@ -1,9 +1,10 @@
 /**
  * Ultra-Spectacular Canvas Fireworks System (60 FPS GPU-Composited)
- * - Multi-Shell Types: Chrysanthemum, Golden Willow, Double Rings, Heart Burst, Strobe Glitter, Crackling Micro-Pops
- * - Shockwave Hào Quang & Sparkling Comet Trails
+ * - Multi-Shell Types: Chrysanthemum, Golden Willow, Double Rings, Heart Burst,
+ *   5-Petal Tết Flower, Starburst, Double Burst, Strobe Glitter, Crackling Micro-Pops
+ * - Luminous Explosion Flash, Shockwave Hào Quang & Sparkling Comet Trails
+ * - Light & Dark Mode Adaptive Palettes and Blend Modes (vibrant over both themes)
  * - Multi-Wave Mega Frenzy (Đại Tiệc Pháo Hoa Giao Thừa)
- * - Dynamic Intensity & Density Controls (Thưa - Chuẩn - Đại Tiệc)
  */
 class FireworksSystem {
     constructor(canvasId) {
@@ -13,6 +14,7 @@ class FireworksSystem {
         this.fireworks = [];
         this.particles = [];
         this.shockwaves = [];
+        this.flashes = [];
         this.rocketSparks = [];
 
         // Density level from localStorage: 'low' | 'medium' | 'high'
@@ -28,13 +30,23 @@ class FireworksSystem {
         this.isFrenzyRunning = false;
         this.resizeTimer = null;
 
-        this.colorPalettes = [
+        this.darkPalettes = [
             ['#FFD700', '#FF3366', '#FF9900', '#FFF176', '#FFFFFF'], // Imperial Red & Gold
             ['#FF0055', '#FF9900', '#FFEA00', '#00E676', '#00E5FF', '#D500F9'], // Ngũ Sắc Rực Rỡ
             ['#00F5FF', '#00E676', '#76FF03', '#FFFFFF', '#18FFFF'], // Neon Emerald & Cyan
             ['#E040FB', '#7C4DFF', '#536DFE', '#FF4081', '#FFFFFF'], // Tím Hoàng Cung
             ['#FFE082', '#FFD54F', '#FFCA28', '#FFB300', '#FFF9C4', '#FFFFFF'], // Liễu Rủ Hoàng Kim
             ['#FF1744', '#FF5252', '#FF80AB', '#FF4081', '#FFFFFF']  // Hồng Đào Ruby
+        ];
+
+        // Saturated jewel-toned palettes so bursts stay crisp & vivid over Light Mode cards
+        this.lightPalettes = [
+            ['#DC2626', '#EA580C', '#D97706', '#F59E0B', '#B91C1C'], // Đỏ Son & Hoàng Kim
+            ['#E11D48', '#F59E0B', '#059669', '#0284C7', '#7C3AED'], // Ngũ Sắc Rực Rỡ
+            ['#0284C7', '#059669', '#0D9488', '#2563EB', '#D97706'], // Ngọc Bích & Thiên Thanh
+            ['#9333EA', '#C026D3', '#E11D48', '#4F46E5', '#F59E0B'], // Tím Hoàng Cung
+            ['#D97706', '#B45309', '#F59E0B', '#EA580C', '#DC2626'], // Liễu Rủ Hổ Phách
+            ['#BE123C', '#E11D48', '#F43F5E', '#D97706', '#9F1239']  // Hồng Đào Đậm Sắc
         ];
 
         this.resize();
@@ -53,19 +65,35 @@ class FireworksSystem {
         });
     }
 
+    isLightMode() {
+        return typeof document !== 'undefined' && document.body.classList.contains('light-mode');
+    }
+
+    getPalettes() {
+        return this.isLightMode() ? this.lightPalettes : this.darkPalettes;
+    }
+
+    pickPalette(index = null) {
+        const list = this.getPalettes();
+        if (typeof index === 'number') {
+            return list[Math.abs(index) % list.length];
+        }
+        return list[Math.floor(Math.random() * list.length)];
+    }
+
     updateDensityLimits() {
         if (this.density === 'low') {
-            this.maxParticles = 650;
-            this.autoDelayBase = 3200;
-            this.autoDelayRandom = 2200;
+            this.maxParticles = 1000;
+            this.autoDelayBase = 2100;
+            this.autoDelayRandom = 1400;
         } else if (this.density === 'medium') {
-            this.maxParticles = 1300;
-            this.autoDelayBase = 1800;
-            this.autoDelayRandom = 1500;
-        } else { // high (Đại tiệc rực rỡ)
-            this.maxParticles = 2400;
-            this.autoDelayBase = 900;
+            this.maxParticles = 2100;
+            this.autoDelayBase = 1100;
             this.autoDelayRandom = 1000;
+        } else { // high (Đại tiệc rực rỡ)
+            this.maxParticles = 3800;
+            this.autoDelayBase = 580;
+            this.autoDelayRandom = 640;
         }
     }
 
@@ -92,7 +120,16 @@ class FireworksSystem {
         if (this.isRunning) return;
         this.isRunning = true;
         this.wakeLoop();
-        this.scheduleNextAutoFire(1200);
+        // Immediate opening salvo so the sky feels alive right away
+        setTimeout(() => {
+            if (this.isRunning && this.autoFireEnabled) {
+                this.launchRandomShell();
+                if (this.density !== 'low') {
+                    setTimeout(() => this.launchRandomShell(), 220);
+                }
+            }
+        }, 280);
+        this.scheduleNextAutoFire(1100);
     }
 
     wakeLoop() {
@@ -121,11 +158,16 @@ class FireworksSystem {
         const delay = Math.max(minInitialDelay, this.autoDelayBase + Math.random() * this.autoDelayRandom);
         this.autoLaunchTimer = setTimeout(() => {
             if (this.isRunning && this.autoFireEnabled) {
-                // If high density, occasionally launch pairs or triplets
-                const multiLaunch = this.density === 'high' && Math.random() > 0.45;
                 this.launchRandomShell();
-                if (multiLaunch) {
-                    setTimeout(() => this.launchRandomShell(), 180);
+                if (this.density === 'high') {
+                    if (Math.random() > 0.25) {
+                        setTimeout(() => this.isRunning && this.launchRandomShell(), 140);
+                    }
+                    if (Math.random() > 0.55) {
+                        setTimeout(() => this.isRunning && this.launchRandomShell(), 310);
+                    }
+                } else if (this.density === 'medium' && Math.random() > 0.5) {
+                    setTimeout(() => this.isRunning && this.launchRandomShell(), 190);
                 }
                 this.scheduleNextAutoFire();
             }
@@ -133,21 +175,22 @@ class FireworksSystem {
     }
 
     launchRandomShell() {
-        const types = ['chrysanthemum', 'willow', 'ring', 'strobe', 'heart'];
+        const types = ['chrysanthemum', 'willow', 'ring', 'strobe', 'heart', 'flower', 'starburst', 'double_burst'];
         const type = types[Math.floor(Math.random() * types.length)];
-        const startX = Math.random() * (this.width - 240) + 120;
-        const startY = this.height + 20;
-        const destX = startX + (Math.random() * 160 - 80);
-        const destY = Math.random() * (this.height * 0.45) + 60;
-        const palette = this.colorPalettes[Math.floor(Math.random() * this.colorPalettes.length)];
+        const margin = Math.min(120, this.width * 0.12);
+        const startX = Math.random() * Math.max(80, this.width - margin * 2) + margin;
+        const startY = this.height + 16;
+        const destX = Math.max(60, Math.min(this.width - 60, startX + (Math.random() * 200 - 100)));
+        const destY = Math.random() * (this.height * 0.54) + 55;
+        const palette = this.pickPalette();
 
         this.launchRocket(startX, startY, destX, destY, palette, type);
     }
 
     launchRocket(startX, startY, destX, destY, palette = null, shellType = 'chrysanthemum', speedBoost = 1) {
-        if (this.fireworks.length > 25) return;
+        if (this.fireworks.length > 36) return;
 
-        const pal = palette || this.colorPalettes[Math.floor(Math.random() * this.colorPalettes.length)];
+        const pal = palette || this.pickPalette();
         this.fireworks.push(new AdvancedRocket(startX, startY, destX, destY, pal, shellType, speedBoost));
         this.wakeLoop();
 
@@ -158,64 +201,119 @@ class FireworksSystem {
 
     explodeAt(x, y, forcedPalette = null, shellType = 'chrysanthemum', countMultiplier = 1) {
         this.wakeLoop();
-        const palette = forcedPalette || this.colorPalettes[Math.floor(Math.random() * this.colorPalettes.length)];
+        const palette = forcedPalette || this.pickPalette();
         const availableSlots = this.maxParticles - this.particles.length;
-        if (availableSlots < 10) return;
+        if (availableSlots < 12) return;
 
-        // Add soft shockwave halo
+        const isLight = this.isLightMode();
+
+        // Luminous flash + expanding shockwave ring
+        this.flashes.push(new ExplosionFlash(x, y, palette[0], isLight));
         this.shockwaves.push(new ShockwaveHalo(x, y, palette[0]));
+        if (countMultiplier >= 1.2) {
+            this.shockwaves.push(new ShockwaveHalo(x, y, palette[1] || '#FFFFFF', 1.45));
+        }
 
-        let baseCount = 75;
-        if (this.density === 'low') baseCount = 45;
-        else if (this.density === 'high') baseCount = 110;
+        let baseCount = 92;
+        if (this.density === 'low') baseCount = 58;
+        else if (this.density === 'high') baseCount = 135;
 
         const count = Math.min(availableSlots, Math.floor(baseCount * countMultiplier));
 
         if (shellType === 'heart') {
-            // Heart-shaped parametric burst
+            // Double-ring Heart parametric burst
             for (let i = 0; i < count; i++) {
                 const t = (Math.PI * 2 * i) / count;
                 const hx = 16 * Math.pow(Math.sin(t), 3);
                 const hy = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-                const speed = 0.22 + Math.random() * 0.05;
-                this.particles.push(new RichParticle(x, y, palette, hx * speed, hy * speed, 'heart'));
+                const layer = i % 3 === 0 ? 0.16 : 0.25 + Math.random() * 0.045;
+                this.particles.push(new RichParticle(x, y, palette, hx * layer, hy * layer, 'heart'));
             }
-        } else if (shellType === 'ring') {
-            // Concentric rings
-            const outerCount = Math.floor(count * 0.65);
+        } else if (shellType === 'flower') {
+            // 5-petal Tết Peach/Apricot Blossom burst
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 * i) / count;
+                const petalFactor = 0.72 + 0.55 * Math.cos(5 * angle);
+                const speed = (2.8 + Math.random() * 0.85) * petalFactor * Math.min(1.25, countMultiplier);
+                const isCenter = i % 5 === 0;
+                const pColors = isCenter ? ['#FFD700', '#F59E0B', '#FFFFFF'] : palette;
+                const vScale = isCenter ? 0.42 : 1;
+                this.particles.push(new RichParticle(
+                    x, y, pColors,
+                    Math.cos(angle) * speed * vScale,
+                    Math.sin(angle) * speed * vScale,
+                    isCenter ? 'strobe' : 'standard'
+                ));
+            }
+        } else if (shellType === 'starburst') {
+            // Multi-point sparkling star burst + inner glitter ring
+            const points = 7;
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 * i) / count;
+                const spike = 0.58 + 0.65 * Math.pow(Math.abs(Math.cos((points * angle) / 2)), 2);
+                const speed = (2.6 + Math.random() * 1.1) * spike;
+                this.particles.push(new RichParticle(x, y, palette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'strobe'));
+            }
+        } else if (shellType === 'double_burst') {
+            // Outer chrysanthemum + inner contrasting crown + cracklers
+            const outerCount = Math.floor(count * 0.68);
             const innerCount = count - outerCount;
+            const altPalette = this.pickPalette(Math.floor(Math.random() * 6) + 1);
             for (let i = 0; i < outerCount; i++) {
-                const angle = (Math.PI * 2 * i) / outerCount;
-                const speed = 4.2 + Math.random() * 0.3;
-                this.particles.push(new RichParticle(x, y, palette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'ring'));
+                const angle = (Math.PI * 2 * i) / outerCount + (Math.random() * 0.12 - 0.06);
+                const speed = 4.5 + Math.random() * 1.4;
+                const isCrackler = Math.random() > 0.72;
+                this.particles.push(new RichParticle(x, y, palette, Math.cos(angle) * speed, Math.sin(angle) * speed, isCrackler ? 'crackler' : 'standard'));
             }
-            const innerPalette = [palette[palette.length - 1], '#FFFFFF'];
             for (let i = 0; i < innerCount; i++) {
                 const angle = (Math.PI * 2 * i) / innerCount;
-                const speed = 2.1 + Math.random() * 0.3;
-                this.particles.push(new RichParticle(x, y, innerPalette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'ring'));
+                const speed = 2.0 + Math.random() * 0.6;
+                this.particles.push(new RichParticle(x, y, altPalette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'strobe'));
+            }
+        } else if (shellType === 'ring') {
+            // Triple concentric rings
+            const outerCount = Math.floor(count * 0.56);
+            const midCount = Math.floor(count * 0.28);
+            const innerCount = count - outerCount - midCount;
+            for (let i = 0; i < outerCount; i++) {
+                const angle = (Math.PI * 2 * i) / outerCount;
+                const speed = 4.6 + Math.random() * 0.35;
+                this.particles.push(new RichParticle(x, y, palette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'ring'));
+            }
+            const midPalette = [palette[palette.length - 1], isLight ? '#F59E0B' : '#FFFFFF'];
+            for (let i = 0; i < midCount; i++) {
+                const angle = (Math.PI * 2 * i) / midCount;
+                const speed = 2.8 + Math.random() * 0.25;
+                this.particles.push(new RichParticle(x, y, midPalette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'strobe'));
+            }
+            for (let i = 0; i < innerCount; i++) {
+                const angle = (Math.PI * 2 * i) / innerCount;
+                const speed = 1.4 + Math.random() * 0.2;
+                this.particles.push(new RichParticle(x, y, palette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'ring'));
             }
         } else if (shellType === 'willow') {
             // Golden brocade willow with heavy cascading trails
-            const willowPalette = ['#FFE082', '#FFD54F', '#FFCA28', '#FFB300', '#FFFFFF'];
+            const willowPalette = isLight
+                ? ['#B45309', '#D97706', '#F59E0B', '#EA580C', '#DC2626']
+                : ['#FFE082', '#FFD54F', '#FFCA28', '#FFB300', '#FFFFFF'];
             for (let i = 0; i < count; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 5.2 + 1.2;
+                const speed = Math.random() * 5.8 + 1.1;
                 this.particles.push(new RichParticle(x, y, willowPalette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'willow'));
             }
         } else if (shellType === 'strobe') {
             // Glitter strobe flashers
             for (let i = 0; i < count; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 4.6 + 1.4;
+                const speed = Math.random() * 5.2 + 1.4;
                 this.particles.push(new RichParticle(x, y, palette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'strobe'));
             }
         } else {
-            // Classic Chrysanthemum with sparkling tail and cracklers
+            // Rich Chrysanthemum with shimmering tail and cracklers
             for (let i = 0; i < count; i++) {
-                const angle = (Math.PI * 2 * i) / count + (Math.random() * 0.18 - 0.09);
-                const speed = Math.random() * 5.0 + 1.6;
-                const isCrackler = Math.random() > 0.8;
+                const angle = (Math.PI * 2 * i) / count + (Math.random() * 0.16 - 0.08);
+                const speed = Math.random() * 5.5 + 1.5;
+                const isCrackler = Math.random() > 0.72;
                 this.particles.push(new RichParticle(x, y, palette, Math.cos(angle) * speed, Math.sin(angle) * speed, isCrackler ? 'crackler' : 'standard'));
             }
         }
@@ -227,7 +325,7 @@ class FireworksSystem {
 
     /**
      * Choreographed Multi-Wave Mega Frenzy (Đại Tiệc Pháo Hoa Giao Thừa Cực Hoành Tráng)
-     * Launches 28-35 shells in timed artistic waves!
+     * Launches 40+ multi-type shells in timed artistic waves across the screen!
      */
     triggerMegaFrenzy() {
         if (this.isFrenzyRunning) return;
@@ -242,66 +340,69 @@ class FireworksSystem {
         const W = this.width;
         const H = this.height;
 
-        // Wave 1 (t = 0): 5 Fan-out barrage across the horizon
-        const fanAngles = [-0.32, -0.16, 0, 0.16, 0.32];
+        // Wave 1 (t = 0): 7-shell symmetrical fan barrage across the sky
+        const fanAngles = [-0.42, -0.28, -0.14, 0, 0.14, 0.28, 0.42];
         fanAngles.forEach((angle, idx) => {
-            const startX = W * 0.5 + (idx - 2) * 50;
-            const destX = W * 0.5 + Math.sin(angle) * (W * 0.42);
-            const destY = H * 0.32 + Math.cos(angle) * 30;
-            const pal = this.colorPalettes[idx % this.colorPalettes.length];
+            const startX = W * 0.5 + (idx - 3) * 44;
+            const destX = W * 0.5 + Math.sin(angle) * (W * 0.46);
+            const destY = H * 0.26 + Math.abs(idx - 3) * 28;
+            const pal = this.pickPalette(idx);
+            const type = idx === 3 ? 'flower' : idx % 2 === 0 ? 'chrysanthemum' : 'double_burst';
             setTimeout(() => {
-                this.launchRocket(startX, H + 10, destX, destY, pal, 'chrysanthemum', 1.15);
-            }, idx * 70);
+                this.launchRocket(startX, H + 10, destX, destY, pal, type, 1.18);
+            }, idx * 60);
         });
 
-        // Wave 2 (t = 450ms): Criss-cross rockets from left & right sides
+        // Wave 2 (t = 420ms): 6 criss-crossing comets from both corners
         setTimeout(() => {
-            // Left to right
-            this.launchRocket(80, H + 10, W * 0.42, H * 0.28, this.colorPalettes[0], 'willow');
-            this.launchRocket(160, H + 10, W * 0.55, H * 0.22, this.colorPalettes[1], 'ring');
-            // Right to left
-            this.launchRocket(W - 80, H + 10, W * 0.58, H * 0.28, this.colorPalettes[4], 'willow');
-            this.launchRocket(W - 160, H + 10, W * 0.45, H * 0.22, this.colorPalettes[2], 'ring');
-        }, 450);
+            this.launchRocket(60, H + 10, W * 0.36, H * 0.26, this.pickPalette(0), 'willow', 1.15);
+            this.launchRocket(140, H + 10, W * 0.52, H * 0.20, this.pickPalette(1), 'ring', 1.2);
+            this.launchRocket(220, H + 10, W * 0.65, H * 0.32, this.pickPalette(3), 'flower', 1.1);
+            this.launchRocket(W - 60, H + 10, W * 0.64, H * 0.26, this.pickPalette(4), 'willow', 1.15);
+            this.launchRocket(W - 140, H + 10, W * 0.48, H * 0.20, this.pickPalette(2), 'ring', 1.2);
+            this.launchRocket(W - 220, H + 10, W * 0.35, H * 0.32, this.pickPalette(5), 'starburst', 1.1);
+        }, 420);
 
-        // Wave 3 (t = 850ms - 2100ms): Rapid-fire volley of high comets & hearts
+        // Wave 3 (t = 820ms - 2600ms): Rapid-fire volley of 22 comets across full height & width
         let fired = 0;
+        const types = ['heart', 'flower', 'strobe', 'willow', 'double_burst', 'starburst', 'ring', 'chrysanthemum'];
         const volleyTimer = setInterval(() => {
-            const x = Math.random() * (W - 200) + 100;
-            const y = Math.random() * (H * 0.4) + 60;
-            const types = ['heart', 'strobe', 'willow', 'chrysanthemum', 'ring'];
+            const x = Math.random() * (W - 160) + 80;
+            const y = Math.random() * (H * 0.5) + 55;
             const t = types[fired % types.length];
-            const p = this.colorPalettes[fired % this.colorPalettes.length];
-            this.launchRocket(x + (Math.random() * 80 - 40), H + 10, x, y, p, t, 1.2);
+            const p = this.pickPalette(fired);
+            this.launchRocket(x + (Math.random() * 90 - 45), H + 10, x, y, p, t, 1.22);
             fired++;
-            if (fired >= 14) {
+            if (fired >= 22) {
                 clearInterval(volleyTimer);
             }
-        }, 90);
+        }, 82);
 
-        // Wave 4 (t = 2400ms): Grand Finale Salvo - 6 giant simultaneous bursts!
+        // Wave 4 (t = 2750ms): Grand Finale Salvo - 7 giant simultaneous mega bursts!
         setTimeout(() => {
             const finalePoints = [
-                { x: W * 0.16, y: H * 0.32, type: 'willow' },
-                { x: W * 0.32, y: H * 0.22, type: 'heart' },
-                { x: W * 0.50, y: H * 0.18, type: 'chrysanthemum' },
-                { x: W * 0.68, y: H * 0.22, type: 'strobe' },
-                { x: W * 0.84, y: H * 0.32, type: 'willow' }
+                { x: W * 0.12, y: H * 0.34, type: 'willow', pal: 4 },
+                { x: W * 0.25, y: H * 0.22, type: 'flower', pal: 5 },
+                { x: W * 0.38, y: H * 0.40, type: 'double_burst', pal: 1 },
+                { x: W * 0.50, y: H * 0.18, type: 'starburst', pal: 0 },
+                { x: W * 0.62, y: H * 0.40, type: 'double_burst', pal: 2 },
+                { x: W * 0.75, y: H * 0.22, type: 'heart', pal: 3 },
+                { x: W * 0.88, y: H * 0.34, type: 'willow', pal: 4 }
             ];
 
             finalePoints.forEach(pt => {
-                this.launchRocket(pt.x, H + 10, pt.x, pt.y, this.colorPalettes[4], pt.type, 1.35);
+                this.launchRocket(pt.x, H + 10, pt.x, pt.y, this.pickPalette(pt.pal), pt.type, 1.38);
             });
-        }, 2350);
+        }, 2750);
 
-        // Reset Frenzy state after 4.5 seconds
+        // Reset Frenzy state after 4.8 seconds
         setTimeout(() => {
             this.isFrenzyRunning = false;
             if (frenzyBtn) {
                 frenzyBtn.classList.remove('frenzy-active');
                 frenzyBtn.setAttribute('title', 'Bắn pháo hoa liên hoàn cực đã mắt');
             }
-        }, 4500);
+        }, 4800);
     }
 
     // Backward compatibility with previous triggerFrenzy(count)
@@ -312,7 +413,13 @@ class FireworksSystem {
     animate() {
         if (!this.isRunning || !this.loopActive) return;
 
-        const hasWork = this.fireworks.length > 0 || this.particles.length > 0 || this.shockwaves.length > 0 || this.rocketSparks.length > 0;
+        const hasWork =
+            this.fireworks.length > 0 ||
+            this.particles.length > 0 ||
+            this.shockwaves.length > 0 ||
+            this.flashes.length > 0 ||
+            this.rocketSparks.length > 0;
+
         if (!hasWork) {
             this.idleFrames++;
             if (this.idleFrames > 20) {
@@ -325,12 +432,25 @@ class FireworksSystem {
             this.idleFrames = 0;
         }
 
-        // Clear canvas with trail fade
+        const isLight = this.isLightMode();
+
+        // Clear canvas with graceful trail fade
         this.ctx.globalCompositeOperation = 'destination-out';
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+        this.ctx.fillStyle = isLight ? 'rgba(0, 0, 0, 0.28)' : 'rgba(0, 0, 0, 0.19)';
         this.ctx.fillRect(0, 0, this.width, this.height);
 
-        this.ctx.globalCompositeOperation = 'lighter';
+        // Dark mode glows richly with additive blending; Light mode uses crisp alpha compositing so colors stay vibrant over light cards
+        this.ctx.globalCompositeOperation = isLight ? 'source-over' : 'lighter';
+
+        // 0. Draw Explosion Flashes
+        for (let i = this.flashes.length - 1; i >= 0; i--) {
+            const fl = this.flashes[i];
+            fl.update();
+            fl.draw(this.ctx);
+            if (fl.isDead()) {
+                this.flashes.splice(i, 1);
+            }
+        }
 
         // 1. Draw Shockwave Halos
         for (let i = this.shockwaves.length - 1; i >= 0; i--) {
@@ -356,15 +476,16 @@ class FireworksSystem {
         for (let i = this.fireworks.length - 1; i >= 0; i--) {
             const rocket = this.fireworks[i];
             rocket.update();
-            rocket.draw(this.ctx);
+            rocket.draw(this.ctx, isLight);
 
-            // Spawn sparks behind rocket
-            if (Math.random() > 0.3 && this.rocketSparks.length < 200) {
+            // Spawn richer sparks behind rocket
+            if (Math.random() > 0.15 && this.rocketSparks.length < 320) {
                 this.rocketSparks.push(new RocketSpark(rocket.x, rocket.y, rocket.palette[0]));
             }
 
             if (rocket.hasReached()) {
-                this.explodeAt(rocket.x, rocket.y, rocket.palette, rocket.shellType);
+                const burstScale = rocket.speedBoost > 1.25 ? 1.35 : 1.08;
+                this.explodeAt(rocket.x, rocket.y, rocket.palette, rocket.shellType, burstScale);
                 this.fireworks.splice(i, 1);
             }
         }
@@ -373,16 +494,17 @@ class FireworksSystem {
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
             p.update();
-            p.draw(this.ctx);
+            p.draw(this.ctx, isLight);
 
-            // Handle micro-cracklers popping
-            if (p.shouldCrackle && !p.hasCrackled) {
+            // Handle micro-cracklers popping mid-air
+            if (p.readyToCrackle && !p.hasCrackled) {
                 p.hasCrackled = true;
-                if (this.particles.length < this.maxParticles - 10) {
-                    for (let c = 0; c < 4; c++) {
+                if (this.particles.length < this.maxParticles - 8) {
+                    const crackleColors = isLight ? ['#F59E0B', '#DC2626', '#FFFBEB'] : ['#FFF9C4', '#FFD700', '#FFFFFF'];
+                    for (let c = 0; c < 5; c++) {
                         const ca = Math.random() * Math.PI * 2;
-                        const cs = Math.random() * 2.2 + 0.8;
-                        this.particles.push(new RichParticle(p.x, p.y, ['#FFF9C4', '#FFFFFF'], Math.cos(ca) * cs, Math.sin(ca) * cs, 'pop'));
+                        const cs = Math.random() * 2.5 + 0.9;
+                        this.particles.push(new RichParticle(p.x, p.y, crackleColors, Math.cos(ca) * cs, Math.sin(ca) * cs, 'pop'));
                     }
                 }
             }
@@ -392,7 +514,43 @@ class FireworksSystem {
             }
         }
 
+        this.ctx.globalAlpha = 1;
         this.animFrameId = requestAnimationFrame(() => this.animate());
+    }
+}
+
+class ExplosionFlash {
+    constructor(x, y, color, isLight = false) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.radius = isLight ? 44 : 62;
+        this.alpha = isLight ? 0.42 : 0.72;
+        this.decay = 0.075;
+    }
+
+    update() {
+        this.radius *= 1.06;
+        this.alpha -= this.decay;
+    }
+
+    draw(ctx) {
+        if (this.alpha <= 0) return;
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+        grad.addColorStop(0, '#FFFFFF');
+        grad.addColorStop(0.35, this.color);
+        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    isDead() {
+        return this.alpha <= 0;
     }
 }
 
@@ -406,6 +564,7 @@ class AdvancedRocket {
         this.destY = destY;
         this.palette = palette;
         this.shellType = shellType;
+        this.speedBoost = speedBoost;
         this.angle = Math.atan2(destY - startY, destX - startX);
         this.speed = (14.5 + Math.random() * 3.5) * speedBoost;
     }
@@ -418,23 +577,24 @@ class AdvancedRocket {
         this.y += Math.sin(this.angle) * this.speed;
     }
 
-    draw(ctx) {
+    draw(ctx, isLight = false) {
+        ctx.globalAlpha = 1;
         ctx.beginPath();
         ctx.moveTo(this.prevX, this.prevY);
         ctx.lineTo(this.x, this.y);
         ctx.strokeStyle = this.palette[0] || '#FFE082';
-        ctx.lineWidth = 3.2;
+        ctx.lineWidth = 3.6;
         ctx.stroke();
 
         // Bright rocket head
         ctx.beginPath();
-        ctx.arc(this.x, this.y, 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = '#FFFFFF';
+        ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = isLight ? '#FDE047' : '#FFFFFF';
         ctx.fill();
     }
 
     hasReached() {
-        return Math.hypot(this.destX - this.x, this.destY - this.y) <= 20 || this.speed < 2.8 || this.y <= this.destY;
+        return Math.hypot(this.destX - this.x, this.destY - this.y) <= 22 || this.speed < 2.8 || this.y <= this.destY;
     }
 }
 
@@ -442,12 +602,12 @@ class RocketSpark {
     constructor(x, y, color) {
         this.x = x + (Math.random() * 6 - 3);
         this.y = y + (Math.random() * 6 - 3);
-        this.vx = (Math.random() - 0.5) * 1.5;
-        this.vy = Math.random() * 2 + 1;
+        this.vx = (Math.random() - 0.5) * 1.8;
+        this.vy = Math.random() * 2.2 + 0.9;
         this.color = color;
-        this.alpha = 0.85;
-        this.decay = Math.random() * 0.05 + 0.04;
-        this.size = Math.random() * 2 + 1.2;
+        this.alpha = 0.9;
+        this.decay = Math.random() * 0.045 + 0.035;
+        this.size = Math.random() * 2.2 + 1.3;
     }
 
     update() {
@@ -471,14 +631,14 @@ class RocketSpark {
 }
 
 class ShockwaveHalo {
-    constructor(x, y, color) {
+    constructor(x, y, color, radiusScale = 1) {
         this.x = x;
         this.y = y;
         this.color = color;
         this.radius = 6;
-        this.maxRadius = 65 + Math.random() * 30;
-        this.alpha = 0.65;
-        this.decay = 0.045;
+        this.maxRadius = (72 + Math.random() * 34) * radiusScale;
+        this.alpha = 0.7;
+        this.decay = 0.04;
     }
 
     update() {
@@ -491,7 +651,7 @@ class ShockwaveHalo {
         ctx.save();
         ctx.globalAlpha = this.alpha;
         ctx.strokeStyle = this.color;
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = 2.6;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.stroke();
@@ -517,39 +677,41 @@ class RichParticle {
         this.tick = Math.random() * Math.PI * 2;
 
         if (type === 'willow') {
-            this.friction = 0.955;
-            this.gravity = 0.085;
-            this.decay = Math.random() * 0.012 + 0.008; // very long golden trail
-            this.size = 2.4;
+            this.friction = 0.956;
+            this.gravity = 0.082;
+            this.decay = Math.random() * 0.011 + 0.0075; // very long golden trail
+            this.size = 2.8;
         } else if (type === 'heart') {
-            this.friction = 0.94;
-            this.gravity = 0.04;
-            this.decay = Math.random() * 0.016 + 0.012;
-            this.size = 2.6;
+            this.friction = 0.942;
+            this.gravity = 0.038;
+            this.decay = Math.random() * 0.014 + 0.011;
+            this.size = 3.0;
         } else if (type === 'ring') {
             this.friction = 0.95;
-            this.gravity = 0.05;
-            this.decay = Math.random() * 0.018 + 0.012;
-            this.size = 2.5;
+            this.gravity = 0.048;
+            this.decay = Math.random() * 0.016 + 0.011;
+            this.size = 2.9;
         } else if (type === 'strobe') {
-            this.friction = 0.94;
-            this.gravity = 0.07;
-            this.decay = Math.random() * 0.018 + 0.012;
-            this.size = 2.8;
+            this.friction = 0.942;
+            this.gravity = 0.065;
+            this.decay = Math.random() * 0.015 + 0.011;
+            this.size = 3.2;
         } else if (type === 'pop') {
             this.friction = 0.92;
             this.gravity = 0.08;
-            this.decay = 0.04;
-            this.size = 1.6;
+            this.decay = 0.036;
+            this.size = 2.0;
         } else { // standard / crackler
-            this.friction = 0.945;
-            this.gravity = 0.075;
-            this.decay = Math.random() * 0.02 + 0.013;
-            this.size = 2.5;
+            this.friction = 0.946;
+            this.gravity = 0.072;
+            this.decay = Math.random() * 0.017 + 0.012;
+            this.size = 2.9;
         }
 
-        this.shouldCrackle = type === 'crackler';
+        this.isCrackler = type === 'crackler';
+        this.readyToCrackle = false;
         this.hasCrackled = false;
+        this.crackleAt = 16 + Math.floor(Math.random() * 14);
         this.lifeTime = 0;
     }
 
@@ -565,21 +727,17 @@ class RichParticle {
         this.y += this.vy;
         this.alpha -= this.decay;
         this.lifeTime++;
-        this.tick += 0.35;
+        this.tick += 0.38;
 
-        if (this.shouldCrackle && !this.hasCrackled && this.lifeTime > 22) {
-            this.shouldCrackle = true;
-        } else {
-            this.shouldCrackle = false;
-        }
+        this.readyToCrackle = this.isCrackler && !this.hasCrackled && this.lifeTime >= this.crackleAt;
     }
 
-    draw(ctx) {
+    draw(ctx, isLight = false) {
         if (this.alpha <= 0) return;
 
         let renderAlpha = this.alpha;
         if (this.type === 'strobe') {
-            renderAlpha = Math.sin(this.tick) > 0 ? this.alpha : this.alpha * 0.2;
+            renderAlpha = Math.sin(this.tick) > 0 ? this.alpha : this.alpha * 0.22;
         }
 
         ctx.globalAlpha = renderAlpha;
@@ -587,14 +745,14 @@ class RichParticle {
         ctx.moveTo(this.prevX, this.prevY);
         ctx.lineTo(this.x, this.y);
         ctx.strokeStyle = this.color;
-        ctx.lineWidth = this.size;
+        ctx.lineWidth = isLight ? this.size * 1.15 : this.size;
         ctx.stroke();
 
-        // Sparkle head
-        if (this.type === 'willow' || this.type === 'strobe') {
+        // Sparkle tip head
+        if (this.type === 'willow' || this.type === 'strobe' || this.type === 'heart') {
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size * 0.6, 0, Math.PI * 2);
-            ctx.fillStyle = '#FFFFFF';
+            ctx.arc(this.x, this.y, this.size * 0.65, 0, Math.PI * 2);
+            ctx.fillStyle = isLight ? '#FEF08A' : '#FFFFFF';
             ctx.fill();
         }
     }

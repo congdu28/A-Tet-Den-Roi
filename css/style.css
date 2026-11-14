@@ -866,7 +866,7 @@ button, input, select, textarea {
 }
 
 #fireworks-canvas {
-    z-index: 1;
+    z-index: 500;
 }
 
 #ambient-canvas {
