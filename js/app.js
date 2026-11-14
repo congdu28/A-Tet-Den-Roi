@@ -436,11 +436,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bgMarqueeLayer) {
         const defaultMarqueeState = {
             enabled: true,
-            text: '🌸 Chúc Mừng Năm Mới Đinh Mùi 2027 • An Khang Thịnh Vượng • Vạn Sự Như Ý • Tấn Tài Tấn Lộc 🌸',
-            style: 'multi',
-            speed: 2,
+            text: '🌸 Pancake Chào Mừng Đinh Mùi 2027 • An Khang Thịnh Vượng • Vạn Sự Như Ý • Tấn Tài Tấn Lộc 🌸',
+            style: 'single',
+            speed: 1,
             size: 52,
-            opacity: 16
+            opacity: 13
         };
 
         let marqueeState = { ...defaultMarqueeState };
@@ -454,7 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const marqueePresets = [
-            '🌸 Chúc Mừng Năm Mới Đinh Mùi 2027 • An Khang Thịnh Vượng • Vạn Sự Như Ý • Tấn Tài Tấn Lộc 🌸',
+            '🌸 Pancake Chào Mừng Đinh Mùi 2027 • An Khang Thịnh Vượng • Vạn Sự Như Ý • Tấn Tài Tấn Lộc 🌸',
             '🧧 Cung Chúc Tân Xuân • Phát Tài Phát Lộc • Gia Đạo Bình An • Sum Vầy Hạnh Phúc 🧧',
             '✨ Xuân Đinh Mùi 2027 • Mã Đáo Thành Công • Công Danh Rạng Rỡ • Tiền Vào Như Nước ✨',
             '🏮 Tết Đoàn Viên • Bách Niên Giai Lão • Sức Khỏe Dồi Dào • Cát Tường Như Ý 🏮',
