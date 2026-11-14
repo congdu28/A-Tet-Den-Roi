@@ -471,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bgMarqueeLayer) {
         const defaultMarqueeState = {
             enabled: true,
-            text: '🌸 Pancake Chào Mừng Đinh Mùi 2027 • An Khang Thịnh Vượng • Vạn Sự Như Ý • Tấn Tài Tấn Lộc 🌸',
+            text: '🌸Chào Mừng Đinh Mùi 2027 • An Khang Thịnh Vượng • Vạn Sự Như Ý • Tấn Tài Tấn Lộc 🌸',
             style: 'single',
             speed: 1,
             size: 52,
@@ -483,13 +483,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const saved = JSON.parse(localStorage.getItem('tet-bg-marquee') || 'null');
             if (saved && typeof saved === 'object') {
                 marqueeState = { ...defaultMarqueeState, ...saved };
+                if (marqueeState.text === '🌸 Pancake Chào Mừng Đinh Mùi 2027 • An Khang Thịnh Vượng • Vạn Sự Như Ý • Tấn Tài Tấn Lộc 🌸') {
+                    marqueeState.text = defaultMarqueeState.text;
+                }
             }
         } catch (err) {
             marqueeState = { ...defaultMarqueeState };
         }
 
         const marqueePresets = [
-            '🌸 Pancake Chào Mừng Đinh Mùi 2027 • An Khang Thịnh Vượng • Vạn Sự Như Ý • Tấn Tài Tấn Lộc 🌸',
+            '🌸Chào Mừng Đinh Mùi 2027 • An Khang Thịnh Vượng • Vạn Sự Như Ý • Tấn Tài Tấn Lộc 🌸',
             '🧧 Cung Chúc Tân Xuân • Phát Tài Phát Lộc • Gia Đạo Bình An • Sum Vầy Hạnh Phúc 🧧',
             '✨ Xuân Đinh Mùi 2027 • Mã Đáo Thành Công • Công Danh Rạng Rỡ • Tiền Vào Như Nước ✨',
             '🏮 Tết Đoàn Viên • Bách Niên Giai Lão • Sức Khỏe Dồi Dào • Cát Tường Như Ý 🏮',
