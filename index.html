@@ -13,6 +13,12 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏮</text></svg>">
 </head>
 <body class="theme-red-gold font-uvn-thuphap light-mode">
+    <!-- Custom Background Image Layer -->
+    <div id="custom-bg-layer" class="custom-bg-layer hidden" aria-hidden="true">
+        <div id="custom-bg-image" class="custom-bg-image"></div>
+        <div id="custom-bg-overlay" class="custom-bg-overlay"></div>
+    </div>
+
     <!-- Background Canvas Layers -->
     <canvas id="fireworks-canvas"></canvas>
     <canvas id="ambient-canvas"></canvas>
@@ -1151,6 +1157,76 @@
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #4338ca, #ec4899);"></span>
                                 <span>Sắc Hoa Tây Bắc</span>
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Ảnh Nền Tùy Chỉnh (Custom Background Image) -->
+                    <div class="settings-sub-section bg-custom-box" style="margin-top: 16px;">
+                        <div class="settings-sub-title">
+                            <span>🖼️</span> Ảnh Nền Tùy Chỉnh Của Bạn:
+                        </div>
+                        <small class="bg-custom-hint">Thay hình nền riêng cho trang web (hỗ trợ JPG, PNG, WEBP, GIF — tự động lưu trên trình duyệt)</small>
+
+                        <input type="file" id="bg-image-file-input" accept="image/*" style="display: none;">
+
+                        <div class="bg-action-row">
+                            <button type="button" id="btn-upload-bg-image" class="btn-ctrl btn-highlight bg-upload-btn">
+                                <span>📁</span> Tải Ảnh Từ Máy
+                            </button>
+                            <button type="button" id="btn-reset-bg-image" class="btn-mini-action bg-reset-btn" title="Khôi phục nền màu mặc định theo theme">
+                                <span>↺</span> Nền Mặc Định
+                            </button>
+                        </div>
+
+                        <div class="bg-url-row">
+                            <input type="url" id="input-bg-image-url" class="bg-marquee-text-input" placeholder="Hoặc dán link ảnh (https://...)...">
+                            <button type="button" id="btn-apply-bg-url" class="btn-mini-action">Áp dụng</button>
+                        </div>
+
+                        <!-- Xem trước ảnh nền đang chọn -->
+                        <div id="bg-image-preview-wrap" class="bg-preview-card hidden">
+                            <img id="bg-preview-thumb" class="bg-preview-thumb" src="" alt="Xem trước ảnh nền">
+                            <div class="bg-preview-info">
+                                <div id="bg-preview-name" class="bg-preview-name">Ảnh nền tùy chỉnh</div>
+                                <div id="bg-preview-status" class="bg-preview-status">Đang áp dụng</div>
+                            </div>
+                            <button type="button" id="btn-clear-active-bg" class="btn-mini-action bg-remove-btn" title="Gỡ ảnh nền hiện tại">✕ Gỡ</button>
+                        </div>
+
+                        <!-- Tinh chỉnh hiển thị ảnh nền -->
+                        <div id="bg-image-controls" class="bg-controls-grid hidden">
+                            <div class="effect-slider-item">
+                                <div class="effect-slider-header">
+                                    <span>📐 Kiểu hiển thị:</span>
+                                </div>
+                                <select id="select-bg-fit" class="settings-select" style="padding: 8px 10px; font-size: 0.84rem;">
+                                    <option value="cover">Phủ kín màn hình (Cover)</option>
+                                    <option value="contain">Vừa khung ảnh (Contain)</option>
+                                    <option value="repeat">Lặp họa tiết (Tile)</option>
+                                </select>
+                            </div>
+
+                            <div class="effect-slider-item">
+                                <div class="effect-slider-header">
+                                    <span>🌗 Lớp phủ dịu nền:</span>
+                                    <span class="effect-slider-badge" id="badge-bg-overlay">35%</span>
+                                </div>
+                                <input type="range" id="slider-bg-overlay" class="custom-range-slider" min="0" max="85" step="5" value="35">
+                            </div>
+
+                            <div class="effect-slider-item">
+                                <div class="effect-slider-header">
+                                    <span>🌫️ Độ mờ (Blur):</span>
+                                    <span class="effect-slider-badge" id="badge-bg-blur">0px</span>
+                                </div>
+                                <input type="range" id="slider-bg-blur" class="custom-range-slider" min="0" max="16" step="1" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Thư viện ảnh nền đã tải lên -->
+                        <div id="saved-bg-list-wrap" class="saved-bg-list-wrap hidden">
+                            <div class="saved-bg-list-title">🗂️ Ảnh nền đã tải lên gần đây:</div>
+                            <div id="saved-bg-grid" class="saved-bg-grid"></div>
                         </div>
                     </div>
                 </div>

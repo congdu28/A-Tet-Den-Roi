@@ -1214,5 +1214,375 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCoupletDOM(currentCoupletIndex);
     startCoupletTimer();
 
+    // ==========================================================
+    // 14. CUSTOM BACKGROUND IMAGE MANAGER (Upload, URL, Fit, Overlay, Blur + IndexedDB)
+    // ==========================================================
+    const customBgLayer = document.getElementById('custom-bg-layer');
+    const customBgImage = document.getElementById('custom-bg-image');
+    const customBgOverlay = document.getElementById('custom-bg-overlay');
+
+    const bgFileInput = document.getElementById('bg-image-file-input');
+    const bgUploadBtn = document.getElementById('btn-upload-bg-image');
+    const bgResetBtn = document.getElementById('btn-reset-bg-image');
+    const bgUrlInput = document.getElementById('input-bg-image-url');
+    const bgApplyUrlBtn = document.getElementById('btn-apply-bg-url');
+
+    const bgPreviewWrap = document.getElementById('bg-image-preview-wrap');
+    const bgPreviewThumb = document.getElementById('bg-preview-thumb');
+    const bgPreviewName = document.getElementById('bg-preview-name');
+    const bgClearActiveBtn = document.getElementById('btn-clear-active-bg');
+    const bgControlsGrid = document.getElementById('bg-image-controls');
+
+    const bgFitSelect = document.getElementById('select-bg-fit');
+    const bgOverlaySlider = document.getElementById('slider-bg-overlay');
+    const bgOverlayBadge = document.getElementById('badge-bg-overlay');
+    const bgBlurSlider = document.getElementById('slider-bg-blur');
+    const bgBlurBadge = document.getElementById('badge-bg-blur');
+
+    const savedBgListWrap = document.getElementById('saved-bg-list-wrap');
+    const savedBgGrid = document.getElementById('saved-bg-grid');
+
+    const BG_DB_NAME = 'Tet2027_Bg_DB';
+    const BG_STORE_NAME = 'backgrounds';
+    const BG_KEY_ACTIVE = 'tet-custom-bg-active';
+    const BG_KEY_FIT = 'tet-custom-bg-fit';
+    const BG_KEY_OVERLAY = 'tet-custom-bg-overlay';
+    const BG_KEY_BLUR = 'tet-custom-bg-blur';
+
+    let savedBgItems = []; // [{ id, name, url, createdAt }]
+
+    const openBgDb = () => {
+        return new Promise((resolve, reject) => {
+            if (typeof window === 'undefined' || !window.indexedDB) {
+                resolve(null);
+                return;
+            }
+            const req = indexedDB.open(BG_DB_NAME, 1);
+            req.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(BG_STORE_NAME)) {
+                    db.createObjectStore(BG_STORE_NAME, { keyPath: 'id' });
+                }
+            };
+            req.onsuccess = (e) => resolve(e.target.result);
+            req.onerror = (e) => reject(e.target.error);
+        });
+    };
+
+    const saveBgToDb = async (id, name, blob) => {
+        try {
+            const db = await openBgDb();
+            if (!db) return false;
+            return await new Promise((resolve) => {
+                const tx = db.transaction(BG_STORE_NAME, 'readwrite');
+                const store = tx.objectStore(BG_STORE_NAME);
+                store.put({ id, name, blob, createdAt: Date.now() });
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+            });
+        } catch (err) {
+            console.warn('Lỗi lưu ảnh nền vào IndexedDB:', err);
+            return false;
+        }
+    };
+
+    const loadBgsFromDb = async () => {
+        try {
+            const db = await openBgDb();
+            if (!db) return [];
+            return await new Promise((resolve) => {
+                const tx = db.transaction(BG_STORE_NAME, 'readonly');
+                const store = tx.objectStore(BG_STORE_NAME);
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = () => resolve([]);
+            });
+        } catch (err) {
+            console.warn('Lỗi đọc ảnh nền từ IndexedDB:', err);
+            return [];
+        }
+    };
+
+    const deleteBgFromDb = async (id) => {
+        try {
+            const db = await openBgDb();
+            if (!db) return false;
+            return await new Promise((resolve) => {
+                const tx = db.transaction(BG_STORE_NAME, 'readwrite');
+                const store = tx.objectStore(BG_STORE_NAME);
+                store.delete(id);
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+            });
+        } catch (err) {
+            console.warn('Lỗi xóa ảnh nền khỏi IndexedDB:', err);
+            return false;
+        }
+    };
+
+    const applyBgDisplayStyles = () => {
+        const fit = localStorage.getItem(BG_KEY_FIT) || 'cover';
+        const overlay = Math.max(0, Math.min(85, parseInt(localStorage.getItem(BG_KEY_OVERLAY) ?? '35', 10) || 0));
+        const blur = Math.max(0, Math.min(16, parseInt(localStorage.getItem(BG_KEY_BLUR) ?? '0', 10) || 0));
+
+        if (customBgImage) {
+            if (fit === 'repeat') {
+                customBgImage.style.backgroundSize = 'auto';
+                customBgImage.style.backgroundRepeat = 'repeat';
+            } else if (fit === 'contain') {
+                customBgImage.style.backgroundSize = 'contain';
+                customBgImage.style.backgroundRepeat = 'no-repeat';
+            } else {
+                customBgImage.style.backgroundSize = 'cover';
+                customBgImage.style.backgroundRepeat = 'no-repeat';
+            }
+            customBgImage.style.filter = blur > 0 ? `blur(${blur}px)` : 'none';
+        }
+
+        if (customBgOverlay) {
+            customBgOverlay.style.background = `rgba(0, 0, 0, ${(overlay / 100).toFixed(2)})`;
+        }
+
+        if (bgFitSelect) bgFitSelect.value = fit;
+        if (bgOverlaySlider) bgOverlaySlider.value = String(overlay);
+        if (bgOverlayBadge) bgOverlayBadge.textContent = `${overlay}%`;
+        if (bgBlurSlider) bgBlurSlider.value = String(blur);
+        if (bgBlurBadge) bgBlurBadge.textContent = `${blur}px`;
+    };
+
+    const updateSavedBgActiveUI = (activeId) => {
+        if (!savedBgGrid) return;
+        const items = savedBgGrid.querySelectorAll('.saved-bg-thumb-item');
+        items.forEach(el => {
+            el.classList.toggle('active', el.getAttribute('data-bg-id') === activeId);
+        });
+    };
+
+    const setActiveCustomBg = (url, label, activeToken) => {
+        if (!customBgLayer || !customBgImage) return;
+
+        if (!url || activeToken === 'none') {
+            customBgLayer.classList.add('hidden');
+            customBgImage.style.backgroundImage = '';
+            if (bgPreviewWrap) bgPreviewWrap.classList.add('hidden');
+            if (bgControlsGrid) bgControlsGrid.classList.add('hidden');
+            localStorage.setItem(BG_KEY_ACTIVE, 'none');
+            updateSavedBgActiveUI('');
+            return;
+        }
+
+        customBgImage.style.backgroundImage = `url("${url.replace(/"/g, '\\"')}")`;
+        customBgLayer.classList.remove('hidden');
+
+        if (bgPreviewThumb) bgPreviewThumb.src = url;
+        if (bgPreviewName) bgPreviewName.textContent = label || 'Ảnh nền tùy chỉnh';
+        if (bgPreviewWrap) bgPreviewWrap.classList.remove('hidden');
+        if (bgControlsGrid) bgControlsGrid.classList.remove('hidden');
+
+        localStorage.setItem(BG_KEY_ACTIVE, activeToken);
+        const activeId = activeToken.startsWith('idb:') ? activeToken.slice(4) : '';
+        updateSavedBgActiveUI(activeId);
+        applyBgDisplayStyles();
+    };
+
+    const renderSavedBgGrid = () => {
+        if (!savedBgListWrap || !savedBgGrid) return;
+
+        if (savedBgItems.length === 0) {
+            savedBgListWrap.classList.add('hidden');
+            savedBgGrid.innerHTML = '';
+            return;
+        }
+
+        savedBgListWrap.classList.remove('hidden');
+        savedBgGrid.innerHTML = '';
+
+        const activeToken = localStorage.getItem(BG_KEY_ACTIVE) || 'none';
+        const activeId = activeToken.startsWith('idb:') ? activeToken.slice(4) : '';
+
+        savedBgItems.forEach(item => {
+            const card = document.createElement('div');
+            card.className = `saved-bg-thumb-item${item.id === activeId ? ' active' : ''}`;
+            card.setAttribute('data-bg-id', item.id);
+            card.title = item.name;
+
+            const img = document.createElement('img');
+            img.src = item.url;
+            img.alt = item.name;
+            card.appendChild(img);
+
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'saved-bg-delete-btn';
+            delBtn.title = 'Xóa ảnh nền này';
+            delBtn.textContent = '×';
+            delBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await deleteBgFromDb(item.id);
+                URL.revokeObjectURL(item.url);
+                savedBgItems = savedBgItems.filter(x => x.id !== item.id);
+
+                if (localStorage.getItem(BG_KEY_ACTIVE) === `idb:${item.id}`) {
+                    setActiveCustomBg(null, '', 'none');
+                }
+                renderSavedBgGrid();
+                showToast('🗑️ Đã xóa ảnh nền khỏi thư viện!');
+            });
+            card.appendChild(delBtn);
+
+            card.addEventListener('click', () => {
+                setActiveCustomBg(item.url, item.name, `idb:${item.id}`);
+                if (window.tetAudio) {
+                    window.tetAudio.init();
+                    window.tetAudio.playLuckyChime();
+                }
+                showToast(`🖼️ Đã đổi ảnh nền: "${item.name}"`);
+            });
+
+            savedBgGrid.appendChild(card);
+        });
+    };
+
+    // Event bindings for Custom Background
+    if (bgUploadBtn && bgFileInput) {
+        bgUploadBtn.addEventListener('click', () => bgFileInput.click());
+
+        bgFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files && e.target.files[0];
+            bgFileInput.value = '';
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showToast('⚠️ Vui lòng chọn tệp hình ảnh hợp lệ (JPG, PNG, WEBP, GIF).');
+                return;
+            }
+            if (file.size > 15 * 1024 * 1024) {
+                showToast('⚠️ Ảnh quá lớn (tối đa 15MB). Vui lòng chọn ảnh nhẹ hơn.');
+                return;
+            }
+
+            const id = `bg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+            const cleanName = file.name.replace(/\.[^/.]+$/, '') || 'Ảnh nền Tết';
+            const saved = await saveBgToDb(id, cleanName, file);
+            const objUrl = URL.createObjectURL(file);
+
+            if (saved) {
+                savedBgItems.unshift({ id, name: cleanName, url: objUrl, createdAt: Date.now() });
+                renderSavedBgGrid();
+                setActiveCustomBg(objUrl, cleanName, `idb:${id}`);
+            } else {
+                setActiveCustomBg(objUrl, cleanName, 'none');
+            }
+
+            if (window.tetAudio) {
+                window.tetAudio.init();
+                window.tetAudio.playLuckyChime();
+            }
+            showToast(`🖼️ Đã đổi ảnh nền thành "${cleanName}"!`);
+        });
+    }
+
+    const applyBgFromUrlInput = () => {
+        if (!bgUrlInput) return;
+        const rawUrl = bgUrlInput.value.trim();
+        if (!rawUrl) {
+            showToast('⚠️ Vui lòng nhập đường dẫn (URL) hình ảnh.');
+            return;
+        }
+        if (!/^https?:\/\/|^data:image\//i.test(rawUrl)) {
+            showToast('⚠️ Đường dẫn ảnh phải bắt đầu bằng https:// hoặc http://');
+            return;
+        }
+
+        const testImg = new Image();
+        testImg.onload = () => {
+            setActiveCustomBg(rawUrl, 'Ảnh nền từ liên kết URL', `url:${rawUrl}`);
+            if (window.tetAudio) {
+                window.tetAudio.init();
+                window.tetAudio.playLuckyChime();
+            }
+            showToast('🖼️ Đã áp dụng ảnh nền từ liên kết URL!');
+        };
+        testImg.onerror = () => {
+            showToast('❌ Không thể tải ảnh từ liên kết này. Vui lòng kiểm tra lại URL.');
+        };
+        testImg.src = rawUrl;
+    };
+
+    if (bgApplyUrlBtn) {
+        bgApplyUrlBtn.addEventListener('click', applyBgFromUrlInput);
+    }
+    if (bgUrlInput) {
+        bgUrlInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyBgFromUrlInput();
+            }
+        });
+    }
+
+    const resetToDefaultBg = () => {
+        setActiveCustomBg(null, '', 'none');
+        if (bgUrlInput) bgUrlInput.value = '';
+        if (window.tetAudio) {
+            window.tetAudio.init();
+            window.tetAudio.playLuckyChime();
+        }
+        showToast('↺ Đã khôi phục nền màu mặc định theo giao diện!');
+    };
+
+    if (bgResetBtn) bgResetBtn.addEventListener('click', resetToDefaultBg);
+    if (bgClearActiveBtn) bgClearActiveBtn.addEventListener('click', resetToDefaultBg);
+
+    if (bgFitSelect) {
+        bgFitSelect.addEventListener('change', (e) => {
+            localStorage.setItem(BG_KEY_FIT, e.target.value);
+            applyBgDisplayStyles();
+        });
+    }
+
+    if (bgOverlaySlider) {
+        bgOverlaySlider.addEventListener('input', (e) => {
+            localStorage.setItem(BG_KEY_OVERLAY, e.target.value);
+            applyBgDisplayStyles();
+        });
+    }
+
+    if (bgBlurSlider) {
+        bgBlurSlider.addEventListener('input', (e) => {
+            localStorage.setItem(BG_KEY_BLUR, e.target.value);
+            applyBgDisplayStyles();
+        });
+    }
+
+    // Initialize saved backgrounds on load
+    (async () => {
+        applyBgDisplayStyles();
+        const records = await loadBgsFromDb();
+        records.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        savedBgItems = records.map(r => ({
+            id: r.id,
+            name: r.name || 'Ảnh nền Tết',
+            url: URL.createObjectURL(r.blob),
+            createdAt: r.createdAt || 0
+        }));
+        renderSavedBgGrid();
+
+        const activeToken = localStorage.getItem(BG_KEY_ACTIVE) || 'none';
+        if (activeToken.startsWith('idb:')) {
+            const id = activeToken.slice(4);
+            const found = savedBgItems.find(item => item.id === id);
+            if (found) {
+                setActiveCustomBg(found.url, found.name, activeToken);
+            } else {
+                localStorage.setItem(BG_KEY_ACTIVE, 'none');
+            }
+        } else if (activeToken.startsWith('url:')) {
+            const savedUrl = activeToken.slice(4);
+            if (bgUrlInput) bgUrlInput.value = savedUrl;
+            setActiveCustomBg(savedUrl, 'Ảnh nền từ liên kết URL', activeToken);
+        }
+    })();
+
     console.log("🌸 Tết Đinh Mùi 2027: Font chữ đồng bộ 100% & Trình phát nhạc MP3 sẵn sàng! 🌸");
 });

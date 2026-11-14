@@ -812,6 +812,36 @@ button, input, select, textarea {
     font-family: inherit;
 }
 
+/* Custom Background Image Layer */
+.custom-bg-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.custom-bg-layer.hidden {
+    display: none;
+}
+
+.custom-bg-image {
+    position: absolute;
+    inset: -24px;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    transition: opacity 0.35s ease, filter 0.2s ease;
+    will-change: filter;
+}
+
+.custom-bg-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    transition: background 0.2s ease;
+}
+
 /* Background Canvases */
 #fireworks-canvas,
 #ambient-canvas,
@@ -7256,4 +7286,224 @@ body.light-mode .hd-pill {
     .fortune-filter-nav {
         grid-template-columns: 1fr;
     }
+}
+
+/* ==========================================================
+   CUSTOM BACKGROUND IMAGE SETTINGS UI
+   ========================================================== */
+.bg-custom-box {
+    padding: 14px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 215, 0, 0.22);
+}
+
+body.light-mode .bg-custom-box {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(225, 29, 72, 0.2);
+}
+
+.bg-custom-hint {
+    display: block;
+    font-size: 0.76rem;
+    color: var(--color-text-sub);
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.bg-action-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.bg-upload-btn {
+    flex: 1;
+    min-width: 160px;
+    justify-content: center;
+    padding: 9px 14px;
+}
+
+.bg-reset-btn {
+    padding: 9px 12px;
+    white-space: nowrap;
+}
+
+.bg-url-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.bg-url-row .bg-marquee-text-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.bg-preview-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    margin-bottom: 10px;
+}
+
+body.light-mode .bg-preview-card {
+    background: rgba(225, 29, 72, 0.06);
+    border-color: rgba(225, 29, 72, 0.25);
+}
+
+.bg-preview-card.hidden {
+    display: none;
+}
+
+.bg-preview-thumb {
+    width: 54px;
+    height: 38px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 215, 0, 0.45);
+    flex-shrink: 0;
+}
+
+.bg-preview-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.bg-preview-name {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bg-preview-status {
+    font-size: 0.74rem;
+    color: var(--color-accent-gold);
+}
+
+body.light-mode .bg-preview-status {
+    color: #be123c;
+}
+
+.bg-remove-btn {
+    flex-shrink: 0;
+}
+
+.bg-controls-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.bg-controls-grid.hidden {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    .bg-controls-grid {
+        grid-template-columns: 1fr;
+    }
+    .bg-url-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+.saved-bg-list-wrap {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(255, 215, 0, 0.25);
+}
+
+body.light-mode .saved-bg-list-wrap {
+    border-top-color: rgba(225, 29, 72, 0.2);
+}
+
+.saved-bg-list-wrap.hidden {
+    display: none;
+}
+
+.saved-bg-list-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-text-sub);
+    margin-bottom: 8px;
+}
+
+.saved-bg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+    gap: 8px;
+}
+
+.saved-bg-thumb-item {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    background: rgba(0, 0, 0, 0.3);
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.saved-bg-thumb-item:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 215, 0, 0.65);
+}
+
+.saved-bg-thumb-item.active {
+    border-color: #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.45);
+}
+
+body.light-mode .saved-bg-thumb-item.active {
+    border-color: #e11d48;
+    box-shadow: 0 0 10px rgba(225, 29, 72, 0.35);
+}
+
+.saved-bg-thumb-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.saved-bg-delete-btn {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.72);
+    color: #fff;
+    font-size: 0.7rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.saved-bg-thumb-item:hover .saved-bg-delete-btn,
+.saved-bg-thumb-item:focus-within .saved-bg-delete-btn {
+    opacity: 1;
+}
+
+.saved-bg-delete-btn:hover {
+    background: #dc2626;
 }
