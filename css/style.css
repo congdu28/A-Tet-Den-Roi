@@ -2379,19 +2379,30 @@ body.light-mode .timer-fireworks-hint {
 }
 
 /* ==========================================================
-   THANH TIẾN TRÌNH NĂM CŨ ĐẾN TẾT ĐINH MÙI (CHUYỂN ĐỘNG SINH ĐỘNG)
+   THANH TIẾN TRÌNH NĂM CŨ ĐẾN TẾT ĐINH MÙI (NỔI BẬT + KIM TUYẾN BẮN RA)
    ========================================================== */
 .year-progress-wrapper {
-    margin-top: 12px;
+    margin-top: 14px;
+    padding: 10px 14px 12px 14px;
+    border-radius: 18px;
+    background: rgba(0, 0, 0, 0.24);
+    border: 1px solid rgba(255, 215, 0, 0.26);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+body.light-mode .year-progress-wrapper {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(225, 29, 72, 0.2);
+    box-shadow: 0 4px 14px rgba(185, 28, 28, 0.06);
 }
 
 .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.86rem;
+    font-size: 0.88rem;
     color: var(--color-accent-gold-light);
-    margin-bottom: 6px;
+    margin-bottom: 9px;
     font-weight: 700;
     flex-wrap: wrap;
     gap: 8px;
@@ -2417,8 +2428,8 @@ body.light-mode .timer-fireworks-hint {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(255, 215, 0, 0.1);
-    border: 1px solid rgba(255, 215, 0, 0.3);
+    background: rgba(255, 215, 0, 0.12);
+    border: 1px solid rgba(255, 215, 0, 0.35);
     padding: 3px 10px;
     border-radius: 12px;
 }
@@ -2427,15 +2438,35 @@ body.light-mode .timer-fireworks-hint {
     color: #ffd700;
 }
 
+.progress-bar-stage {
+    position: relative;
+    width: 100%;
+    cursor: pointer;
+}
+
+.progress-glitter-canvas {
+    position: absolute;
+    left: 0;
+    top: -26px;
+    width: 100%;
+    height: calc(100% + 44px);
+    pointer-events: none;
+    z-index: 4;
+}
+
 .progress-track {
     width: 100%;
-    height: 18px;
-    background: rgba(0, 0, 0, 0.55);
+    height: 22px;
+    background: rgba(0, 0, 0, 0.62);
     border-radius: 999px;
     overflow: hidden;
-    border: 1.5px solid rgba(255, 215, 0, 0.4);
-    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8), 0 0 12px rgba(255, 215, 0, 0.15);
+    border: 2px solid rgba(255, 215, 0, 0.58);
+    box-shadow:
+        inset 0 2px 7px rgba(0, 0, 0, 0.85),
+        0 0 18px rgba(255, 215, 0, 0.25),
+        0 3px 10px rgba(0, 0, 0, 0.35);
     position: relative;
+    z-index: 1;
 }
 
 .progress-fill {
@@ -2443,36 +2474,84 @@ body.light-mode .timer-fireworks-hint {
     width: 0%;
     border-radius: 999px;
     position: relative;
-    background-size: 32px 32px, 100% 100%;
+    overflow: hidden;
+    background-size: 28px 28px, 100% 100%;
     background-image: 
         linear-gradient(
             45deg, 
-            rgba(255, 255, 255, 0.28) 25%, 
+            rgba(255, 255, 255, 0.3) 25%, 
             transparent 25%, 
             transparent 50%, 
-            rgba(255, 255, 255, 0.28) 50%, 
-            rgba(255, 255, 255, 0.28) 75%, 
+            rgba(255, 255, 255, 0.3) 50%, 
+            rgba(255, 255, 255, 0.3) 75%, 
             transparent 75%, 
             transparent
         ),
-        linear-gradient(90deg, #ef4444 0%, #f97316 35%, #eab308 70%, #fef08a 100%);
-    box-shadow: 0 0 16px rgba(234, 179, 8, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    animation: progressStripesMove 1.4s linear infinite;
+        linear-gradient(90deg, #dc2626 0%, #f97316 32%, #facc15 72%, #fff7ae 100%);
+    box-shadow:
+        0 0 20px rgba(250, 204, 21, 0.78),
+        0 0 8px rgba(255, 255, 255, 0.55),
+        inset 0 2px 2px rgba(255, 255, 255, 0.65);
+    animation: progressStripesMove 1.1s linear infinite;
     transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Luồng ánh sáng kim tuyến quét ngang liên tục trên thân thanh tiến trình */
+.progress-fill::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        105deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0) 35%,
+        rgba(255, 255, 255, 0.75) 50%,
+        rgba(255, 255, 255, 0) 65%,
+        transparent 100%
+    );
+    transform: translateX(-100%);
+    animation: progressShimmerSweep 2.1s ease-in-out infinite;
+    pointer-events: none;
 }
 
 /* Đầu tia sáng dẫn đường rực rỡ */
 .progress-fill::after {
     content: '';
     position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 26px;
+    top: -2px;
+    right: -2px;
+    bottom: -2px;
+    width: 30px;
     border-radius: 999px;
-    background: radial-gradient(circle at center, #ffffff 20%, rgba(255, 255, 255, 0.95) 50%, transparent 100%);
-    box-shadow: 0 0 14px #fff, 0 0 22px #ffd700;
-    animation: progressHeadGlow 1s ease-in-out infinite alternate;
+    background: radial-gradient(circle at center, #ffffff 28%, rgba(255, 245, 157, 0.92) 60%, transparent 100%);
+    box-shadow: 0 0 18px #fff, 0 0 28px #ffd700;
+    animation: progressHeadGlow 0.9s ease-in-out infinite alternate;
+}
+
+.progress-spark-head {
+    position: absolute;
+    top: 50%;
+    left: 0%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 900;
+    color: #fffef0;
+    background: radial-gradient(circle, #ffffff 15%, #fde047 55%, rgba(249, 115, 22, 0.85) 100%);
+    box-shadow:
+        0 0 12px #ffffff,
+        0 0 24px #ffd700,
+        0 0 36px rgba(249, 115, 22, 0.85);
+    text-shadow: 0 0 6px #ffffff;
+    pointer-events: none;
+    transition: left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: progressStarPulse 1.4s ease-in-out infinite alternate;
 }
 
 @keyframes progressStripesMove {
@@ -2480,19 +2559,37 @@ body.light-mode .timer-fireworks-hint {
         background-position: 0 0, 0 0;
     }
     100% {
-        background-position: 32px 0, 0 0;
+        background-position: 28px 0, 0 0;
+    }
+}
+
+@keyframes progressShimmerSweep {
+    0% {
+        transform: translateX(-100%);
+    }
+    65%, 100% {
+        transform: translateX(130%);
     }
 }
 
 @keyframes progressHeadGlow {
     0% {
-        opacity: 0.8;
-        transform: scaleX(0.9);
+        opacity: 0.85;
+        transform: scaleX(0.95);
     }
     100% {
         opacity: 1;
-        transform: scaleX(1.3);
-        filter: drop-shadow(0 0 8px #ffd700);
+        transform: scaleX(1.35);
+        filter: drop-shadow(0 0 10px #ffd700);
+    }
+}
+
+@keyframes progressStarPulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.94) rotate(0deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.16) rotate(22deg);
     }
 }
 
@@ -2511,25 +2608,38 @@ body.light-mode .progress-dest-badge strong {
 }
 
 body.light-mode .progress-track {
-    background: rgba(254, 242, 242, 0.9);
-    border-color: rgba(225, 29, 72, 0.35);
-    box-shadow: inset 0 2px 5px rgba(225, 29, 72, 0.12), 0 2px 8px rgba(0, 0, 0, 0.05);
+    background: rgba(254, 226, 226, 0.85);
+    border-color: rgba(225, 29, 72, 0.45);
+    box-shadow:
+        inset 0 2px 6px rgba(225, 29, 72, 0.16),
+        0 0 16px rgba(245, 158, 11, 0.25),
+        0 3px 10px rgba(0, 0, 0, 0.08);
 }
 
 body.light-mode .progress-fill {
     background-image: 
         linear-gradient(
             45deg, 
-            rgba(255, 255, 255, 0.35) 25%, 
+            rgba(255, 255, 255, 0.38) 25%, 
             transparent 25%, 
             transparent 50%, 
-            rgba(255, 255, 255, 0.35) 50%, 
-            rgba(255, 255, 255, 0.35) 75%, 
+            rgba(255, 255, 255, 0.38) 50%, 
+            rgba(255, 255, 255, 0.38) 75%, 
             transparent 75%, 
             transparent
         ),
-        linear-gradient(90deg, #e11d48 0%, #f97316 40%, #eab308 75%, #10b981 100%);
-    box-shadow: 0 0 14px rgba(225, 29, 72, 0.45);
+        linear-gradient(90deg, #e11d48 0%, #f97316 38%, #f59e0b 75%, #fde047 100%);
+    box-shadow:
+        0 0 16px rgba(225, 29, 72, 0.48),
+        0 0 10px rgba(245, 158, 11, 0.55);
+}
+
+body.light-mode .progress-spark-head {
+    background: radial-gradient(circle, #ffffff 15%, #fde047 55%, #f43f5e 100%);
+    box-shadow:
+        0 0 10px #ffffff,
+        0 0 20px #f59e0b,
+        0 0 30px rgba(225, 29, 72, 0.55);
 }
 
 /* ==========================================================

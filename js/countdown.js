@@ -66,6 +66,9 @@ class TetCountdown {
             seconds: document.getElementById('count-seconds'),
             millis: document.getElementById('count-millis'),
             progressBar: document.getElementById('year-progress-bar'),
+            progressHead: document.getElementById('year-progress-head'),
+            progressStage: document.getElementById('year-progress-stage'),
+            glitterCanvas: document.getElementById('progress-glitter-canvas'),
             headerProgressBar: document.getElementById('header-progress-bar'),
             progressText: document.getElementById('year-progress-text'),
             celebrationBanner: document.getElementById('celebration-banner'),
@@ -85,6 +88,11 @@ class TetCountdown {
         this.prevDateString = '';
         this.mainTimer = null;
         this.millisTimer = null;
+        this.currentPercent = 0;
+        this.glitterParticles = [];
+        this.glitterRafId = null;
+        this.glitterStageWidth = 0;
+        this.glitterStageHeight = 0;
 
         // Initialize lunar calendar engine if available
         if (window.TetLunarCalendar) {
@@ -92,9 +100,159 @@ class TetCountdown {
         }
     }
 
+    initProgressGlitter() {
+        const canvas = this.elements.glitterCanvas;
+        const stage = this.elements.progressStage;
+        if (!canvas || !stage) return;
+
+        const ctx = canvas.getContext('2d', { alpha: true });
+        if (!ctx) return;
+
+        const measureCanvas = () => {
+            const rect = canvas.getBoundingClientRect();
+            if (rect.width <= 0 || rect.height <= 0) return;
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            this.glitterStageWidth = rect.width;
+            this.glitterStageHeight = rect.height;
+            canvas.width = Math.round(rect.width * dpr);
+            canvas.height = Math.round(rect.height * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        };
+
+        measureCanvas();
+        if (typeof ResizeObserver !== 'undefined') {
+            this.glitterResizeObserver = new ResizeObserver(measureCanvas);
+            this.glitterResizeObserver.observe(stage);
+        } else {
+            window.addEventListener('resize', measureCanvas, { passive: true });
+        }
+
+        const GLITTER_COLORS = ['#FFFDE7', '#FFD700', '#FFA726', '#FF4081', '#FF5252', '#40E0D0'];
+
+        const spawnBurst = (count = 2, isClickBurst = false) => {
+            if (!this.glitterStageWidth || !this.glitterStageHeight) return;
+            if (this.glitterParticles.length > 110) return;
+
+            const pct = Math.max(0, Math.min(100, this.currentPercent));
+            const headX = this.glitterStageWidth * (pct / 100);
+            const centerY = this.glitterStageHeight * 0.52;
+
+            for (let i = 0; i < count; i++) {
+                // 80% shoot from glowing tip, 20% shimmer from within filled bar
+                const fromHead = isClickBurst || Math.random() < 0.82 || headX < 24;
+                const spawnX = fromHead ? headX + (Math.random() - 0.5) * 6 : Math.random() * headX;
+                const spawnY = centerY + (Math.random() - 0.5) * 10;
+
+                const angle = fromHead
+                    ? (Math.random() - 0.5) * Math.PI * 1.45 // Fan forward, up, and down
+                    : -Math.PI / 2 + (Math.random() - 0.5) * 1.2;
+                const speed = isClickBurst
+                    ? 1.5 + Math.random() * 2.8
+                    : fromHead
+                        ? 0.9 + Math.random() * 2.1
+                        : 0.4 + Math.random() * 0.9;
+
+                const shapeRoll = Math.random();
+                const shape = shapeRoll < 0.35 ? 'star' : shapeRoll < 0.72 ? 'diamond' : 'confetti';
+
+                this.glitterParticles.push({
+                    x: spawnX,
+                    y: spawnY,
+                    vx: Math.cos(angle) * speed + (fromHead ? 0.45 : 0),
+                    vy: Math.sin(angle) * speed - (fromHead ? 0.35 : 0.4),
+                    gravity: isClickBurst ? 0.055 : 0.04,
+                    drag: 0.975,
+                    size: shape === 'star' ? 2.8 + Math.random() * 2.8 : 2.4 + Math.random() * 2.8,
+                    color: GLITTER_COLORS[Math.floor(Math.random() * GLITTER_COLORS.length)],
+                    life: 1,
+                    decay: isClickBurst ? 0.02 + Math.random() * 0.018 : 0.022 + Math.random() * 0.02,
+                    rot: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 0.25,
+                    twinklePhase: Math.random() * Math.PI * 2,
+                    shape
+                });
+            }
+        };
+
+        stage.addEventListener('click', (e) => {
+            e.stopPropagation();
+            spawnBurst(26, true);
+        });
+
+        let lastEmitTime = 0;
+        const tick = (now) => {
+            if (!document.hidden && this.glitterStageWidth > 0) {
+                ctx.clearRect(0, 0, this.glitterStageWidth, this.glitterStageHeight);
+
+                if (now - lastEmitTime > 48) {
+                    spawnBurst(2, false);
+                    lastEmitTime = now;
+                }
+
+                for (let i = this.glitterParticles.length - 1; i >= 0; i--) {
+                    const p = this.glitterParticles[i];
+                    p.vx *= p.drag;
+                    p.vy = p.vy * p.drag + p.gravity;
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.rot += p.rotSpeed;
+                    p.twinklePhase += 0.28;
+                    p.life -= p.decay;
+
+                    if (p.life <= 0) {
+                        this.glitterParticles.splice(i, 1);
+                        continue;
+                    }
+
+                    const twinkle = 0.6 + 0.4 * Math.abs(Math.sin(p.twinklePhase));
+                    const alpha = Math.max(0, Math.min(1, p.life * twinkle));
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot);
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = p.color;
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 6;
+
+                    if (p.shape === 'star') {
+                        const s = p.size;
+                        ctx.beginPath();
+                        ctx.moveTo(0, -s);
+                        ctx.lineTo(s * 0.3, -s * 0.3);
+                        ctx.lineTo(s, 0);
+                        ctx.lineTo(s * 0.3, s * 0.3);
+                        ctx.lineTo(0, s);
+                        ctx.lineTo(-s * 0.3, s * 0.3);
+                        ctx.lineTo(-s, 0);
+                        ctx.lineTo(-s * 0.3, -s * 0.3);
+                        ctx.closePath();
+                        ctx.fill();
+                    } else if (p.shape === 'diamond') {
+                        const s = p.size;
+                        ctx.beginPath();
+                        ctx.moveTo(0, -s);
+                        ctx.lineTo(s * 0.65, 0);
+                        ctx.lineTo(0, s);
+                        ctx.lineTo(-s * 0.65, 0);
+                        ctx.closePath();
+                        ctx.fill();
+                    } else {
+                        ctx.fillRect(-p.size * 0.7, -p.size * 0.35, p.size * 1.4, p.size * 0.7);
+                    }
+                    ctx.restore();
+                }
+            }
+            this.glitterRafId = requestAnimationFrame(tick);
+        };
+
+        this.glitterRafId = requestAnimationFrame(tick);
+    }
+
     start() {
         this.renderMilestones();
         this.updateMain();
+        this.initProgressGlitter();
 
         // 1. Update days/hours/minutes/seconds & real-time clock once every second (0 overhead!)
         this.mainTimer = setInterval(() => this.updateMain(), 1000);
@@ -205,10 +363,15 @@ class TetCountdown {
         // Progress bar (updated only once per second)
         const totalDuration = this.targetDate.getTime() - this.startDate.getTime();
         const elapsed = now.getTime() - this.startDate.getTime();
-        const percent = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100)).toFixed(1);
+        const percentNum = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+        const percent = percentNum.toFixed(1);
+        this.currentPercent = percentNum;
 
         if (this.elements.progressBar) {
             this.elements.progressBar.style.width = `${percent}%`;
+        }
+        if (this.elements.progressHead) {
+            this.elements.progressHead.style.left = `${percent}%`;
         }
         if (this.elements.headerProgressBar) {
             this.elements.headerProgressBar.style.width = `${percent}%`;
@@ -219,6 +382,13 @@ class TetCountdown {
     }
 
     handleTetArrived() {
+        this.currentPercent = 100;
+        if (this.elements.progressBar) {
+            this.elements.progressBar.style.width = '100%';
+        }
+        if (this.elements.progressHead) {
+            this.elements.progressHead.style.left = '100%';
+        }
         if (this.elements.headerProgressBar) {
             this.elements.headerProgressBar.style.width = '100%';
         }
