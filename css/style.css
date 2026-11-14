@@ -1993,13 +1993,32 @@ body.light-mode .mascot-speech-bubble::after {
    ========================================================== */
 .countdown-container {
     background: var(--card-bg);
-    border: var(--card-border);
-    border-radius: 28px;
-    box-shadow: var(--card-shadow);
-    padding: 28px 24px;
-    margin-bottom: 30px;
+    border: 2px solid rgba(255, 215, 0, 0.58);
+    border-radius: 30px;
+    box-shadow: var(--card-shadow), 0 0 42px rgba(255, 215, 0, 0.16);
+    padding: 26px 26px 24px 26px;
+    margin-bottom: 22px;
     position: relative;
     overflow: hidden;
+}
+
+.countdown-container::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #ffd700, #fff4b8, #ffd700, transparent);
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+body.light-mode .countdown-container {
+    border-color: rgba(225, 29, 72, 0.42);
+    box-shadow: var(--card-shadow), 0 12px 36px rgba(225, 29, 72, 0.14);
+}
+
+body.light-mode .countdown-container::before {
+    background: linear-gradient(90deg, transparent, #e11d48, #f59e0b, #e11d48, transparent);
 }
 
 /* Real-time Clock & Solar-Lunar Date Strip (Đồng nhất kích thước hoàn hảo) */
@@ -2159,41 +2178,50 @@ body.light-mode .btn-lunar-calendar {
 .timer-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    gap: 18px;
     margin-bottom: 22px;
 }
 
 .timer-card {
     background: var(--card-inner-bg);
-    border: 1px solid rgba(255, 215, 0, 0.45);
-    border-radius: 20px;
-    padding: 18px 8px;
+    border: 1.5px solid rgba(255, 215, 0, 0.55);
+    border-radius: 22px;
+    padding: 24px 10px 20px 10px;
     text-align: center;
-    box-shadow: inset 0 2px 4px rgba(255, 215, 0, 0.2), 0 6px 16px rgba(0, 0, 0, 0.35);
-    transition: transform 0.2s ease;
+    position: relative;
+    box-shadow: inset 0 2px 6px rgba(255, 215, 0, 0.24), 0 10px 24px rgba(0, 0, 0, 0.38);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .timer-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     border-color: var(--color-accent-gold);
+    box-shadow: inset 0 2px 8px rgba(255, 215, 0, 0.32), 0 14px 28px rgba(0, 0, 0, 0.45);
+}
+
+.timer-card:last-child {
+    border-color: rgba(255, 215, 0, 0.78);
+    box-shadow: inset 0 2px 8px rgba(255, 215, 0, 0.28), 0 10px 26px rgba(255, 215, 0, 0.16);
 }
 
 .timer-number {
     font-family: var(--font-heading);
-    font-size: clamp(2.5rem, 6vw, 4.4rem);
+    font-size: clamp(2.8rem, 7vw, 5.2rem);
     font-weight: 900;
+    font-variant-numeric: tabular-nums;
     line-height: 1;
     color: #fff;
     background: linear-gradient(180deg, #ffffff 0%, #fff9c4 40%, var(--color-accent-gold) 90%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-bottom: 6px;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.35));
+    margin-bottom: 8px;
 }
 
 .timer-label {
-    font-size: clamp(0.72rem, 1.8vw, 0.88rem);
-    font-weight: 700;
-    letter-spacing: 2px;
+    font-size: clamp(0.76rem, 1.8vw, 0.94rem);
+    font-weight: 800;
+    letter-spacing: 2.5px;
     color: var(--color-accent-gold-light);
     text-transform: uppercase;
 }
@@ -2396,16 +2424,35 @@ body.light-mode .progress-fill {
 /* ==========================================================
    NAVIGATION TABS (SCROLLABLE ON MOBILE - FIXED NO HOVER JUMP)
    ========================================================== */
+/* ==========================================================
+   UNIFIED FEATURES HUB CARD (4 TABS + CONTENT IN ONE BLOCK)
+   ========================================================== */
+.features-hub-card {
+    background: var(--card-bg);
+    border: var(--card-border);
+    border-radius: 28px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
 .nav-tabs-wrapper {
     display: flex;
-    justify-content: flex-start;
+    justify-content: center;
     align-items: center;
     gap: 10px;
-    margin-bottom: 26px;
+    margin-bottom: 0;
     overflow-x: auto;
-    padding: 6px 4px 10px 4px;
+    padding: 14px 20px;
+    background: rgba(0, 0, 0, 0.28);
+    border-bottom: 1.5px solid rgba(255, 215, 0, 0.22);
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
+}
+
+body.light-mode .nav-tabs-wrapper {
+    background: rgba(225, 29, 72, 0.05);
+    border-bottom-color: rgba(225, 29, 72, 0.18);
 }
 
 .nav-tabs-wrapper::-webkit-scrollbar {
@@ -2420,19 +2467,24 @@ body.light-mode .progress-fill {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: var(--card-bg);
-    border: var(--card-border);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1.5px solid rgba(255, 215, 0, 0.25);
     color: var(--color-text-main);
     font-weight: 700;
     font-size: 0.92rem;
-    padding: 10px 18px;
-    border-radius: 30px;
+    padding: 10px 20px;
+    border-radius: 999px;
     cursor: pointer;
     transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
     white-space: nowrap;
     flex-shrink: 0;
     user-select: none;
     box-sizing: border-box;
+}
+
+body.light-mode .nav-tab-btn {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(225, 29, 72, 0.22);
 }
 
 .nav-tab-btn:hover {
@@ -2452,7 +2504,7 @@ body.light-mode .nav-tab-btn:hover {
     background: var(--btn-primary-bg);
     color: var(--btn-primary-color);
     border-color: var(--color-accent-gold);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 /* ==========================================================
@@ -2473,6 +2525,15 @@ body.light-mode .nav-tab-btn:hover {
     box-shadow: var(--card-shadow);
     padding: 28px 24px;
     margin-bottom: 30px;
+}
+
+.features-hub-body .section-card {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    margin-bottom: 0;
+    padding: 26px 24px 28px 24px;
 }
 
 .section-header {
@@ -2568,9 +2629,15 @@ body.light-mode .lixi-stat-highlight {
 
 .lixi-tree-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 20px 16px;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 20px 14px;
     padding: 16px 0;
+}
+
+@media (max-width: 900px) {
+    .lixi-tree-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 .hanging-lixi {
@@ -7056,15 +7123,20 @@ body.light-mode .hd-pill {
         display: none;
     }
 
-    /* 6. Tabs Menu Chức Năng (Cuộn Ngang Mượt Mà Kiểu Ứng Dụng) */
+    /* 6. Tabs Menu Chức Năng (Tích Hợp Trong Khối Thống Nhất) */
+    .features-hub-card {
+        border-radius: 20px;
+        margin-bottom: 24px;
+    }
+
     .nav-tabs-wrapper {
         display: flex;
         overflow-x: auto;
         flex-wrap: nowrap;
         justify-content: flex-start;
         gap: 8px;
-        padding: 4px 4px 12px 4px;
-        margin-bottom: 20px;
+        padding: 10px 12px;
+        margin-bottom: 0;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
     }
@@ -7082,7 +7154,8 @@ body.light-mode .hd-pill {
     }
 
     /* 7. Các Thẻ Chức Năng Chính */
-    .section-card {
+    .section-card,
+    .features-hub-body .section-card {
         padding: 18px 12px;
         border-radius: 20px;
     }
