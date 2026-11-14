@@ -208,7 +208,26 @@ document.addEventListener('DOMContentLoaded', () => {
         'theme-ruou-vang', 'theme-binh-minh', 'theme-tay-bac'
     ];
 
-    const applyTheme = (themeClass) => {
+    const THEME_PRESET_BG_MAP = {
+        'theme-red-gold': 'assets/backgrounds/tet-hoa-dao-bac-bo.svg',
+        'theme-mai-vang': 'assets/backgrounds/tet-hoa-mai-vang.svg',
+        'theme-dao-hong': 'assets/backgrounds/tet-hoa-dao-bac-bo.svg',
+        'theme-dem-giao-thua': 'assets/backgrounds/tet-phao-hoa-giao-thua.svg',
+        'theme-loc-biec': 'assets/backgrounds/tet-ngoc-bich-loc-xuan.svg',
+        'theme-cam-hoi-an': 'assets/backgrounds/tet-den-long-am-ap.svg',
+        'theme-tim-hue': 'assets/backgrounds/tet-phao-hoa-giao-thua.svg',
+        'theme-trang-sen': 'assets/backgrounds/tet-ngoc-bich-loc-xuan.svg',
+        'theme-ho-phach': 'assets/backgrounds/tet-dong-son-hoang-kim.svg',
+        'theme-ngoc-bich': 'assets/backgrounds/tet-ngoc-bich-loc-xuan.svg',
+        'theme-cyber-tet': 'assets/backgrounds/tet-phao-hoa-giao-thua.svg',
+        'theme-gom-su': 'assets/backgrounds/tet-phao-hoa-giao-thua.svg',
+        'theme-hoang-kim': 'assets/backgrounds/tet-hoa-mai-vang.svg',
+        'theme-ruou-vang': 'assets/backgrounds/tet-sum-vay-bep-hong.svg',
+        'theme-binh-minh': 'assets/backgrounds/tet-binh-minh-non-nuoc.svg',
+        'theme-tay-bac': 'assets/backgrounds/tet-hoa-dao-bac-bo.svg'
+    };
+
+    const applyTheme = (themeClass, syncPresetBg = false) => {
         allThemes.forEach(t => document.body.classList.remove(t));
         document.body.classList.add(themeClass);
         if (themeSelect) themeSelect.value = themeClass;
@@ -222,6 +241,16 @@ document.addEventListener('DOMContentLoaded', () => {
             accBadgeTheme.textContent = THEME_DISPLAY_NAMES[themeClass] || 'Giao Diện Tết';
         }
 
+        if (syncPresetBg) {
+            const activeToken = localStorage.getItem('tet-custom-bg-active') || 'none';
+            if (activeToken.startsWith('preset:') && typeof window.selectPresetBgByUrl === 'function') {
+                const matchedPreset = THEME_PRESET_BG_MAP[themeClass];
+                if (matchedPreset) {
+                    window.selectPresetBgByUrl(matchedPreset);
+                }
+            }
+        }
+
         if (window.cardMaker) {
             window.cardMaker.requestSmartRender();
         }
@@ -230,12 +259,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    applyTheme(savedTheme);
+    applyTheme(savedTheme, false);
 
     themeChips.forEach(chip => {
         chip.addEventListener('click', () => {
             const theme = chip.getAttribute('data-theme');
-            applyTheme(theme);
+            applyTheme(theme, true);
             if (window.tetAudio) {
                 window.tetAudio.init();
                 window.tetAudio.playLuckyChime();
@@ -245,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (themeSelect) {
         themeSelect.addEventListener('change', (e) => {
-            applyTheme(e.target.value);
+            applyTheme(e.target.value, true);
             if (window.tetAudio) {
                 window.tetAudio.init();
                 window.tetAudio.playLuckyChime();
@@ -1397,18 +1426,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             customBgImage.style.mixBlendMode = 'normal';
-            const filterParts = [];
-            if (blur > 0) filterParts.push(`blur(${blur}px)`);
-            if (isLightMode && bgTone === 'dark') {
-                filterParts.push('brightness(1.08)', 'saturate(0.95)');
-            }
-            customBgImage.style.filter = filterParts.length ? filterParts.join(' ') : 'none';
+            customBgImage.style.filter = blur > 0 ? `blur(${blur}px)` : 'none';
         }
 
         if (customBgOverlay) {
             if (isLightMode) {
-                const lightAlpha = bgTone === 'dark' ? Math.max(overlay, 22) : overlay;
-                customBgOverlay.style.background = `rgba(255, 248, 245, ${(lightAlpha / 100).toFixed(2)})`;
+                customBgOverlay.style.background = `rgba(255, 248, 245, ${(overlay / 100).toFixed(2)})`;
             } else {
                 customBgOverlay.style.background = `rgba(8, 2, 4, ${(overlay / 100).toFixed(2)})`;
             }
@@ -1422,6 +1445,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.refreshCustomBgTheme = applyBgDisplayStyles;
+    window.selectPresetBgByUrl = (presetUrl) => {
+        const card = Array.from(bgPresetCards).find(c => c.getAttribute('data-preset-url') === presetUrl);
+        if (!card) return;
+        const presetName = card.getAttribute('data-preset-name') || 'Ảnh nền Tết';
+        setActiveCustomBg(presetUrl, presetName, `preset:${presetUrl}`);
+    };
 
     const updateSavedBgActiveUI = (activeId) => {
         if (!savedBgGrid) return;

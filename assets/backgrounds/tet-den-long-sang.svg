@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="hoiAnDay" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffbeb"/>
+      <stop offset="50%" stop-color="#fef3c7"/>
+      <stop offset="100%" stop-color="#fde68a"/>
+    </linearGradient>
+    <radialGradient id="lanternGlowDay" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fde047" stop-opacity="0.65"/>
+      <stop offset="60%" stop-color="#fb923c" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#fb923c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="silkRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb7185"/>
+      <stop offset="55%" stop-color="#e11d48"/>
+      <stop offset="100%" stop-color="#9f1239"/>
+    </linearGradient>
+    <linearGradient id="silkGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="55%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#hoiAnDay)"/>
+  <circle cx="960" cy="240" r="380" fill="url(#lanternGlowDay)" opacity="0.5"/>
+  <!-- Soft sunlit ancient roof silhouette -->
+  <path d="M0,1080 L0,955 Q220,925 420,960 L520,905 Q600,935 680,905 L780,965 Q1120,935 1440,960 L1540,895 Q1620,930 1710,895 L1820,955 L1920,940 L1920,1080 Z" fill="#b45309" opacity="0.18"/>
+  <!-- Left Lanterns -->
+  <g transform="translate(210,0)">
+    <line x1="0" y1="0" x2="0" y2="140" stroke="#b45309" stroke-width="4"/>
+    <circle cx="0" cy="230" r="125" fill="url(#lanternGlowDay)"/>
+    <ellipse cx="0" cy="230" rx="68" ry="82" fill="url(#silkRed)" stroke="#f59e0b" stroke-width="3"/>
+    <ellipse cx="0" cy="230" rx="34" ry="80" fill="none" stroke="#fde047" stroke-width="2" opacity="0.75"/>
+    <rect x="-26" y="140" width="52" height="14" rx="4" fill="#b45309"/>
+    <rect x="-26" y="306" width="52" height="14" rx="4" fill="#b45309"/>
+    <line x1="-10" y1="320" x2="-10" y2="385" stroke="#d97706" stroke-width="3"/>
+    <line x1="0" y1="320" x2="0" y2="400" stroke="#b45309" stroke-width="4"/>
+    <line x1="10" y1="320" x2="10" y2="385" stroke="#d97706" stroke-width="3"/>
+  </g>
+  <g transform="translate(380,0)">
+    <line x1="0" y1="0" x2="0" y2="80" stroke="#b45309" stroke-width="3"/>
+    <circle cx="0" cy="145" r="95" fill="url(#lanternGlowDay)"/>
+    <ellipse cx="0" cy="145" rx="48" ry="58" fill="url(#silkGold)" stroke="#fff7ed" stroke-width="2.5"/>
+    <rect x="-18" y="80" width="36" height="10" rx="3" fill="#92400e"/>
+    <rect x="-18" y="198" width="36" height="10" rx="3" fill="#92400e"/>
+    <line x1="0" y1="208" x2="0" y2="260" stroke="#d97706" stroke-width="3"/>
+  </g>
+  <!-- Right Lanterns -->
+  <g transform="translate(1700,0)">
+    <line x1="0" y1="0" x2="0" y2="155" stroke="#b45309" stroke-width="4"/>
+    <circle cx="0" cy="245" r="130" fill="url(#lanternGlowDay)"/>
+    <ellipse cx="0" cy="245" rx="70" ry="84" fill="url(#silkRed)" stroke="#f59e0b" stroke-width="3"/>
+    <ellipse cx="0" cy="245" rx="36" ry="82" fill="none" stroke="#fde047" stroke-width="2" opacity="0.75"/>
+    <rect x="-28" y="155" width="56" height="14" rx="4" fill="#b45309"/>
+    <rect x="-28" y="324" width="56" height="14" rx="4" fill="#b45309"/>
+    <line x1="-10" y1="338" x2="-10" y2="400" stroke="#d97706" stroke-width="3"/>
+    <line x1="0" y1="338" x2="0" y2="415" stroke="#b45309" stroke-width="4"/>
+    <line x1="10" y1="338" x2="10" y2="400" stroke="#d97706" stroke-width="3"/>
+  </g>
+  <g transform="translate(1530,0)">
+    <line x1="0" y1="0" x2="0" y2="95" stroke="#b45309" stroke-width="3"/>
+    <circle cx="0" cy="160" r="90" fill="url(#lanternGlowDay)"/>
+    <ellipse cx="0" cy="160" rx="46" ry="56" fill="url(#silkGold)" stroke="#fff7ed" stroke-width="2.5"/>
+    <rect x="-18" y="95" width="36" height="10" rx="3" fill="#92400e"/>
+    <rect x="-18" y="210" width="36" height="10" rx="3" fill="#92400e"/>
+    <line x1="0" y1="220" x2="0" y2="275" stroke="#d97706" stroke-width="3"/>
+  </g>
+</svg>

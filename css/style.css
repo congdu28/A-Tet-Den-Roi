@@ -638,20 +638,22 @@ body.light-mode.theme-tay-bac {
 }
 
 body.light-mode .timer-number {
-    background: linear-gradient(180deg, #b91c1c 0%, #e11d48 60%, #991b1b 100%);
+    background: linear-gradient(180deg, var(--color-accent-gold) 0%, var(--color-text-main) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.14));
 }
 
 body.light-mode .main-title {
-    background: linear-gradient(180deg, #991b1b 0%, #e11d48 48%, #b91c1c 100%);
+    background: linear-gradient(180deg, var(--color-text-main) 0%, var(--color-accent-gold) 52%, var(--color-text-main) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     filter:
         drop-shadow(0 1px 2px rgba(255, 255, 255, 0.95))
-        drop-shadow(0 4px 10px rgba(153, 27, 27, 0.35))
-        drop-shadow(0 0 16px rgba(255, 215, 0, 0.45));
+        drop-shadow(0 4px 10px rgba(0, 0, 0, 0.22))
+        drop-shadow(0 0 14px rgba(255, 215, 0, 0.35));
     animation: none;
 }
 
@@ -1060,15 +1062,15 @@ body.light-mode .bg-marquee-text-input {
 }
 
 .top-nav-bar.is-scrolled {
-    background: rgba(24, 4, 4, 0.94);
-    border-color: rgba(255, 215, 0, 0.65);
+    background: var(--card-bg);
+    border-color: var(--color-accent-gold);
     box-shadow: 0 10px 26px rgba(0, 0, 0, 0.65);
 }
 
 body.light-mode .top-nav-bar.is-scrolled {
     background: rgba(255, 255, 255, 0.96);
-    border-color: rgba(225, 29, 72, 0.45);
-    box-shadow: 0 8px 22px rgba(185, 28, 28, 0.16);
+    border-color: var(--color-accent-gold);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14);
 }
 
 .brand-badge-wrap {
@@ -2044,12 +2046,13 @@ body.light-mode .mascot-speech-bubble::after {
 }
 
 body.light-mode .countdown-container {
-    border-color: rgba(225, 29, 72, 0.42);
-    box-shadow: var(--card-shadow), 0 12px 36px rgba(225, 29, 72, 0.14);
+    border-color: var(--color-accent-gold);
+    box-shadow: var(--card-shadow), 0 12px 32px rgba(0, 0, 0, 0.1);
 }
 
 body.light-mode .countdown-container::before {
-    background: linear-gradient(90deg, transparent, #e11d48, #f59e0b, #e11d48, transparent);
+    background: var(--btn-primary-bg);
+    opacity: 0.9;
 }
 
 /* Real-time Clock & Solar-Lunar Date Strip (Đồng nhất kích thước hoàn hảo) */
@@ -4488,6 +4491,16 @@ body.light-mode .btn-sub-action:hover {
     background: var(--badge-bg);
     color: var(--color-accent-gold);
     border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+body.light-mode .milestone-card {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode .milestone-badge {
+    border-color: var(--color-accent-gold);
 }
 
 /* ==========================================================

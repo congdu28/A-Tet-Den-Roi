@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="hearthDay" cx="50%" cy="62%" r="75%">
+      <stop offset="0%" stop-color="#fff7ed"/>
+      <stop offset="45%" stop-color="#ffedd5"/>
+      <stop offset="100%" stop-color="#fdba74"/>
+    </radialGradient>
+    <radialGradient id="warmCenter" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.75"/>
+      <stop offset="55%" stop-color="#fb923c" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#fb923c" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#hearthDay)"/>
+  <circle cx="960" cy="820" r="460" fill="url(#warmCenter)" opacity="0.65"/>
+  <g stroke="#c2410c" stroke-width="12" opacity="0.14">
+    <line x1="160" y1="0" x2="160" y2="1080"/>
+    <line x1="1760" y1="0" x2="1760" y2="1080"/>
+    <line x1="0" y1="160" x2="1920" y2="160"/>
+    <line x1="0" y1="920" x2="1920" y2="920"/>
+  </g>
+  <g fill="#f97316" opacity="0.32">
+    <circle cx="320" cy="780" r="7"/><circle cx="480" cy="640" r="5"/><circle cx="660" cy="820" r="8"/>
+    <circle cx="810" cy="520" r="5.5"/><circle cx="960" cy="690" r="9"/><circle cx="1110" cy="480" r="5"/>
+    <circle cx="1280" cy="760" r="7.5"/><circle cx="1460" cy="610" r="6"/><circle cx="1620" cy="830" r="8"/>
+  </g>
+</svg>
