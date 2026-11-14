@@ -66,6 +66,7 @@ class TetCountdown {
             seconds: document.getElementById('count-seconds'),
             millis: document.getElementById('count-millis'),
             progressBar: document.getElementById('year-progress-bar'),
+            headerProgressBar: document.getElementById('header-progress-bar'),
             progressText: document.getElementById('year-progress-text'),
             celebrationBanner: document.getElementById('celebration-banner'),
             countdownBox: document.getElementById('countdown-main-box'),
@@ -209,12 +210,18 @@ class TetCountdown {
         if (this.elements.progressBar) {
             this.elements.progressBar.style.width = `${percent}%`;
         }
+        if (this.elements.headerProgressBar) {
+            this.elements.headerProgressBar.style.width = `${percent}%`;
+        }
         if (this.elements.progressText) {
             this.elements.progressText.textContent = `Hành trình năm cũ tới Tết Đinh Mùi: ${percent}%`;
         }
     }
 
     handleTetArrived() {
+        if (this.elements.headerProgressBar) {
+            this.elements.headerProgressBar.style.width = '100%';
+        }
         if (this.elements.countdownBox) {
             this.elements.countdownBox.classList.add('hidden');
         }
