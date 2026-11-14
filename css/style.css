@@ -3656,6 +3656,8 @@ body.light-mode .font-slider-label span:last-child {
     background: rgba(255, 215, 0, 0.05);
     border: 1px solid rgba(255, 215, 0, 0.2);
     margin-top: 14px;
+    cursor: pointer;
+    user-select: none;
 }
 
 body.light-mode .card-toggle-row {
@@ -5291,9 +5293,14 @@ body.light-mode .ambient-toggle-item:hover {
 }
 
 .switch-control input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
     opacity: 0;
-    width: 0;
-    height: 0;
+    cursor: pointer;
+    z-index: 2;
 }
 
 .switch-slider {

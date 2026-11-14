@@ -230,13 +230,27 @@ class CardMaker {
 
     bindEvents() {
         const updateEvents = ['input', 'change'];
-        [this.senderInput, this.recipientInput, this.titleInput, this.headerInput, this.sealInput, this.fontSelect, this.themeSelect, this.patternSelect].forEach(elem => {
+        [this.senderInput, this.recipientInput, this.titleInput, this.headerInput, this.sealInput, this.themeSelect, this.patternSelect].forEach(elem => {
             if (elem) {
                 updateEvents.forEach(evt => elem.addEventListener(evt, () => this.scheduleRender()));
             }
         });
 
-        // Text Color Chips
+        if (this.fontSelect) {
+            this.fontSelect.addEventListener('change', () => {
+                const fontName = this.fontSelect.value;
+                if (document.fonts && typeof document.fonts.load === 'function' && fontName) {
+                    Promise.all([
+                        document.fonts.load(`600 18px "${fontName}"`),
+                        document.fonts.load(`700 42px "${fontName}"`)
+                    ]).then(() => this.scheduleRender()).catch(() => this.scheduleRender());
+                }
+                this.scheduleRender();
+                if (window.tetAudio) window.tetAudio.playLuckyChime();
+            });
+        }
+
+        // Text Color Chips (scoped strictly to #card-text-color-chips)
         const textColorChips = document.querySelectorAll('#card-text-color-chips .card-theme-chip');
         textColorChips.forEach(chip => {
             chip.addEventListener('click', () => {
@@ -244,10 +258,11 @@ class CardMaker {
                 chip.classList.add('active');
                 this.selectedTextColor = chip.dataset.textColor || 'gold-cream';
                 this.scheduleRender();
+                if (window.tetAudio) window.tetAudio.playLuckyChime();
             });
         });
 
-        // Wish Alignment Chips
+        // Wish Alignment Chips (scoped strictly to #card-align-chips)
         const alignChips = document.querySelectorAll('#card-align-chips .card-frame-chip');
         alignChips.forEach(chip => {
             chip.addEventListener('click', () => {
@@ -255,6 +270,7 @@ class CardMaker {
                 chip.classList.add('active');
                 this.wishAlign = chip.dataset.align || 'center';
                 this.scheduleRender();
+                if (window.tetAudio) window.tetAudio.playLuckyChime();
             });
         });
 
@@ -305,8 +321,8 @@ class CardMaker {
             });
         });
 
-        // 3. Theme Visual Chips
-        const cardThemeChips = document.querySelectorAll('.card-theme-chip');
+        // 3. Theme Visual Chips (scoped strictly to #card-theme-chips)
+        const cardThemeChips = document.querySelectorAll('#card-theme-chips .card-theme-chip');
         cardThemeChips.forEach(chip => {
             chip.addEventListener('click', () => {
                 cardThemeChips.forEach(c => c.classList.remove('active'));
@@ -318,8 +334,8 @@ class CardMaker {
             });
         });
 
-        // 4. Frame Style Chips (NEW)
-        const frameChips = document.querySelectorAll('.card-frame-chip');
+        // 4. Frame Style Chips (scoped strictly to #card-frame-selector)
+        const frameChips = document.querySelectorAll('#card-frame-selector .card-frame-chip');
         frameChips.forEach(chip => {
             chip.addEventListener('click', () => {
                 frameChips.forEach(c => c.classList.remove('active'));
@@ -1177,9 +1193,11 @@ class CardMaker {
 
     getCardFontFamily() {
         const name = (this.fontSelect && this.fontSelect.value) || 'Playfair Display';
-        if (name === 'Dancing Script') return `'Dancing Script', cursive, serif`;
-        if (name === 'Montserrat' || name === 'Plus Jakarta Sans') return `'${name}', sans-serif`;
-        return `'${name}', Georgia, serif`;
+        const cursiveFonts = new Set(['Dancing Script', 'Charm', 'Pacifico', 'Mali', 'Patrick Hand']);
+        const sansFonts = new Set(['Montserrat', 'Plus Jakarta Sans', 'Be Vietnam Pro', 'Quicksand', 'Nunito', 'Josefin Sans']);
+        if (cursiveFonts.has(name)) return `"${name}", "Dancing Script", cursive, serif`;
+        if (sansFonts.has(name)) return `"${name}", "Be Vietnam Pro", sans-serif`;
+        return `"${name}", "Playfair Display", Georgia, serif`;
     }
 
     getTextPalette() {
@@ -1252,14 +1270,38 @@ class CardMaker {
         ctx.restore();
     }
 
-    renderBodyWish(ctx, W, innerPad, font, wish, bodyCenterY, sideMargin, colors) {
+    renderBodyWish(ctx, W, innerPad, font, wish, bodyMinTop, bodyMaxBottom, sideMargin, colors) {
         const maxWidth = W - innerPad * 2 - sideMargin;
-        ctx.font = `${this.wishFontSize}px ${font}`;
-        const lines = this.getWrappedLines(ctx, wish, maxWidth);
-        const lineHeight = Math.round(this.wishFontSize * 1.56);
+        const availH = Math.max(80, bodyMaxBottom - bodyMinTop);
+
+        let effectiveSize = this.wishFontSize;
+        let lineRatio = 1.66;
+        let lines = [];
+        let lineHeight = Math.round(effectiveSize * lineRatio);
+
+        // Fit cleanly inside the safe vertical corridor without clipping or overlapping header/footer
+        while (true) {
+            ctx.font = `${effectiveSize}px ${font}`;
+            lines = this.getWrappedLines(ctx, wish, maxWidth);
+            lineHeight = Math.round(effectiveSize * lineRatio);
+            const totalH = lines.length * lineHeight;
+
+            if (totalH <= availH || effectiveSize <= 12) {
+                break;
+            }
+            if (lineRatio > 1.46 && totalH * 0.9 <= availH) {
+                lineRatio = Math.max(1.44, lineRatio - 0.1);
+            } else {
+                effectiveSize = Math.max(12, effectiveSize - 0.5);
+                if (effectiveSize <= 14 && lineRatio > 1.44) {
+                    lineRatio = Math.max(1.44, lineRatio - 0.08);
+                }
+            }
+        }
 
         const totalHeight = lines.length * lineHeight;
-        const startY = bodyCenterY - (totalHeight / 2) + Math.round(lineHeight / 2);
+        const bodyCenterY = (bodyMinTop + bodyMaxBottom) / 2;
+        const startY = bodyCenterY - (totalHeight / 2) + Math.round(lineHeight * 0.52);
 
         const align = this.wishAlign || 'center';
         let textX = W / 2;
@@ -1268,7 +1310,9 @@ class CardMaker {
 
         ctx.save();
         ctx.textAlign = align;
+        ctx.textBaseline = 'middle';
         ctx.fillStyle = colors.body;
+        ctx.font = `${effectiveSize}px ${font}`;
         lines.forEach((line, idx) => {
             ctx.fillText(line, textX, startY + idx * lineHeight);
         });
@@ -1282,12 +1326,13 @@ class CardMaker {
         const colors = this.getTextPalette();
         const headerText = (this.headerInput && this.headerInput.value.trim()) || '🌸 XUÂN ĐINH MÙI 2027 • TÂN NIÊN ĐẠI CÁT 🌸';
         const titleText = (this.titleInput && this.titleInput.value.trim()) || 'CHÚC MỪNG NĂM MỚI';
+        const safeTextW = W - innerPad * 2 - 48;
         ctx.textAlign = 'center';
 
         // 1. Header Banner
         ctx.fillStyle = colors.header;
         ctx.font = `bold 15px ${font}`;
-        ctx.fillText(headerText, W / 2, 90);
+        ctx.fillText(headerText, W / 2, 86, safeTextW);
 
         // 2. Main Title (Gradient with shadow)
         const titleGrad = ctx.createLinearGradient(W / 2 - 250, 0, W / 2 + 250, 0);
@@ -1299,33 +1344,46 @@ class CardMaker {
         ctx.shadowColor = colors.titleShadow;
         ctx.shadowBlur = 12;
         ctx.shadowOffsetY = 4;
-        ctx.fillText(titleText, W / 2, 146, W - innerPad * 2 - 40);
+        ctx.fillText(titleText, W / 2, 142, safeTextW);
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 0;
 
         // 3. Subtitle / Motto
         ctx.fillStyle = colors.subtitle;
         ctx.font = `italic 14px ${font}`;
-        ctx.fillText('~ Vạn Sự Như Ý • An Khang Thịnh Vượng • Phú Quý Cát Tường ~', W / 2, 180);
+        ctx.fillText('~ Vạn Sự Như Ý • An Khang Thịnh Vượng • Phú Quý Cát Tường ~', W / 2, 176, safeTextW);
 
         // Gold divider ribbon
-        this.drawDivider(ctx, W / 2, 204, 380);
+        const divY = 200;
+        this.drawDivider(ctx, W / 2, divY, 380);
 
         // 4. Central Motif Stamp
-        this.drawMotifStamp(ctx, this.selectedMotif, W / 2, 248, 0.88);
+        const motifY = 242;
+        const motifScale = 0.85;
+        this.drawMotifStamp(ctx, this.selectedMotif, W / 2, motifY, motifScale);
+        const motifBottom = this.selectedMotif === 'none' ? divY + 12 : motifY + Math.round(32 * motifScale);
 
-        // 5. Recipient Name Header
+        // 5. Recipient Name Header (adaptive clearance below motif/divider)
+        const recipientY = Math.max(
+            this.selectedMotif === 'none' ? 268 : 316,
+            motifBottom + 24 + Math.round(this.recipientFontSize * 0.85)
+        );
         ctx.fillStyle = colors.recipient;
         ctx.font = `bold ${this.recipientFontSize}px ${font}`;
-        ctx.fillText(`Kính gửi: ${recipient}`, W / 2, 332);
+        ctx.fillText(`Kính gửi: ${recipient}`, W / 2, recipientY, safeTextW);
 
-        // 6. Dynamic Body Wishes
-        this.renderBodyWish(ctx, W, innerPad, font, wish, 416, 80, colors);
+        // 6. Dynamic Body Wishes bounded cleanly between recipient & footer
+        const footerY = H - innerPad - 26;
+        const senderTop = footerY - Math.round(this.senderFontSize * 1.34) - 20;
+        const sealTop = this.showSeal ? (footerY - 62) : (footerY - 20);
+        const bodyMinTop = recipientY + Math.max(24, Math.round(this.recipientFontSize * 0.62));
+        const bodyMaxBottom = Math.min(senderTop, sealTop) - 18;
+        this.renderBodyWish(ctx, W, innerPad, font, wish, bodyMinTop, bodyMaxBottom, 88, colors);
 
         // 7. Footer: Imperial Seal (Left) & Right-Aligned Sender Sign-off
-        const footerY = H - innerPad - 28;
         if (this.showSeal) this.drawSealStamp(ctx, innerPad + 28, footerY - 58);
-        this.drawSender(ctx, W - innerPad - 35, footerY, font, sender, this.senderFontSize, colors);
+        const senderMaxW = W - innerPad * 2 - (this.showSeal ? 152 : 64);
+        this.drawSender(ctx, W - innerPad - 35, footerY, font, sender, this.senderFontSize, colors, senderMaxW);
     }
 
     /**
@@ -1335,12 +1393,13 @@ class CardMaker {
         const colors = this.getTextPalette();
         const headerText = (this.headerInput && this.headerInput.value.trim()) || '🌸 XUÂN ĐINH MÙI 2027 • TÂN NIÊN ĐẠI CÁT 🌸';
         const titleText = (this.titleInput && this.titleInput.value.trim()) || 'CHÚC MỪNG NĂM MỚI';
+        const safeTextW = W - innerPad * 2 - 56;
         ctx.textAlign = 'center';
 
         // 1. Header Banner
         ctx.fillStyle = colors.header;
         ctx.font = `bold 14px ${font}`;
-        ctx.fillText(headerText, W / 2, 78);
+        ctx.fillText(headerText, W / 2, 72, safeTextW);
 
         // 2. Main Title
         const titleGrad = ctx.createLinearGradient(W / 2 - 250, 0, W / 2 + 250, 0);
@@ -1348,36 +1407,49 @@ class CardMaker {
         titleGrad.addColorStop(0.5, colors.titleStops[1]);
         titleGrad.addColorStop(1, colors.titleStops[2]);
         ctx.fillStyle = titleGrad;
-        ctx.font = `900 42px ${font}`;
+        ctx.font = `900 40px ${font}`;
         ctx.shadowColor = colors.titleShadow;
         ctx.shadowBlur = 12;
         ctx.shadowOffsetY = 4;
-        ctx.fillText(titleText, W / 2, 130, W - innerPad * 2 - 40);
+        ctx.fillText(titleText, W / 2, 122, safeTextW);
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 0;
 
         // 3. Subtitle / Motto
         ctx.fillStyle = colors.subtitle;
         ctx.font = `italic 13.5px ${font}`;
-        ctx.fillText('~ Vạn Sự Như Ý • An Khang Thịnh Vượng • Phú Quý Vinh Hoa ~', W / 2, 162);
+        ctx.fillText('~ Vạn Sự Như Ý • An Khang Thịnh Vượng • Phú Quý Vinh Hoa ~', W / 2, 152, safeTextW);
 
-        this.drawDivider(ctx, W / 2, 184, 460);
+        const divY = 172;
+        this.drawDivider(ctx, W / 2, divY, 460);
 
-        // 4. Central Motif Stamp
-        this.drawMotifStamp(ctx, this.selectedMotif, W / 2, 226, 0.82);
+        // 4. Compact Central Motif Stamp so horizontal 16:9 maintains generous vertical spacing
+        const motifY = 208;
+        const motifScale = 0.74;
+        this.drawMotifStamp(ctx, this.selectedMotif, W / 2, motifY, motifScale);
+        const motifBottom = this.selectedMotif === 'none' ? divY + 12 : motifY + Math.round(32 * motifScale);
 
-        // 5. Recipient Name Header
+        // 5. Recipient Name Header with dynamic clearance
+        const recipientY = Math.max(
+            this.selectedMotif === 'none' ? 236 : 276,
+            motifBottom + 22 + Math.round(this.recipientFontSize * 0.85)
+        );
         ctx.fillStyle = colors.recipient;
         ctx.font = `bold ${this.recipientFontSize}px ${font}`;
-        ctx.fillText(`Kính gửi: ${recipient}`, W / 2, 304);
+        ctx.fillText(`Kính gửi: ${recipient}`, W / 2, recipientY, safeTextW);
 
-        // 6. Dynamic Body Wishes
-        this.renderBodyWish(ctx, W, innerPad, font, wish, 384, 120, colors);
+        // 6. Airy Dynamic Body Wishes bounded cleanly away from Recipient & Footer
+        const footerY = H - innerPad - 22;
+        const senderTop = footerY - Math.round(this.senderFontSize * 1.34) - 18;
+        const sealTop = this.showSeal ? (footerY - 62) : (footerY - 18);
+        const bodyMinTop = recipientY + Math.max(22, Math.round(this.recipientFontSize * 0.62));
+        const bodyMaxBottom = Math.min(senderTop, sealTop) - 16;
+        this.renderBodyWish(ctx, W, innerPad, font, wish, bodyMinTop, bodyMaxBottom, 130, colors);
 
         // 7. Footer: Imperial Seal (Left) & Right-Aligned Sender Sign-off
-        const footerY = H - innerPad - 24;
-        if (this.showSeal) this.drawSealStamp(ctx, innerPad + 32, footerY - 56);
-        this.drawSender(ctx, W - innerPad - 40, footerY, font, sender, this.senderFontSize, colors);
+        if (this.showSeal) this.drawSealStamp(ctx, innerPad + 32, footerY - 58);
+        const senderMaxW = W - innerPad * 2 - (this.showSeal ? 160 : 72);
+        this.drawSender(ctx, W - innerPad - 40, footerY, font, sender, this.senderFontSize, colors, senderMaxW);
     }
 
     /**
@@ -1387,12 +1459,13 @@ class CardMaker {
         const colors = this.getTextPalette();
         const headerText = (this.headerInput && this.headerInput.value.trim()) || '🌸 XUÂN ĐINH MÙI 2027 🌸';
         const titleText = (this.titleInput && this.titleInput.value.trim()) || 'CHÚC MỪNG NĂM MỚI';
+        const safeTextW = W - innerPad * 2 - 48;
         ctx.textAlign = 'center';
 
         // 1. Header Banner
         ctx.fillStyle = colors.header;
         ctx.font = `bold 16px ${font}`;
-        ctx.fillText(headerText, W / 2, 110);
+        ctx.fillText(headerText, W / 2, 108, safeTextW);
 
         // 2. Main Title
         const titleGrad = ctx.createLinearGradient(W / 2 - 250, 0, W / 2 + 250, 0);
@@ -1404,32 +1477,45 @@ class CardMaker {
         ctx.shadowColor = colors.titleShadow;
         ctx.shadowBlur = 12;
         ctx.shadowOffsetY = 4;
-        ctx.fillText(titleText, W / 2, 175, W - innerPad * 2 - 40);
+        ctx.fillText(titleText, W / 2, 174, safeTextW);
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 0;
 
         // 3. Subtitle / Motto
         ctx.fillStyle = colors.subtitle;
         ctx.font = `italic 15px ${font}`;
-        ctx.fillText('~ Vạn Sự Như Ý • An Khang Thịnh Vượng • Cát Tường Như Ý ~', W / 2, 214);
+        ctx.fillText('~ Vạn Sự Như Ý • An Khang Thịnh Vượng • Cát Tường Như Ý ~', W / 2, 212, safeTextW);
 
-        this.drawDivider(ctx, W / 2, 242, 420);
+        const divY = 240;
+        this.drawDivider(ctx, W / 2, divY, 420);
 
         // 4. Central Motif Stamp
-        this.drawMotifStamp(ctx, this.selectedMotif, W / 2, 302, 1.0);
+        const motifY = 298;
+        const motifScale = 1.0;
+        this.drawMotifStamp(ctx, this.selectedMotif, W / 2, motifY, motifScale);
+        const motifBottom = this.selectedMotif === 'none' ? divY + 14 : motifY + Math.round(32 * motifScale);
 
         // 5. Recipient Name Header
+        const recipientY = Math.max(
+            this.selectedMotif === 'none' ? 320 : 398,
+            motifBottom + 32 + Math.round(this.recipientFontSize * 0.85)
+        );
         ctx.fillStyle = colors.recipient;
         ctx.font = `bold ${this.recipientFontSize}px ${font}`;
-        ctx.fillText(`Kính gửi: ${recipient}`, W / 2, 410);
+        ctx.fillText(`Kính gửi: ${recipient}`, W / 2, recipientY, safeTextW);
 
         // 6. Dynamic Body Wishes
-        this.renderBodyWish(ctx, W, innerPad, font, wish, 530, 80, colors);
+        const footerY = H - innerPad - 32;
+        const senderTop = footerY - Math.round(this.senderFontSize * 1.34) - 24;
+        const sealTop = this.showSeal ? (footerY - 64) : (footerY - 24);
+        const bodyMinTop = recipientY + Math.max(28, Math.round(this.recipientFontSize * 0.7));
+        const bodyMaxBottom = Math.min(senderTop, sealTop) - 22;
+        this.renderBodyWish(ctx, W, innerPad, font, wish, bodyMinTop, bodyMaxBottom, 92, colors);
 
         // 7. Footer: Imperial Seal (Left) & Right-Aligned Sender Sign-off
-        const footerY = H - innerPad - 32;
         if (this.showSeal) this.drawSealStamp(ctx, innerPad + 32, footerY - 58);
-        this.drawSender(ctx, W - innerPad - 40, footerY, font, sender, this.senderFontSize, colors);
+        const senderMaxW = W - innerPad * 2 - (this.showSeal ? 156 : 72);
+        this.drawSender(ctx, W - innerPad - 40, footerY, font, sender, this.senderFontSize, colors, senderMaxW);
     }
 
     /**
@@ -1439,12 +1525,13 @@ class CardMaker {
         const colors = this.getTextPalette();
         const headerText = (this.headerInput && this.headerInput.value.trim()) || '🌸 XUÂN ĐINH MÙI 2027 🌸';
         const titleText = (this.titleInput && this.titleInput.value.trim()) || 'CHÚC MỪNG NĂM MỚI';
+        const safeTextW = W - innerPad * 2 - 40;
         ctx.textAlign = 'center';
 
         // 1. Header Banner
         ctx.fillStyle = colors.header;
         ctx.font = `bold 15px ${font}`;
-        ctx.fillText(headerText, W / 2, 130);
+        ctx.fillText(headerText, W / 2, 128, safeTextW);
 
         // 2. Main Title
         const titleGrad = ctx.createLinearGradient(W / 2 - 200, 0, W / 2 + 200, 0);
@@ -1457,10 +1544,10 @@ class CardMaker {
         ctx.shadowBlur = 12;
         ctx.shadowOffsetY = 4;
         if (titleText === 'CHÚC MỪNG NĂM MỚI') {
-            ctx.fillText('CHÚC MỪNG', W / 2, 195);
-            ctx.fillText('NĂM MỚI', W / 2, 245);
+            ctx.fillText('CHÚC MỪNG', W / 2, 192, safeTextW);
+            ctx.fillText('NĂM MỚI', W / 2, 244, safeTextW);
         } else {
-            ctx.fillText(titleText, W / 2, 222, W - innerPad * 2 - 36);
+            ctx.fillText(titleText, W / 2, 220, safeTextW);
         }
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 0;
@@ -1468,25 +1555,38 @@ class CardMaker {
         // 3. Subtitle / Motto
         ctx.fillStyle = colors.subtitle;
         ctx.font = `italic 14px ${font}`;
-        ctx.fillText('~ Vạn Sự Như Ý • An Khang Thịnh Vượng ~', W / 2, 288);
+        ctx.fillText('~ Vạn Sự Như Ý • An Khang Thịnh Vượng ~', W / 2, 286, safeTextW);
 
-        this.drawDivider(ctx, W / 2, 318, 300);
+        const divY = 316;
+        this.drawDivider(ctx, W / 2, divY, 300);
 
         // 4. Central Motif Stamp
-        this.drawMotifStamp(ctx, this.selectedMotif, W / 2, 388, 1.05);
+        const motifY = 384;
+        const motifScale = 1.05;
+        this.drawMotifStamp(ctx, this.selectedMotif, W / 2, motifY, motifScale);
+        const motifBottom = this.selectedMotif === 'none' ? divY + 18 : motifY + Math.round(32 * motifScale);
 
         // 5. Recipient Name Header
+        const recipientY = Math.max(
+            this.selectedMotif === 'none' ? 390 : 495,
+            motifBottom + 36 + Math.round(this.recipientFontSize * 0.85)
+        );
         ctx.fillStyle = colors.recipient;
         ctx.font = `bold ${this.recipientFontSize}px ${font}`;
-        ctx.fillText(`Kính gửi: ${recipient}`, W / 2, 510);
+        ctx.fillText(`Kính gửi: ${recipient}`, W / 2, recipientY, safeTextW);
 
         // 6. Dynamic Body Wishes
-        this.renderBodyWish(ctx, W, innerPad, font, wish, 650, 40, colors);
+        const footerY = H - innerPad - 40;
+        const senderTop = footerY - Math.round(this.senderFontSize * 1.34) - 26;
+        const sealTop = this.showSeal ? (footerY - 64) : (footerY - 26);
+        const bodyMinTop = recipientY + Math.max(30, Math.round(this.recipientFontSize * 0.72));
+        const bodyMaxBottom = Math.min(senderTop, sealTop) - 26;
+        this.renderBodyWish(ctx, W, innerPad, font, wish, bodyMinTop, bodyMaxBottom, 52, colors);
 
         // 7. Footer: Imperial Seal (Left) & Right-Aligned Sender Sign-off
-        const footerY = H - innerPad - 40;
         if (this.showSeal) this.drawSealStamp(ctx, innerPad + 24, footerY - 58);
-        this.drawSender(ctx, W - innerPad - 30, footerY, font, sender, this.senderFontSize, colors);
+        const senderMaxW = W - innerPad * 2 - (this.showSeal ? 142 : 56);
+        this.drawSender(ctx, W - innerPad - 30, footerY, font, sender, this.senderFontSize, colors, senderMaxW);
     }
 
     drawDivider(ctx, cx, cy, width) {
@@ -1511,17 +1611,17 @@ class CardMaker {
         ctx.restore();
     }
 
-    drawSender(ctx, rightX, baseY, font, sender, fontSize = this.senderFontSize, colors = this.getTextPalette()) {
+    drawSender(ctx, rightX, baseY, font, sender, fontSize = this.senderFontSize, colors = this.getTextPalette(), maxWidth = 360) {
         ctx.save();
         ctx.textAlign = 'right';
 
         ctx.fillStyle = colors.senderLabel;
         ctx.font = `italic ${Math.max(12, Math.round(fontSize * 0.67))}px ${font}`;
-        ctx.fillText('Thân chúc,', rightX, baseY - Math.round(fontSize * 1.24));
+        ctx.fillText('Thân chúc,', rightX, baseY - Math.round(fontSize * 1.32));
 
         ctx.fillStyle = colors.senderName;
         ctx.font = `bold ${fontSize}px ${font}`;
-        ctx.fillText(sender, rightX, baseY);
+        ctx.fillText(sender, rightX, baseY, maxWidth);
         ctx.restore();
     }
 
@@ -1696,17 +1796,17 @@ class CardMaker {
         ctx.fillText(icon, 0, 0);
         ctx.shadowBlur = 0;
 
-        // Subtitle badge under icon
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-        const textWidth = ctx.measureText(subText).width * 0.4 + 28;
+        // Subtitle badge under icon (measure with actual 11px font)
+        ctx.font = 'bold 11px "Be Vietnam Pro", sans-serif';
+        const textWidth = ctx.measureText(subText).width + 26;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.48)';
         ctx.fillRect(-textWidth / 2, 10, textWidth, 20);
 
-        ctx.strokeStyle = 'rgba(255, 215, 0, 0.5)';
+        ctx.strokeStyle = 'rgba(255, 215, 0, 0.55)';
         ctx.lineWidth = 1;
         ctx.strokeRect(-textWidth / 2, 10, textWidth, 20);
 
         ctx.fillStyle = '#FFD54F';
-        ctx.font = 'bold 11px sans-serif';
         ctx.fillText(subText, 0, 24);
 
         ctx.restore();
@@ -1765,9 +1865,15 @@ class CardMaker {
 
         const text = `🌸 CHÚC MỪNG NĂM MỚI 2027 - ĐINH MÙI 🌸\n\nKính gửi: ${recipient}\n${wish}\n\nThân chúc,\n${sender}`;
 
-        navigator.clipboard.writeText(text).then(() => {
-            this.showToastMessage('📋 Đã sao chép toàn bộ lời chúc Tết vào bộ nhớ tạm!', 2500);
-        });
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+            navigator.clipboard.writeText(text).then(() => {
+                this.showToastMessage('📋 Đã sao chép toàn bộ lời chúc Tết vào bộ nhớ tạm!', 2500);
+            }).catch(() => {
+                this.showToastMessage('⚠️ Trình duyệt không cho phép sao chép tự động, hãy bôi đen và copy thủ công.', 3000);
+            });
+        } else {
+            this.showToastMessage('⚠️ Trình duyệt không hỗ trợ sao chép tự động.', 2800);
+        }
     }
 }
 
