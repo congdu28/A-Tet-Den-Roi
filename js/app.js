@@ -1395,6 +1395,30 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'custom';
     };
 
+    const ALLOWED_BG_MIMES = new Set([
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/gif',
+        'image/avif'
+    ]);
+
+    const isSafeExternalBgUrl = (rawUrl) => {
+        if (!rawUrl || typeof rawUrl !== 'string') return false;
+        const trimmed = rawUrl.trim();
+        if (/^data:image\/(?:png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(trimmed)) {
+            return true;
+        }
+        try {
+            const parsed = new URL(trimmed);
+            return parsed.protocol === 'https:';
+        } catch {
+            return false;
+        }
+    };
+
+    const escapeCssUrl = (url) => String(url || '').replace(/[\r\n"\\()]/g, '\\$&');
+
     const applyBgDisplayStyles = () => {
         const fit = localStorage.getItem(BG_KEY_FIT) || 'cover';
         const overlay = Math.max(0, Math.min(85, parseInt(localStorage.getItem(BG_KEY_OVERLAY) ?? '15', 10) || 0));
@@ -1411,7 +1435,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.querySelector(`.bg-preset-card[data-preset-url="${canonicalUrl.replace(/"/g, '\\"')}"]`);
             const modeUrl = resolvePresetImageUrl(card, canonicalUrl);
             if (modeUrl) {
-                customBgImage.style.backgroundImage = `url("${modeUrl.replace(/"/g, '\\"')}")`;
+                customBgImage.style.backgroundImage = `url("${escapeCssUrl(modeUrl)}")`;
                 if (bgPreviewThumb) bgPreviewThumb.src = modeUrl;
             }
         }
@@ -1492,7 +1516,7 @@ document.addEventListener('DOMContentLoaded', () => {
             displayUrl = resolvePresetImageUrl(card, url);
         }
 
-        customBgImage.style.backgroundImage = `url("${displayUrl.replace(/"/g, '\\"')}")`;
+        customBgImage.style.backgroundImage = `url("${escapeCssUrl(displayUrl)}")`;
         customBgLayer.classList.remove('hidden');
 
         if (bgPreviewThumb) bgPreviewThumb.src = displayUrl;
@@ -1588,7 +1612,9 @@ document.addEventListener('DOMContentLoaded', () => {
             bgFileInput.value = '';
             if (!file) return;
 
-            if (!file.type.startsWith('image/')) {
+            const isSvgFile = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name);
+            const isAllowedMime = ALLOWED_BG_MIMES.has(file.type) || (!file.type && /\.(jpe?g|png|webp|gif|avif)$/i.test(file.name));
+            if (isSvgFile || !isAllowedMime) {
                 showToast('⚠️ Vui lòng chọn tệp hình ảnh hợp lệ (JPG, PNG, WEBP, GIF).');
                 return;
             }
@@ -1625,12 +1651,13 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('⚠️ Vui lòng nhập đường dẫn (URL) hình ảnh.');
             return;
         }
-        if (!/^https?:\/\/|^data:image\//i.test(rawUrl)) {
-            showToast('⚠️ Đường dẫn ảnh phải bắt đầu bằng https:// hoặc http://');
+        if (!isSafeExternalBgUrl(rawUrl)) {
+            showToast('⚠️ Vì lý do bảo mật, đường dẫn ảnh phải bắt đầu bằng https://');
             return;
         }
 
         const testImg = new Image();
+        testImg.referrerPolicy = 'no-referrer';
         testImg.onload = () => {
             setActiveCustomBg(rawUrl, 'Ảnh nền từ liên kết URL', `url:${rawUrl}`);
             if (window.tetAudio) {
@@ -1725,8 +1752,12 @@ document.addEventListener('DOMContentLoaded', () => {
         setActiveCustomBg(presetUrl, presetName, initialBgToken);
     } else if (initialBgToken && initialBgToken.startsWith('url:')) {
         const savedUrl = initialBgToken.slice(4);
-        if (bgUrlInput) bgUrlInput.value = savedUrl;
-        setActiveCustomBg(savedUrl, 'Ảnh nền từ liên kết URL', initialBgToken);
+        if (isSafeExternalBgUrl(savedUrl)) {
+            if (bgUrlInput) bgUrlInput.value = savedUrl;
+            setActiveCustomBg(savedUrl, 'Ảnh nền từ liên kết URL', initialBgToken);
+        } else {
+            setActiveCustomBg(DEFAULT_PRESET_BG_URL, DEFAULT_PRESET_BG_NAME, DEFAULT_PRESET_BG_TOKEN);
+        }
     } else {
         applyBgDisplayStyles();
     }

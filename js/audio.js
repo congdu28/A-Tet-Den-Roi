@@ -16,6 +16,7 @@ class TetAudioEngine {
 
         // Custom HTML5 Audio element for user-uploaded MP3 songs (Có lời)
         this.customAudio = new Audio();
+        this.customAudio.preload = 'metadata';
         this.customAudio.loop = false;
         this.customAudio.volume = this.volume;
         this.isCustomTrack = false;

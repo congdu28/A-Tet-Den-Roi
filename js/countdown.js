@@ -179,12 +179,24 @@ class TetCountdown {
             spawnBurst(26, true);
         });
 
+        let isStageVisible = true;
+        const prefersReducedMotion = typeof window.matchMedia === 'function'
+            ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            : false;
+
+        if (typeof IntersectionObserver !== 'undefined') {
+            this.glitterVisibilityObserver = new IntersectionObserver((entries) => {
+                isStageVisible = entries.some(entry => entry.isIntersecting);
+            }, { threshold: 0.01 });
+            this.glitterVisibilityObserver.observe(stage);
+        }
+
         let lastEmitTime = 0;
         const tick = (now) => {
-            if (!document.hidden && this.glitterStageWidth > 0) {
+            if (!document.hidden && isStageVisible && this.glitterStageWidth > 0) {
                 ctx.clearRect(0, 0, this.glitterStageWidth, this.glitterStageHeight);
 
-                if (now - lastEmitTime > 48) {
+                if (!prefersReducedMotion && now - lastEmitTime > 48) {
                     spawnBurst(2, false);
                     lastEmitTime = now;
                 }
@@ -210,11 +222,17 @@ class TetCountdown {
                     ctx.save();
                     ctx.translate(p.x, p.y);
                     ctx.rotate(p.rot);
-                    ctx.globalAlpha = alpha;
                     ctx.fillStyle = p.color;
-                    ctx.shadowColor = p.color;
-                    ctx.shadowBlur = 6;
 
+                    // Soft additive halo without expensive Canvas 2D shadowBlur
+                    if (p.size >= 3.2 && alpha > 0.25) {
+                        ctx.globalAlpha = alpha * 0.28;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, p.size * 1.45, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    ctx.globalAlpha = alpha;
                     if (p.shape === 'star') {
                         const s = p.size;
                         ctx.beginPath();
@@ -419,16 +437,29 @@ class TetCountdown {
             card.className = `milestone-card ${isPassed ? 'passed' : ''}`;
             card.id = `ms-${m.id}`;
 
-            card.innerHTML = `
-                <div class="milestone-icon">${m.icon}</div>
-                <div class="milestone-content">
-                    <div class="milestone-title">${m.name}</div>
-                    <div class="milestone-desc">${m.desc}</div>
-                    <div class="milestone-badge">
-                        ${isPassed ? '✓ Đã hoàn thành' : (diffDays === 0 ? '✨ Đang diễn ra hôm nay!' : `Còn ${diffDays} ngày`)}
-                    </div>
-                </div>
-            `;
+            const iconEl = document.createElement('div');
+            iconEl.className = 'milestone-icon';
+            iconEl.textContent = m.icon;
+
+            const contentEl = document.createElement('div');
+            contentEl.className = 'milestone-content';
+
+            const titleEl = document.createElement('div');
+            titleEl.className = 'milestone-title';
+            titleEl.textContent = m.name;
+
+            const descEl = document.createElement('div');
+            descEl.className = 'milestone-desc';
+            descEl.textContent = m.desc;
+
+            const badgeEl = document.createElement('div');
+            badgeEl.className = 'milestone-badge';
+            badgeEl.textContent = isPassed
+                ? '✓ Đã hoàn thành'
+                : (diffDays === 0 ? '✨ Đang diễn ra hôm nay!' : `Còn ${diffDays} ngày`);
+
+            contentEl.append(titleEl, descEl, badgeEl);
+            card.append(iconEl, contentEl);
             this.elements.milestoneList.appendChild(card);
         });
     }

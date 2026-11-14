@@ -122,9 +122,12 @@ class LixiSystem {
         try {
             const savedOpened = JSON.parse(localStorage.getItem('tet-lixi-opened') || '[]');
             const savedTotal = parseInt(localStorage.getItem('tet-lixi-total'), 10) || 0;
-            if (Array.isArray(savedOpened) && savedOpened.length > 0) {
-                this.openedIndices = new Set(savedOpened);
-                this.totalAmountCollected = savedTotal;
+            const validOpened = Array.isArray(savedOpened)
+                ? savedOpened.filter(i => Number.isInteger(i) && i >= 0 && i < 36)
+                : [];
+            if (validOpened.length > 0) {
+                this.openedIndices = new Set(validOpened);
+                this.totalAmountCollected = Math.max(0, savedTotal);
             } else {
                 this.openedIndices = new Set();
                 this.totalAmountCollected = 0;
@@ -153,9 +156,15 @@ class LixiSystem {
         }
 
         const closeBtn = document.getElementById('btn-close-lixi');
+        const acceptBtn = document.getElementById('btn-accept-lixi');
         const modal = document.getElementById('lixi-modal');
         if (closeBtn && modal) {
             closeBtn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+        }
+        if (acceptBtn && modal) {
+            acceptBtn.addEventListener('click', () => {
                 modal.classList.add('hidden');
             });
         }
@@ -256,7 +265,7 @@ class LixiSystem {
         // Show toast
         const toast = document.getElementById('tet-toast');
         if (toast) {
-            toast.innerHTML = '🎋 Cây Lộc 18 Bao Lì Xì mới đã được treo lên! Hãy chọn những phong bao may mắn tiếp theo!';
+            toast.textContent = '🎋 Cây Lộc 18 Bao Lì Xì mới đã được treo lên! Hãy chọn những phong bao may mắn tiếp theo!';
             toast.classList.remove('hidden');
             setTimeout(() => toast.classList.add('hidden'), 3000);
         }

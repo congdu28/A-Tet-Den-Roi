@@ -10,9 +10,7 @@
    ========================================================== */
 @font-face {
     font-family: 'SVN-Athena';
-    src: local('SVN-Athena'), local('SVN-Athene'),
-         url('../assets/fonts/SVN-Athena.woff2') format('woff2'),
-         url('../assets/fonts/SVN-Athena.ttf') format('truetype');
+    src: local('SVN-Athena'), local('SVN-Athene');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -20,9 +18,7 @@
 
 @font-face {
     font-family: 'SVN-Didot';
-    src: local('SVN-Didot'), local('SVN-Conqueror Didot'),
-         url('../assets/fonts/SVN-Didot.woff2') format('woff2'),
-         url('../assets/fonts/SVN-Didot.ttf') format('truetype');
+    src: local('SVN-Didot'), local('SVN-Conqueror Didot');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -30,9 +26,7 @@
 
 @font-face {
     font-family: 'SVN-Angellina';
-    src: local('SVN-Angellina'), local('Angellina'),
-         url('../assets/fonts/SVN-Angellina.woff2') format('woff2'),
-         url('../assets/fonts/SVN-Angellina.ttf') format('truetype');
+    src: local('SVN-Angellina'), local('Angellina');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -40,9 +34,7 @@
 
 @font-face {
     font-family: 'SVN-Brusher';
-    src: local('SVN-Brusher'), local('Brusher'),
-         url('../assets/fonts/SVN-Brusher.woff2') format('woff2'),
-         url('../assets/fonts/SVN-Brusher.ttf') format('truetype');
+    src: local('SVN-Brusher'), local('Brusher');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -50,9 +42,7 @@
 
 @font-face {
     font-family: 'UVN Thu Phap';
-    src: local('UVN Thu Phap'), local('UVN Thư Pháp'), local('UVN Bai Sau'), local('UVN Thư Từ'),
-         url('../assets/fonts/UVN-ThuPhap.woff2') format('woff2'),
-         url('../assets/fonts/UVN-ThuPhap.ttf') format('truetype');
+    src: local('UVN Thu Phap'), local('UVN Thư Pháp'), local('UVN Bai Sau'), local('UVN Thư Từ');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -60,9 +50,7 @@
 
 @font-face {
     font-family: 'HP-ThuPhap';
-    src: local('HP-ThuPhap'), local('HP-Thư Pháp'), local('HP Thu Phap'),
-         url('../assets/fonts/HP-ThuPhap.woff2') format('woff2'),
-         url('../assets/fonts/HP-ThuPhap.ttf') format('truetype');
+    src: local('HP-ThuPhap'), local('HP-Thư Pháp'), local('HP Thu Phap');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -7893,4 +7881,19 @@ body.light-mode .saved-bg-thumb-item.active {
 
 .saved-bg-delete-btn:hover {
     background: #dc2626;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bg-marquee-track,
+    .header-progress-fill::after,
+    .header-progress-spark,
+    .progress-bar-fill,
+    .progress-bar-fill::after,
+    .progress-head-flare,
+    .progress-head-sparkle,
+    .lantern-left,
+    .lantern-right,
+    .mascot-badge {
+        animation: none !important;
+    }
 }
