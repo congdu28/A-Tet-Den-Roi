@@ -1358,28 +1358,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 customBgImage.style.backgroundRepeat = 'no-repeat';
             }
 
-            // Adaptive brightness & saturation so light/dark backgrounds harmonize with Light/Dark mode
+            // Adaptive blending & tone harmonization so Dark Mode stays rich & warm (never muddy gray)
             const filterParts = [];
             if (blur > 0) filterParts.push(`blur(${blur}px)`);
+
             if (!isLightMode && bgTone === 'light') {
-                // Dark mode + bright spring preset -> moonlit evening tone
-                filterParts.push('brightness(0.42)', 'contrast(1.08)', 'saturate(1.15)');
+                // Blend light spring artwork into the rich dark theme gradient via multiply
+                customBgImage.style.mixBlendMode = 'multiply';
+                filterParts.push('contrast(1.16)', 'saturate(1.35)', 'brightness(0.92)');
             } else if (isLightMode && bgTone === 'dark') {
-                // Light mode + dark night preset -> softer lifted tone
-                filterParts.push('brightness(1.12)', 'saturate(0.95)');
+                customBgImage.style.mixBlendMode = 'normal';
+                filterParts.push('brightness(1.08)', 'saturate(0.96)');
+            } else {
+                customBgImage.style.mixBlendMode = 'normal';
             }
             customBgImage.style.filter = filterParts.length ? filterParts.join(' ') : 'none';
         }
 
         if (customBgOverlay) {
             if (isLightMode) {
-                // Warm ivory veil in Light Mode instead of muddy black
-                const lightAlpha = bgTone === 'dark' ? Math.max(overlay, 26) : overlay;
-                customBgOverlay.style.backgroundColor = `rgba(255, 248, 245, ${(lightAlpha / 100).toFixed(2)})`;
+                const lightAlpha = bgTone === 'dark' ? Math.max(overlay, 24) : overlay;
+                customBgOverlay.style.background = `rgba(255, 248, 245, ${(lightAlpha / 100).toFixed(2)})`;
+            } else if (bgTone === 'light') {
+                // Warm crimson-night radial vignette instead of flat gray-black
+                const edgeAlpha = Math.min(0.75, 0.25 + (overlay / 100) * 0.65).toFixed(2);
+                const centerAlpha = (overlay / 250).toFixed(2);
+                customBgOverlay.style.background = `radial-gradient(circle at 50% 35%, rgba(120, 10, 24, ${centerAlpha}), rgba(18, 2, 6, ${edgeAlpha}))`;
             } else {
-                // Deep warm dark veil in Dark Mode
-                const darkAlpha = bgTone === 'light' ? Math.max(overlay, 40) : overlay;
-                customBgOverlay.style.backgroundColor = `rgba(10, 4, 8, ${(darkAlpha / 100).toFixed(2)})`;
+                customBgOverlay.style.background = `rgba(8, 2, 4, ${(overlay / 100).toFixed(2)})`;
             }
         }
 

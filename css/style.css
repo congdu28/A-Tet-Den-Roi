@@ -825,6 +825,7 @@ button, input, select, textarea {
     z-index: 0;
     pointer-events: none;
     overflow: hidden;
+    background: var(--theme-bg-gradient);
 }
 
 .custom-bg-layer.hidden {
@@ -844,8 +845,8 @@ button, input, select, textarea {
 .custom-bg-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.35);
-    transition: background-color 0.35s ease;
+    background: rgba(0, 0, 0, 0.18);
+    transition: background 0.35s ease;
 }
 
 /* Background Canvases */
