@@ -1840,6 +1840,9 @@ body.light-mode .mobile-couplet-separator {
    HERO HEADER & MASCOT
    ========================================================== */
 .hero-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
     margin: 0 0 14px 0;
     overflow: visible;
