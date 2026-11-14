@@ -98,15 +98,21 @@ class TetCountdown {
         // 1. Update days/hours/minutes/seconds & real-time clock once every second (0 overhead!)
         this.mainTimer = setInterval(() => this.updateMain(), 1000);
 
-        // 2. Lắng nghe cuộn trang để kích hoạt hiệu ứng thanh bar ghim trên đầu (sticky)
+        // 2. Lắng nghe cuộn trang để kích hoạt hiệu ứng thanh bar ghim trên đầu (sticky, mượt với rAF + hysteresis)
         this.isScrolled = false;
+        let scrollTicking = false;
         window.addEventListener('scroll', () => {
-            if (!this.elements.topNavbar) return;
-            const scrolled = window.scrollY > 20;
-            if (scrolled !== this.isScrolled) {
-                this.isScrolled = scrolled;
-                this.elements.topNavbar.classList.toggle('is-scrolled', scrolled);
-            }
+            if (scrollTicking || !this.elements.topNavbar) return;
+            scrollTicking = true;
+            requestAnimationFrame(() => {
+                const y = window.scrollY;
+                const nextScrolled = this.isScrolled ? y > 12 : y > 30;
+                if (nextScrolled !== this.isScrolled) {
+                    this.isScrolled = nextScrolled;
+                    this.elements.topNavbar.classList.toggle('is-scrolled', nextScrolled);
+                }
+                scrollTicking = false;
+            });
         }, { passive: true });
 
         // 3. Update milliseconds at relaxed 100ms rate (nếu có phần tử)
