@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="maiNightBg" cx="50%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#7c2d12"/>
+      <stop offset="50%" stop-color="#3f1006"/>
+      <stop offset="100%" stop-color="#170402"/>
+    </radialGradient>
+    <radialGradient id="maiGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.5"/>
+      <stop offset="55%" stop-color="#f59e0b" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <g id="maiNightFlower">
+      <circle cx="0" cy="0" r="38" fill="url(#maiGlow)"/>
+      <circle cx="0" cy="-15" r="10.5" fill="#fef08a"/>
+      <circle cx="14" cy="-4.5" r="10.5" fill="#fde047"/>
+      <circle cx="8.5" cy="12" r="10.5" fill="#facc15"/>
+      <circle cx="-8.5" cy="12" r="10.5" fill="#fde047"/>
+      <circle cx="-14" cy="-4.5" r="10.5" fill="#fef08a"/>
+      <circle cx="0" cy="0" r="5" fill="#b45309"/>
+      <circle cx="-2" cy="-1" r="1.5" fill="#fffbeb"/>
+      <circle cx="2" cy="1" r="1.5" fill="#fffbeb"/>
+    </g>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#maiNightBg)"/>
+  <circle cx="1520" cy="230" r="320" fill="url(#maiGlow)" opacity="0.55"/>
+  <circle cx="380" cy="780" r="240" fill="url(#maiGlow)" opacity="0.35"/>
+  <!-- Left Sweeping Mai Branch -->
+  <path d="M-20,380 Q220,320 420,240 T760,160" fill="none" stroke="#5c280b" stroke-width="13" stroke-linecap="round"/>
+  <path d="M-20,378 Q220,318 420,238 T760,158" fill="none" stroke="#b45309" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+  <path d="M240,305 Q320,210 430,130" fill="none" stroke="#5c280b" stroke-width="8" stroke-linecap="round"/>
+  <path d="M460,225 Q560,290 680,275" fill="none" stroke="#5c280b" stroke-width="7" stroke-linecap="round"/>
+  <!-- Right Sweeping Mai Branch -->
+  <path d="M1940,680 Q1680,580 1480,470 T1180,380" fill="none" stroke="#5c280b" stroke-width="12" stroke-linecap="round"/>
+  <path d="M1940,678 Q1680,578 1480,468 T1180,378" fill="none" stroke="#b45309" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+  <path d="M1640,560 Q1580,450 1460,350" fill="none" stroke="#5c280b" stroke-width="7" stroke-linecap="round"/>
+  <!-- Glowing Mai Blossoms -->
+  <use href="#maiNightFlower" transform="translate(140,335) scale(1.4)"/>
+  <use href="#maiNightFlower" transform="translate(270,295) scale(1.2)"/>
+  <use href="#maiNightFlower" transform="translate(360,190) scale(1.3)"/>
+  <use href="#maiNightFlower" transform="translate(435,125) scale(1.1)"/>
+  <use href="#maiNightFlower" transform="translate(520,210) scale(1.45)"/>
+  <use href="#maiNightFlower" transform="translate(650,270) scale(1.15)"/>
+  <use href="#maiNightFlower" transform="translate(755,160) scale(1.25)"/>
+  <use href="#maiNightFlower" transform="translate(1780,610) scale(1.5)"/>
+  <use href="#maiNightFlower" transform="translate(1620,540) scale(1.25)"/>
+  <use href="#maiNightFlower" transform="translate(1490,465) scale(1.35)"/>
+  <use href="#maiNightFlower" transform="translate(1465,355) scale(1.1)"/>
+  <use href="#maiNightFlower" transform="translate(1310,415) scale(1.25)"/>
+  <use href="#maiNightFlower" transform="translate(1190,380) scale(1.05)"/>
+  <!-- Golden Sparks -->
+  <g fill="#fef08a" opacity="0.55">
+    <circle cx="620" cy="460" r="4"/><circle cx="920" cy="310" r="3.5"/><circle cx="1080" cy="640" r="4.5"/>
+    <circle cx="420" cy="760" r="3.5"/><circle cx="1360" cy="780" r="4"/>
+  </g>
+</svg>

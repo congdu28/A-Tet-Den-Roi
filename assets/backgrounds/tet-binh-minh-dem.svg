@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="moonSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e0b2e"/>
+      <stop offset="50%" stop-color="#4c1028"/>
+      <stop offset="100%" stop-color="#170412"/>
+    </linearGradient>
+    <radialGradient id="moonGlow" cx="50%" cy="46%" r="38%">
+      <stop offset="0%" stop-color="#fef9c3" stop-opacity="0.9"/>
+      <stop offset="35%" stop-color="#f59e0b" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#moonSky)"/>
+  <rect width="1920" height="1080" fill="url(#moonGlow)"/>
+  <g fill="#fef9c3" opacity="0.6">
+    <circle cx="190" cy="140" r="2"/><circle cx="410" cy="110" r="1.8"/><circle cx="680" cy="190" r="2.2"/>
+    <circle cx="1240" cy="150" r="2"/><circle cx="1510" cy="120" r="2.4"/><circle cx="1760" cy="210" r="1.8"/>
+  </g>
+  <circle cx="960" cy="490" r="130" fill="#fef3c7" opacity="0.88"/>
+  <!-- Misty Moonlit Mountains -->
+  <path d="M0,740 Q320,580 640,700 T1280,660 T1920,720 L1920,1080 L0,1080 Z" fill="#581c38" opacity="0.6"/>
+  <path d="M0,830 Q420,710 860,810 T1620,760 L1920,820 L1920,1080 L0,1080 Z" fill="#3b0d24" opacity="0.78"/>
+  <path d="M0,920 Q560,860 1120,930 T1920,890 L1920,1080 L0,1080 Z" fill="#1a0410" opacity="0.9"/>
+  <!-- Flying Swallows -->
+  <g fill="none" stroke="#fde68a" stroke-width="3.5" stroke-linecap="round" opacity="0.65">
+    <path d="M720,340 Q745,315 770,335 Q795,315 820,340"/>
+    <path d="M840,290 Q860,270 880,286 Q900,270 920,290"/>
+    <path d="M1110,370 Q1132,350 1154,366 Q1176,350 1198,370"/>
+  </g>
+</svg>

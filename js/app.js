@@ -1329,6 +1329,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const bgPresetCards = document.querySelectorAll('.bg-preset-card');
+
+    const resolvePresetImageUrl = (card, fallbackUrl) => {
+        if (!card) return fallbackUrl;
+        const isLightMode = document.body.classList.contains('light-mode');
+        const lightUrl = card.getAttribute('data-preset-light');
+        const darkUrl = card.getAttribute('data-preset-dark');
+        if (lightUrl && darkUrl) {
+            return isLightMode ? lightUrl : darkUrl;
+        }
+        return card.getAttribute('data-preset-url') || fallbackUrl;
+    };
+
+    const syncPresetThumbnailsForMode = () => {
+        bgPresetCards.forEach(card => {
+            const img = card.querySelector('img');
+            if (!img) return;
+            const resolved = resolvePresetImageUrl(card, card.getAttribute('data-preset-url') || '');
+            if (resolved && img.getAttribute('src') !== resolved) {
+                img.setAttribute('src', resolved);
+            }
+        });
+    };
+
     const getActiveBgTone = () => {
         const activeToken = localStorage.getItem(BG_KEY_ACTIVE) || 'none';
         if (activeToken.startsWith('preset:')) {
@@ -1341,10 +1365,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const applyBgDisplayStyles = () => {
         const fit = localStorage.getItem(BG_KEY_FIT) || 'cover';
-        const overlay = Math.max(0, Math.min(85, parseInt(localStorage.getItem(BG_KEY_OVERLAY) ?? '35', 10) || 0));
+        const overlay = Math.max(0, Math.min(85, parseInt(localStorage.getItem(BG_KEY_OVERLAY) ?? '15', 10) || 0));
         const blur = Math.max(0, Math.min(16, parseInt(localStorage.getItem(BG_KEY_BLUR) ?? '0', 10) || 0));
         const isLightMode = document.body.classList.contains('light-mode');
         const bgTone = getActiveBgTone();
+
+        syncPresetThumbnailsForMode();
+
+        // If a paired preset is currently active, switch its URL cleanly to match Light/Dark mode
+        const activeToken = localStorage.getItem(BG_KEY_ACTIVE) || 'none';
+        if (activeToken.startsWith('preset:') && customBgImage) {
+            const canonicalUrl = activeToken.slice(7);
+            const card = document.querySelector(`.bg-preset-card[data-preset-url="${canonicalUrl.replace(/"/g, '\\"')}"]`);
+            const modeUrl = resolvePresetImageUrl(card, canonicalUrl);
+            if (modeUrl) {
+                customBgImage.style.backgroundImage = `url("${modeUrl.replace(/"/g, '\\"')}")`;
+                if (bgPreviewThumb) bgPreviewThumb.src = modeUrl;
+            }
+        }
 
         if (customBgImage) {
             if (fit === 'repeat') {
@@ -1358,32 +1396,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 customBgImage.style.backgroundRepeat = 'no-repeat';
             }
 
-            // Adaptive blending & tone harmonization so Dark Mode stays rich & warm (never muddy gray)
+            customBgImage.style.mixBlendMode = 'normal';
             const filterParts = [];
             if (blur > 0) filterParts.push(`blur(${blur}px)`);
-
-            if (!isLightMode && bgTone === 'light') {
-                // Blend light spring artwork into the rich dark theme gradient via multiply
-                customBgImage.style.mixBlendMode = 'multiply';
-                filterParts.push('contrast(1.16)', 'saturate(1.35)', 'brightness(0.92)');
-            } else if (isLightMode && bgTone === 'dark') {
-                customBgImage.style.mixBlendMode = 'normal';
-                filterParts.push('brightness(1.08)', 'saturate(0.96)');
-            } else {
-                customBgImage.style.mixBlendMode = 'normal';
+            if (isLightMode && bgTone === 'dark') {
+                filterParts.push('brightness(1.08)', 'saturate(0.95)');
             }
             customBgImage.style.filter = filterParts.length ? filterParts.join(' ') : 'none';
         }
 
         if (customBgOverlay) {
             if (isLightMode) {
-                const lightAlpha = bgTone === 'dark' ? Math.max(overlay, 24) : overlay;
+                const lightAlpha = bgTone === 'dark' ? Math.max(overlay, 22) : overlay;
                 customBgOverlay.style.background = `rgba(255, 248, 245, ${(lightAlpha / 100).toFixed(2)})`;
-            } else if (bgTone === 'light') {
-                // Warm crimson-night radial vignette instead of flat gray-black
-                const edgeAlpha = Math.min(0.75, 0.25 + (overlay / 100) * 0.65).toFixed(2);
-                const centerAlpha = (overlay / 250).toFixed(2);
-                customBgOverlay.style.background = `radial-gradient(circle at 50% 35%, rgba(120, 10, 24, ${centerAlpha}), rgba(18, 2, 6, ${edgeAlpha}))`;
             } else {
                 customBgOverlay.style.background = `rgba(8, 2, 4, ${(overlay / 100).toFixed(2)})`;
             }
@@ -1406,7 +1431,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const bgPresetCards = document.querySelectorAll('.bg-preset-card');
     const updatePresetActiveUI = (activePresetUrl) => {
         bgPresetCards.forEach(card => {
             card.classList.toggle('active', card.getAttribute('data-preset-url') === activePresetUrl);
@@ -1427,15 +1451,23 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        customBgImage.style.backgroundImage = `url("${url.replace(/"/g, '\\"')}")`;
+        localStorage.setItem(BG_KEY_ACTIVE, activeToken);
+
+        let displayUrl = url;
+        if (activeToken.startsWith('preset:')) {
+            const canonicalUrl = activeToken.slice(7);
+            const card = document.querySelector(`.bg-preset-card[data-preset-url="${canonicalUrl.replace(/"/g, '\\"')}"]`);
+            displayUrl = resolvePresetImageUrl(card, url);
+        }
+
+        customBgImage.style.backgroundImage = `url("${displayUrl.replace(/"/g, '\\"')}")`;
         customBgLayer.classList.remove('hidden');
 
-        if (bgPreviewThumb) bgPreviewThumb.src = url;
+        if (bgPreviewThumb) bgPreviewThumb.src = displayUrl;
         if (bgPreviewName) bgPreviewName.textContent = label || 'Ảnh nền tùy chỉnh';
         if (bgPreviewWrap) bgPreviewWrap.classList.remove('hidden');
         if (bgControlsGrid) bgControlsGrid.classList.remove('hidden');
 
-        localStorage.setItem(BG_KEY_ACTIVE, activeToken);
         const activeId = activeToken.startsWith('idb:') ? activeToken.slice(4) : '';
         const activePresetUrl = activeToken.startsWith('preset:') ? activeToken.slice(7) : '';
         updateSavedBgActiveUI(activeId);
