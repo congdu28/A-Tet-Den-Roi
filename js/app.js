@@ -891,6 +891,47 @@ document.addEventListener('DOMContentLoaded', () => {
         // Initial populate
         renderSongDropdown(window.tetAudio.playlist);
         renderCustomSongsSettingsList();
+
+        // Tự động phát nhạc ngay khi vào trang; nếu trình duyệt chặn autoplay thì tự phát ở tương tác đầu tiên
+        let pendingAutoPlay = true;
+        const cleanupAutoPlayListeners = () => {
+            document.removeEventListener('pointerdown', handleFirstInteractionPlay, true);
+            document.removeEventListener('keydown', handleFirstInteractionPlay, true);
+        };
+
+        const handleFirstInteractionPlay = async (e) => {
+            cleanupAutoPlayListeners();
+            if (!pendingAutoPlay || !window.tetAudio) return;
+            pendingAutoPlay = false;
+
+            // Nếu người dùng bấm trực tiếp vào nút Play/Mute/chọn bài, nhường sự kiện click của nút đó xử lý
+            const targetEl = e && e.target && e.target.closest
+                ? e.target.closest('#btn-music-play, #btn-toggle-mute, #music-mute-btn, .song-item-card, #music-song-select')
+                : null;
+            if (targetEl || window.tetAudio.bgmPlaying || window.tetAudio.isMuted) return;
+
+            const ok = await window.tetAudio.startBGM();
+            if (ok) {
+                updateMusicUI();
+                renderCustomSongsSettingsList();
+            }
+        };
+
+        (async () => {
+            if (!window.tetAudio || window.tetAudio.bgmPlaying) {
+                pendingAutoPlay = false;
+                return;
+            }
+            const autoStarted = await window.tetAudio.startBGM();
+            updateMusicUI();
+            renderCustomSongsSettingsList();
+            if (autoStarted) {
+                pendingAutoPlay = false;
+            } else {
+                document.addEventListener('pointerdown', handleFirstInteractionPlay, { capture: true, passive: true });
+                document.addEventListener('keydown', handleFirstInteractionPlay, { capture: true, passive: true });
+            }
+        })();
     }
 
     if (musicPlayBtn) {

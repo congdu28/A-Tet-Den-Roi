@@ -310,16 +310,23 @@ class TetAudioEngine {
 
     playCustomAudio() {
         this.isCustomTrack = true;
-        this.bgmPlaying = true;
         if (this.customAudio) {
             this.customAudio.volume = this.isMuted ? 0 : this.volume;
+            this.bgmPlaying = true;
             return this.customAudio.play().then(() => {
                 return true;
             }).catch(err => {
-                console.warn("Lỗi phát audio:", err);
+                this.bgmPlaying = false;
+                if (!err || err.name !== 'NotAllowedError') {
+                    console.warn("Lỗi phát audio:", err);
+                }
+                if (typeof this.onSongChange === 'function') {
+                    this.onSongChange(this.playlist[this.currentSongIndex]);
+                }
                 return false;
             });
         }
+        this.bgmPlaying = false;
         return Promise.resolve(false);
     }
 
@@ -626,13 +633,8 @@ class TetAudioEngine {
     }
 
     startBGM() {
-        this.init();
-        if (this.ctx && this.ctx.state === 'suspended') {
-            this.ctx.resume();
-        }
-
         const song = this.playlist[this.currentSongIndex];
-        if (!song) return;
+        if (!song) return Promise.resolve(false);
 
         if (song.url) {
             this.isCustomTrack = true;
@@ -643,16 +645,21 @@ class TetAudioEngine {
                     this.customAudio.src = song.url;
                 }
             }
-            this.playCustomAudio();
+            return this.playCustomAudio();
         } else {
+            this.init();
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume().catch(() => {});
+            }
             this.isCustomTrack = false;
             this.customTrackName = '';
             if (this.customAudio) {
                 this.customAudio.pause();
             }
-            if (this.bgmPlaying && this.bgmTimer) return;
+            if (this.bgmPlaying && this.bgmTimer) return Promise.resolve(true);
             this.bgmPlaying = true;
             this.scheduleMelodyLoop();
+            return Promise.resolve(true);
         }
     }
 
