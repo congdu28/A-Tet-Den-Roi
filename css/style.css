@@ -1151,20 +1151,20 @@ body.light-mode .nav-datetime-badge {
 }
 
 body.light-mode .nav-datetime-badge:hover {
-    border-color: #e11d48;
-    background: #fff1f2;
+    border-color: var(--color-accent-gold);
+    background: var(--badge-bg);
 }
 
 body.light-mode .nav-clock-time {
-    color: #e11d48;
+    color: var(--color-accent-gold);
 }
 
 body.light-mode .nav-clock-date {
-    color: #1e293b;
+    color: var(--color-text-main);
 }
 
 body.light-mode .nav-clock-lunar {
-    color: #991b1b;
+    color: var(--color-text-sub);
 }
 
 body.light-mode .nav-clock-sep {
@@ -2021,6 +2021,13 @@ body.light-mode .mascot-speech-bubble::after {
     justify-content: center;
 }
 
+body.light-mode .target-date-badge {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--card-border);
+    color: var(--color-text-main);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
 /* ==========================================================
    COUNTDOWN TIMER DISPLAY
    ========================================================== */
@@ -2191,22 +2198,22 @@ body.light-mode .datetime-pill:hover {
 }
 
 body.light-mode .pill-label {
-    color: #e11d48;
+    color: var(--color-accent-gold);
 }
 
 body.light-mode .pill-val {
-    color: #1e293b;
+    color: var(--color-text-main);
 }
 
 body.light-mode .pill-val.time-val {
-    color: #0f172a;
+    color: var(--color-text-main);
 }
 
 body.light-mode .btn-lunar-calendar {
-    background: linear-gradient(135deg, #e11d48, #be123c);
-    border-color: #fbbf24;
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);
+    background: var(--btn-primary-bg);
+    border-color: var(--color-accent-gold);
+    color: var(--btn-primary-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
 }
 
 .timer-grid {
@@ -4929,101 +4936,6 @@ body.light-mode .font-preview-text {
     }
 }
 
-.light-dark-toggle-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.btn-mode-toggle {
-    padding: 10px 14px;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 215, 0, 0.35);
-    color: var(--color-text-main);
-    font-size: 0.9rem;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-}
-
-.btn-mode-toggle.active {
-    background: var(--btn-primary-bg);
-    color: var(--btn-primary-color);
-    border-color: var(--color-accent-gold);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.theme-palette-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 8px;
-}
-
-.theme-chip-btn {
-    padding: 9px 10px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 215, 0, 0.25);
-    color: var(--color-text-main);
-    font-size: 0.82rem;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.15s ease;
-}
-
-.theme-chip-btn.active {
-    background: var(--badge-bg);
-    color: var(--color-accent-gold);
-    border-color: var(--color-accent-gold);
-    font-weight: 700;
-}
-
-.theme-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.settings-select {
-    width: 100%;
-    padding: 11px 14px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 215, 0, 0.35);
-    color: var(--color-text-main);
-    font-size: 0.92rem;
-    font-weight: 600;
-    cursor: pointer;
-    outline: none;
-    transition: all 0.2s ease;
-}
-
-.settings-select:focus {
-    border-color: var(--color-accent-gold);
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-}
-
-.settings-select option {
-    background: #2b0207;
-    color: #fff;
-    padding: 6px;
-}
-
-.settings-select optgroup {
-    background: #1a0104;
-    color: var(--color-accent-gold);
-    font-weight: 700;
-}
-
 /* Custom Uploaded Songs in Settings */
 .custom-songs-box {
     background: rgba(0, 0, 0, 0.2);
@@ -7564,17 +7476,59 @@ body.light-mode .bg-preset-card.active {
     min-width: 160px;
     justify-content: center;
     padding: 9px 14px;
+    border-radius: 10px;
+}
+
+.btn-mini-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 215, 0, 0.35);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--color-text-main);
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.18s ease;
+}
+
+.btn-mini-action:hover {
+    background: rgba(255, 215, 0, 0.18);
+    border-color: var(--color-accent-gold);
+    color: var(--color-accent-gold);
+    transform: translateY(-1px);
+}
+
+.btn-mini-action:active {
+    transform: translateY(0);
+}
+
+body.light-mode .btn-mini-action {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(225, 29, 72, 0.28);
+    color: var(--color-text-main);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode .btn-mini-action:hover {
+    background: var(--badge-bg);
+    border-color: var(--color-accent-gold);
+    color: var(--color-accent-gold);
 }
 
 .bg-reset-btn {
-    padding: 9px 12px;
+    padding: 9px 14px;
     white-space: nowrap;
 }
 
 .bg-url-row {
     display: flex;
     gap: 8px;
-    align-items: center;
+    align-items: stretch;
     margin-bottom: 10px;
 }
 
@@ -7632,11 +7586,23 @@ body.light-mode .bg-preview-card {
 }
 
 body.light-mode .bg-preview-status {
-    color: #be123c;
+    color: var(--color-accent-gold);
 }
 
 .bg-remove-btn {
     flex-shrink: 0;
+}
+
+.bg-remove-btn:hover {
+    background: rgba(220, 38, 38, 0.24);
+    border-color: #f87171;
+    color: #fecaca;
+}
+
+body.light-mode .bg-remove-btn:hover {
+    background: rgba(220, 38, 38, 0.12);
+    border-color: #dc2626;
+    color: #b91c1c;
 }
 
 .bg-controls-grid {

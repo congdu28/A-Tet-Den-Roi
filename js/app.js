@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     const THEME_PRESET_BG_MAP = {
-        'theme-red-gold': 'assets/backgrounds/tet-hoa-dao-bac-bo.svg',
+        'theme-red-gold': 'assets/backgrounds/tet-den-long-am-ap.svg',
         'theme-mai-vang': 'assets/backgrounds/tet-hoa-mai-vang.svg',
         'theme-dao-hong': 'assets/backgrounds/tet-hoa-dao-bac-bo.svg',
         'theme-dem-giao-thua': 'assets/backgrounds/tet-phao-hoa-giao-thua.svg',
@@ -1654,18 +1654,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const DEFAULT_PRESET_BG_URL = 'assets/backgrounds/tet-den-long-am-ap.svg';
+    const DEFAULT_PRESET_BG_TOKEN = `preset:${DEFAULT_PRESET_BG_URL}`;
+    const DEFAULT_PRESET_BG_NAME = 'Đèn Lồng Hội An';
+
     const resetToDefaultBg = () => {
+        localStorage.setItem(BG_KEY_FIT, 'cover');
+        localStorage.setItem(BG_KEY_OVERLAY, '15');
+        localStorage.setItem(BG_KEY_BLUR, '0');
+        if (bgUrlInput) bgUrlInput.value = '';
+        setActiveCustomBg(DEFAULT_PRESET_BG_URL, DEFAULT_PRESET_BG_NAME, DEFAULT_PRESET_BG_TOKEN);
+        if (window.tetAudio) {
+            window.tetAudio.init();
+            window.tetAudio.playLuckyChime();
+        }
+        showToast('↺ Đã khôi phục nền mặc định: Đèn Lồng Hội An!');
+    };
+
+    const clearActiveBg = () => {
         setActiveCustomBg(null, '', 'none');
         if (bgUrlInput) bgUrlInput.value = '';
         if (window.tetAudio) {
             window.tetAudio.init();
             window.tetAudio.playLuckyChime();
         }
-        showToast('↺ Đã khôi phục nền màu mặc định theo giao diện!');
+        showToast('✕ Đã gỡ ảnh nền, đang dùng nền màu theo giao diện!');
     };
 
     if (bgResetBtn) bgResetBtn.addEventListener('click', resetToDefaultBg);
-    if (bgClearActiveBtn) bgClearActiveBtn.addEventListener('click', resetToDefaultBg);
+    if (bgClearActiveBtn) bgClearActiveBtn.addEventListener('click', clearActiveBg);
 
     if (bgFitSelect) {
         bgFitSelect.addEventListener('change', (e) => {
@@ -1688,9 +1705,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Initialize saved backgrounds on load
-    (async () => {
+    // Apply preset/URL or default background immediately before IndexedDB finishes
+    const rawActiveToken = localStorage.getItem(BG_KEY_ACTIVE);
+    let initialBgToken = rawActiveToken;
+    if (rawActiveToken === null) {
+        initialBgToken = DEFAULT_PRESET_BG_TOKEN;
+        if (localStorage.getItem(BG_KEY_OVERLAY) === null) {
+            localStorage.setItem(BG_KEY_OVERLAY, '15');
+        }
+    }
+
+    if (initialBgToken && initialBgToken.startsWith('preset:')) {
+        const presetUrl = initialBgToken.slice(7);
+        const matchingCard = Array.from(bgPresetCards).find(c => c.getAttribute('data-preset-url') === presetUrl);
+        const presetName = matchingCard ? (matchingCard.getAttribute('data-preset-name') || DEFAULT_PRESET_BG_NAME) : DEFAULT_PRESET_BG_NAME;
+        setActiveCustomBg(presetUrl, presetName, initialBgToken);
+    } else if (initialBgToken && initialBgToken.startsWith('url:')) {
+        const savedUrl = initialBgToken.slice(4);
+        if (bgUrlInput) bgUrlInput.value = savedUrl;
+        setActiveCustomBg(savedUrl, 'Ảnh nền từ liên kết URL', initialBgToken);
+    } else {
         applyBgDisplayStyles();
+    }
+
+    // Initialize IndexedDB uploaded backgrounds asynchronously
+    (async () => {
         const records = await loadBgsFromDb();
         records.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         savedBgItems = records.map(r => ({
@@ -1701,33 +1740,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }));
         renderSavedBgGrid();
 
-        const rawActiveToken = localStorage.getItem(BG_KEY_ACTIVE);
-        let activeToken = rawActiveToken;
-        if (rawActiveToken === null) {
-            // Default warm festive background on first visit
-            activeToken = 'preset:assets/backgrounds/tet-hoa-dao-bac-bo.svg';
-            if (localStorage.getItem(BG_KEY_OVERLAY) === null) {
-                localStorage.setItem(BG_KEY_OVERLAY, '15');
-            }
-        }
-
-        if (activeToken && activeToken.startsWith('idb:')) {
-            const id = activeToken.slice(4);
+        if (initialBgToken && initialBgToken.startsWith('idb:')) {
+            const id = initialBgToken.slice(4);
             const found = savedBgItems.find(item => item.id === id);
             if (found) {
-                setActiveCustomBg(found.url, found.name, activeToken);
+                setActiveCustomBg(found.url, found.name, initialBgToken);
             } else {
                 localStorage.setItem(BG_KEY_ACTIVE, 'none');
             }
-        } else if (activeToken && activeToken.startsWith('url:')) {
-            const savedUrl = activeToken.slice(4);
-            if (bgUrlInput) bgUrlInput.value = savedUrl;
-            setActiveCustomBg(savedUrl, 'Ảnh nền từ liên kết URL', activeToken);
-        } else if (activeToken && activeToken.startsWith('preset:')) {
-            const presetUrl = activeToken.slice(7);
-            const matchingCard = Array.from(bgPresetCards).find(c => c.getAttribute('data-preset-url') === presetUrl);
-            const presetName = matchingCard ? (matchingCard.getAttribute('data-preset-name') || 'Ảnh nền Tết') : 'Ảnh nền Tết';
-            setActiveCustomBg(presetUrl, presetName, activeToken);
         }
     })();
 

@@ -23,6 +23,15 @@
   </defs>
   <rect width="1920" height="1080" fill="url(#hoiAnDay)"/>
   <circle cx="960" cy="240" r="380" fill="url(#lanternGlowDay)" opacity="0.5"/>
+  <!-- Soft warm lantern bokeh accents -->
+  <g fill="#f59e0b" opacity="0.16">
+    <circle cx="140" cy="490" r="10"/><circle cx="310" cy="390" r="7"/><circle cx="490" cy="210" r="9"/>
+    <circle cx="1430" cy="220" r="9"/><circle cx="1610" cy="420" r="8"/><circle cx="1790" cy="520" r="11"/>
+    <circle cx="280" cy="840" r="8"/><circle cx="1640" cy="850" r="9"/>
+  </g>
+  <g fill="#ffffff" opacity="0.45">
+    <circle cx="220" cy="610" r="5"/><circle cx="460" cy="720" r="4"/><circle cx="1480" cy="710" r="5"/><circle cx="1710" cy="630" r="4"/>
+  </g>
   <!-- Soft sunlit ancient roof silhouette -->
   <path d="M0,1080 L0,955 Q220,925 420,960 L520,905 Q600,935 680,905 L780,965 Q1120,935 1440,960 L1540,895 Q1620,930 1710,895 L1820,955 L1920,940 L1920,1080 Z" fill="#b45309" opacity="0.18"/>
   <!-- Left Lanterns -->
