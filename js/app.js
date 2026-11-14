@@ -1358,6 +1358,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    const bgPresetCards = document.querySelectorAll('.bg-preset-card');
+    const updatePresetActiveUI = (activePresetUrl) => {
+        bgPresetCards.forEach(card => {
+            card.classList.toggle('active', card.getAttribute('data-preset-url') === activePresetUrl);
+        });
+    };
+
     const setActiveCustomBg = (url, label, activeToken) => {
         if (!customBgLayer || !customBgImage) return;
 
@@ -1368,6 +1375,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (bgControlsGrid) bgControlsGrid.classList.add('hidden');
             localStorage.setItem(BG_KEY_ACTIVE, 'none');
             updateSavedBgActiveUI('');
+            updatePresetActiveUI('');
             return;
         }
 
@@ -1381,9 +1389,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem(BG_KEY_ACTIVE, activeToken);
         const activeId = activeToken.startsWith('idb:') ? activeToken.slice(4) : '';
+        const activePresetUrl = activeToken.startsWith('preset:') ? activeToken.slice(7) : '';
         updateSavedBgActiveUI(activeId);
+        updatePresetActiveUI(activePresetUrl);
         applyBgDisplayStyles();
     };
+
+    bgPresetCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const presetUrl = card.getAttribute('data-preset-url');
+            const presetName = card.getAttribute('data-preset-name') || 'Ảnh nền Tết';
+            if (!presetUrl) return;
+            setActiveCustomBg(presetUrl, presetName, `preset:${presetUrl}`);
+            if (window.tetAudio) {
+                window.tetAudio.init();
+                window.tetAudio.playLuckyChime();
+            }
+            showToast(`🖼️ Đã đổi ảnh nền: "${presetName}"`);
+        });
+    });
 
     const renderSavedBgGrid = () => {
         if (!savedBgListWrap || !savedBgGrid) return;
@@ -1568,8 +1592,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }));
         renderSavedBgGrid();
 
-        const activeToken = localStorage.getItem(BG_KEY_ACTIVE) || 'none';
-        if (activeToken.startsWith('idb:')) {
+        const rawActiveToken = localStorage.getItem(BG_KEY_ACTIVE);
+        let activeToken = rawActiveToken;
+        if (rawActiveToken === null) {
+            // Default warm festive background on first visit
+            activeToken = 'preset:assets/backgrounds/tet-hoa-dao-bac-bo.svg';
+            if (localStorage.getItem(BG_KEY_OVERLAY) === null) {
+                localStorage.setItem(BG_KEY_OVERLAY, '15');
+            }
+        }
+
+        if (activeToken && activeToken.startsWith('idb:')) {
             const id = activeToken.slice(4);
             const found = savedBgItems.find(item => item.id === id);
             if (found) {
@@ -1577,10 +1610,15 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 localStorage.setItem(BG_KEY_ACTIVE, 'none');
             }
-        } else if (activeToken.startsWith('url:')) {
+        } else if (activeToken && activeToken.startsWith('url:')) {
             const savedUrl = activeToken.slice(4);
             if (bgUrlInput) bgUrlInput.value = savedUrl;
             setActiveCustomBg(savedUrl, 'Ảnh nền từ liên kết URL', activeToken);
+        } else if (activeToken && activeToken.startsWith('preset:')) {
+            const presetUrl = activeToken.slice(7);
+            const matchingCard = Array.from(bgPresetCards).find(c => c.getAttribute('data-preset-url') === presetUrl);
+            const presetName = matchingCard ? (matchingCard.getAttribute('data-preset-name') || 'Ảnh nền Tết') : 'Ảnh nền Tết';
+            setActiveCustomBg(presetUrl, presetName, activeToken);
         }
     })();
 

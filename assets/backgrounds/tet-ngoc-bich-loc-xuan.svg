@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="jadeBg" cx="50%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#047857"/>
+      <stop offset="55%" stop-color="#064e3b"/>
+      <stop offset="100%" stop-color="#022c22"/>
+    </radialGradient>
+    <radialGradient id="jadeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fde047" stop-opacity="0.45"/>
+      <stop offset="60%" stop-color="#34d399" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#34d399" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#jadeBg)"/>
+  <circle cx="960" cy="400" r="450" fill="url(#jadeGlow)"/>
+  <!-- Bamboo Silhouettes Left & Right -->
+  <g stroke="#062e24" stroke-width="14" opacity="0.55">
+    <line x1="120" y1="0" x2="145" y2="1080"/>
+    <line x1="185" y1="0" x2="165" y2="1080"/>
+    <line x1="1760" y1="0" x2="1735" y2="1080"/>
+    <line x1="1820" y1="0" x2="1840" y2="1080"/>
+  </g>
+  <!-- Golden Prosperity Orbs -->
+  <g fill="#fde047" opacity="0.35">
+    <circle cx="340" cy="240" r="14"/><circle cx="520" cy="680" r="9"/><circle cx="1440" cy="280" r="12"/>
+    <circle cx="1580" cy="720" r="10"/><circle cx="780" cy="180" r="8"/><circle cx="1180" cy="840" r="11"/>
+  </g>
+</svg>

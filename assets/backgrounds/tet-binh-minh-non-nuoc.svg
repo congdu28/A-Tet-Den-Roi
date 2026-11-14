@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="dawnSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fed7aa"/>
+      <stop offset="45%" stop-color="#fde68a"/>
+      <stop offset="100%" stop-color="#fecaca"/>
+    </linearGradient>
+    <radialGradient id="dawnSun" cx="50%" cy="56%" r="36%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="40%" stop-color="#fbbf24" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#f97316" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#dawnSky)"/>
+  <rect width="1920" height="1080" fill="url(#dawnSun)"/>
+  <circle cx="960" cy="600" r="145" fill="#fff7ed" opacity="0.85"/>
+  <!-- Misty Layered Mountains -->
+  <path d="M0,740 Q320,580 640,700 T1280,660 T1920,720 L1920,1080 L0,1080 Z" fill="#f97316" opacity="0.22"/>
+  <path d="M0,830 Q420,710 860,810 T1620,760 L1920,820 L1920,1080 L0,1080 Z" fill="#c2410c" opacity="0.28"/>
+  <path d="M0,920 Q560,860 1120,930 T1920,890 L1920,1080 L0,1080 Z" fill="#7c2d12" opacity="0.34"/>
+  <!-- Flying Cranes / Swallows -->
+  <g fill="none" stroke="#7c2d12" stroke-width="4" stroke-linecap="round" opacity="0.5">
+    <path d="M720,380 Q745,355 770,375 Q795,355 820,380"/>
+    <path d="M840,330 Q860,310 880,326 Q900,310 920,330"/>
+    <path d="M1110,410 Q1132,390 1154,406 Q1176,390 1198,410"/>
+  </g>
+</svg>
