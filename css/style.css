@@ -837,7 +837,7 @@ button, input, select, textarea {
     background-position: center center;
     background-repeat: no-repeat;
     background-size: cover;
-    transition: opacity 0.35s ease, filter 0.2s ease;
+    transition: opacity 0.35s ease, filter 0.35s ease;
     will-change: filter;
 }
 
@@ -845,7 +845,7 @@ button, input, select, textarea {
     position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, 0.35);
-    transition: background 0.2s ease;
+    transition: background-color 0.35s ease;
 }
 
 /* Background Canvases */

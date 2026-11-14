@@ -88,6 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.cardMaker) {
             window.cardMaker.requestSmartRender();
         }
+        if (typeof window.refreshCustomBgTheme === 'function') {
+            window.refreshCustomBgTheme();
+        }
     };
 
     setLightMode(savedMode === 'light', false);
@@ -221,6 +224,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (window.cardMaker) {
             window.cardMaker.requestSmartRender();
+        }
+        if (typeof window.refreshCustomBgTheme === 'function') {
+            window.refreshCustomBgTheme();
         }
     };
 
@@ -629,6 +635,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Synchronize card canvas renderer font
         if (window.cardMaker) {
             window.cardMaker.requestSmartRender();
+        }
+        if (typeof window.refreshCustomBgTheme === 'function') {
+            window.refreshCustomBgTheme();
         }
     };
 
@@ -1320,10 +1329,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const getActiveBgTone = () => {
+        const activeToken = localStorage.getItem(BG_KEY_ACTIVE) || 'none';
+        if (activeToken.startsWith('preset:')) {
+            const presetUrl = activeToken.slice(7);
+            const card = document.querySelector(`.bg-preset-card[data-preset-url="${presetUrl.replace(/"/g, '\\"')}"]`);
+            return (card && card.getAttribute('data-preset-tone')) || 'dark';
+        }
+        return 'custom';
+    };
+
     const applyBgDisplayStyles = () => {
         const fit = localStorage.getItem(BG_KEY_FIT) || 'cover';
         const overlay = Math.max(0, Math.min(85, parseInt(localStorage.getItem(BG_KEY_OVERLAY) ?? '35', 10) || 0));
         const blur = Math.max(0, Math.min(16, parseInt(localStorage.getItem(BG_KEY_BLUR) ?? '0', 10) || 0));
+        const isLightMode = document.body.classList.contains('light-mode');
+        const bgTone = getActiveBgTone();
 
         if (customBgImage) {
             if (fit === 'repeat') {
@@ -1336,11 +1357,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 customBgImage.style.backgroundSize = 'cover';
                 customBgImage.style.backgroundRepeat = 'no-repeat';
             }
-            customBgImage.style.filter = blur > 0 ? `blur(${blur}px)` : 'none';
+
+            // Adaptive brightness & saturation so light/dark backgrounds harmonize with Light/Dark mode
+            const filterParts = [];
+            if (blur > 0) filterParts.push(`blur(${blur}px)`);
+            if (!isLightMode && bgTone === 'light') {
+                // Dark mode + bright spring preset -> moonlit evening tone
+                filterParts.push('brightness(0.42)', 'contrast(1.08)', 'saturate(1.15)');
+            } else if (isLightMode && bgTone === 'dark') {
+                // Light mode + dark night preset -> softer lifted tone
+                filterParts.push('brightness(1.12)', 'saturate(0.95)');
+            }
+            customBgImage.style.filter = filterParts.length ? filterParts.join(' ') : 'none';
         }
 
         if (customBgOverlay) {
-            customBgOverlay.style.background = `rgba(0, 0, 0, ${(overlay / 100).toFixed(2)})`;
+            if (isLightMode) {
+                // Warm ivory veil in Light Mode instead of muddy black
+                const lightAlpha = bgTone === 'dark' ? Math.max(overlay, 26) : overlay;
+                customBgOverlay.style.backgroundColor = `rgba(255, 248, 245, ${(lightAlpha / 100).toFixed(2)})`;
+            } else {
+                // Deep warm dark veil in Dark Mode
+                const darkAlpha = bgTone === 'light' ? Math.max(overlay, 40) : overlay;
+                customBgOverlay.style.backgroundColor = `rgba(10, 4, 8, ${(darkAlpha / 100).toFixed(2)})`;
+            }
         }
 
         if (bgFitSelect) bgFitSelect.value = fit;
@@ -1349,6 +1389,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (bgBlurSlider) bgBlurSlider.value = String(blur);
         if (bgBlurBadge) bgBlurBadge.textContent = `${blur}px`;
     };
+
+    window.refreshCustomBgTheme = applyBgDisplayStyles;
 
     const updateSavedBgActiveUI = (activeId) => {
         if (!savedBgGrid) return;
