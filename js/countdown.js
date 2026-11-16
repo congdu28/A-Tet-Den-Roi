@@ -74,7 +74,10 @@ class TetCountdown {
             celebrationBanner: document.getElementById('celebration-banner'),
             countdownBox: document.getElementById('countdown-main-box'),
             milestoneList: document.getElementById('milestones-container'),
-            currentTime: document.getElementById('clock-current-time'),
+            weatherPill: document.getElementById('weather-status-pill'),
+            weatherIcon: document.getElementById('weather-icon'),
+            weatherTemp: document.getElementById('weather-temp'),
+            weatherCity: document.getElementById('weather-city'),
             solarDate: document.getElementById('clock-solar-date'),
             lunarDate: document.getElementById('clock-lunar-date'),
             // Top Nav Clock Elements
@@ -271,8 +274,9 @@ class TetCountdown {
         this.renderMilestones();
         this.updateMain();
         this.initProgressGlitter();
+        this.initWeatherWidget();
 
-        // 1. Update days/hours/minutes/seconds & real-time clock once every second (0 overhead!)
+        // 1. Update days/hours/minutes/seconds & real-time nav clock once every second
         this.mainTimer = setInterval(() => this.updateMain(), 1000);
 
         // 2. Lắng nghe cuộn trang để kích hoạt hiệu ứng thanh bar ghim trên đầu (sticky, mượt với rAF + hysteresis)
@@ -305,19 +309,142 @@ class TetCountdown {
         }
     }
 
+    describeWeather(code, isDay) {
+        const day = isDay !== 0;
+        if (code === 0) return { icon: day ? '☀️' : '🌙', desc: day ? 'Trời quang nắng đẹp' : 'Đêm quang đãng' };
+        if (code === 1 || code === 2) return { icon: day ? '🌤️' : '☁️', desc: 'Ít mây, dễ chịu' };
+        if (code === 3) return { icon: '☁️', desc: 'Nhiều mây' };
+        if (code === 45 || code === 48) return { icon: '🌫️', desc: 'Có sương mù' };
+        if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return { icon: '🌧️', desc: 'Có mưa' };
+        if (code >= 71 && code <= 77) return { icon: '❄️', desc: 'Tuyết rơi' };
+        if (code >= 95) return { icon: '⛈️', desc: 'Có dông bão' };
+        return { icon: '⛅', desc: 'Thời tiết hiện tại' };
+    }
+
+    renderWeatherPill(temp, city, code, isDay) {
+        if (!this.elements.weatherPill) return;
+        const { icon, desc } = this.describeWeather(code, isDay);
+        const rounded = Math.round(temp);
+        const safeCity = String(city || 'Hà Nội').trim().slice(0, 32) || 'Hà Nội';
+
+        if (this.elements.weatherIcon) this.elements.weatherIcon.textContent = icon;
+        if (this.elements.weatherTemp) this.elements.weatherTemp.textContent = `${rounded}°C`;
+        if (this.elements.weatherCity) this.elements.weatherCity.textContent = safeCity;
+        this.elements.weatherPill.title = `${safeCity}: ${rounded}°C (${desc}) • Nhấn để xem dự báo & lịch âm chi tiết tại Weather 24h`;
+    }
+
+    async fetchJsonWithTimeout(url, timeoutMs = 4000) {
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+        try {
+            const res = await fetch(url, controller ? { signal: controller.signal } : undefined);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return await res.json();
+        } finally {
+            if (timer) clearTimeout(timer);
+        }
+    }
+
+    async refreshWeather(cached = null) {
+        let lat = cached && Number.isFinite(cached.lat) ? cached.lat : 21.0285;
+        let lon = cached && Number.isFinite(cached.lon) ? cached.lon : 105.8542;
+        let city = (cached && cached.city) || 'Hà Nội';
+
+        if (!cached || !Number.isFinite(cached.lat) || !Number.isFinite(cached.lon)) {
+            try {
+                const geo = await this.fetchJsonWithTimeout('https://ipwho.is/?fields=success,city,latitude,longitude', 3500);
+                if (
+                    geo &&
+                    geo.success !== false &&
+                    Number.isFinite(geo.latitude) &&
+                    Number.isFinite(geo.longitude) &&
+                    Math.abs(geo.latitude) <= 90 &&
+                    Math.abs(geo.longitude) <= 180
+                ) {
+                    lat = geo.latitude;
+                    lon = geo.longitude;
+                    if (typeof geo.city === 'string' && geo.city.trim()) {
+                        city = geo.city.trim().slice(0, 32);
+                    }
+                }
+            } catch {
+                // Keep default Hà Nội coordinates if geo lookup is blocked/offline
+            }
+        }
+
+        try {
+            const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&current=temperature_2m,weather_code,is_day&timezone=auto`;
+            const data = await this.fetchJsonWithTimeout(apiUrl, 4000);
+            const cur = data && data.current;
+            if (cur && Number.isFinite(cur.temperature_2m)) {
+                const payload = {
+                    temp: cur.temperature_2m,
+                    code: Number.isFinite(cur.weather_code) ? cur.weather_code : 2,
+                    isDay: Number.isFinite(cur.is_day) ? cur.is_day : 1,
+                    city,
+                    lat,
+                    lon,
+                    ts: Date.now()
+                };
+                this.renderWeatherPill(payload.temp, payload.city, payload.code, payload.isDay);
+                try {
+                    localStorage.setItem('tet-weather-cache-v1', JSON.stringify(payload));
+                } catch {}
+                return;
+            }
+        } catch {
+            // Fall through to clean offline fallback if no cache exists
+        }
+
+        if (!cached && this.elements.weatherTemp && this.elements.weatherCity) {
+            this.elements.weatherIcon && (this.elements.weatherIcon.textContent = '⛅');
+            this.elements.weatherTemp.textContent = 'Thời tiết';
+            this.elements.weatherCity.textContent = 'Weather 24h';
+        }
+    }
+
+    initWeatherWidget() {
+        if (!this.elements.weatherPill) return;
+
+        const CACHE_TTL_MS = 20 * 60 * 1000;
+        let cached = null;
+        try {
+            const parsed = JSON.parse(localStorage.getItem('tet-weather-cache-v1') || 'null');
+            if (parsed && Number.isFinite(parsed.temp) && Number.isFinite(parsed.ts)) {
+                cached = parsed;
+            }
+        } catch {}
+
+        if (cached) {
+            this.renderWeatherPill(cached.temp, cached.city, cached.code, cached.isDay);
+        }
+
+        if (!cached || Date.now() - cached.ts >= CACHE_TTL_MS) {
+            this.refreshWeather(cached);
+        }
+
+        this.weatherTimer = setInterval(() => {
+            if (!document.hidden) {
+                let latest = null;
+                try {
+                    const p = JSON.parse(localStorage.getItem('tet-weather-cache-v1') || 'null');
+                    if (p && Number.isFinite(p.lat) && Number.isFinite(p.lon)) latest = p;
+                } catch {}
+                this.refreshWeather(latest);
+            }
+        }, CACHE_TTL_MS);
+    }
+
     updateMain() {
         const now = new Date();
         const diff = this.targetDate.getTime() - now.getTime();
 
-        // Real-time Clock & Solar/Lunar Date Display
+        // Top Navbar Real-time Clock
         const hh = String(now.getHours()).padStart(2, '0');
         const mm = String(now.getMinutes()).padStart(2, '0');
         const ss = String(now.getSeconds()).padStart(2, '0');
         const timeStr = `${hh}:${mm}:${ss}`;
 
-        if (this.elements.currentTime) {
-            this.elements.currentTime.textContent = timeStr;
-        }
         if (this.elements.navClockTime) {
             this.elements.navClockTime.textContent = timeStr;
         }

@@ -160,11 +160,14 @@
             <!-- Dải Thông Tin Ngày Giờ Hiện Tại & Lịch Tháng Âm Dương (Đồng Nhất Kích Thước Hoàng Gia) -->
             <div class="current-datetime-strip">
                 <div class="current-datetime-left">
-                    <div class="datetime-pill time-pill" title="Giờ hiện tại theo thời gian thực">
-                        <span class="live-clock-dot"></span>
-                        <span class="pill-label">BÂY GIỜ LÀ:</span>
-                        <span class="pill-val time-val" id="clock-current-time">--:--:--</span>
-                    </div>
+                    <a href="https://weather-24h.vercel.app/" target="_blank" rel="noopener noreferrer"
+                       class="datetime-pill weather-pill" id="weather-status-pill"
+                       title="Nhấn để xem dự báo thời tiết & lịch âm chi tiết tại Weather 24h">
+                        <span class="pill-icon" id="weather-icon" aria-hidden="true">🌤️</span>
+                        <span class="pill-val weather-temp-val" id="weather-temp">--°C</span>
+                        <span class="weather-city" id="weather-city">Thời tiết</span>
+                        <span class="weather-ext-arrow" aria-hidden="true">↗</span>
+                    </a>
                     <div class="datetime-pill solar-pill" title="Ngày Dương lịch hiện tại">
                         <span class="pill-icon">📅</span>
                         <span class="pill-val" id="clock-solar-date">Đang cập nhật...</span>

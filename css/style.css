@@ -2210,6 +2210,55 @@ body.light-mode .current-datetime-strip {
     color: #fff;
 }
 
+.datetime-pill.weather-pill {
+    text-decoration: none;
+    cursor: pointer;
+    gap: 6px;
+}
+
+.weather-temp-val {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: #fde047;
+    flex-shrink: 0;
+}
+
+.weather-city {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.92);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.weather-ext-arrow {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--color-accent-gold-light);
+    opacity: 0.8;
+    flex-shrink: 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.datetime-pill.weather-pill:hover .weather-ext-arrow {
+    transform: translate(2px, -2px);
+    opacity: 1;
+}
+
+body.light-mode .weather-temp-val {
+    color: #c2410c;
+}
+
+body.light-mode .weather-city {
+    color: var(--color-text-main);
+}
+
+body.light-mode .weather-ext-arrow {
+    color: #b91c1c;
+}
+
 .pill-icon {
     font-size: 0.95rem;
 }
@@ -7044,7 +7093,8 @@ body.light-mode .hd-pill {
         width: 100%;
     }
 
-    .datetime-pill.time-pill {
+    .datetime-pill.time-pill,
+    .datetime-pill.weather-pill {
         grid-column: 1 / -1;
         justify-content: center;
         padding: 7px 10px;
