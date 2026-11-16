@@ -30,11 +30,11 @@ const SECURITY_HEADERS = {
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'SAMEORIGIN',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self)',
     'Cross-Origin-Resource-Policy': 'same-origin',
     'Cross-Origin-Opener-Policy': 'same-origin',
     'X-Permitted-Cross-Domain-Policies': 'none',
-    'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self' https://api.open-meteo.com https://ipwho.is; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+    'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self' https://api.open-meteo.com https://ipwho.is https://nominatim.openstreetmap.org https://api.bigdatacloud.net; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
 };
 
 function isAllowedPublicPath(relPath) {

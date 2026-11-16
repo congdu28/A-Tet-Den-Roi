@@ -75,6 +75,8 @@ class TetCountdown {
             countdownBox: document.getElementById('countdown-main-box'),
             milestoneList: document.getElementById('milestones-container'),
             weatherPill: document.getElementById('weather-status-pill'),
+            weatherLink: document.getElementById('weather-link-main'),
+            weatherGpsBtn: document.getElementById('btn-weather-gps'),
             weatherIcon: document.getElementById('weather-icon'),
             weatherTemp: document.getElementById('weather-temp'),
             weatherCity: document.getElementById('weather-city'),
@@ -338,16 +340,35 @@ class TetCountdown {
         return code;
     }
 
-    renderWeatherPill(temp, city, code, isDay) {
+    renderWeatherPill(temp, city, code, isDay, fullLocation = '', isGps = false) {
         if (!this.elements.weatherPill) return;
         const { icon, desc } = this.describeWeather(code, isDay);
         const rounded = Math.round(temp);
-        const safeCity = String(city || 'Hà Nội').trim().slice(0, 32) || 'Hà Nội';
+        const safeCity = String(city || 'Hà Nội').trim().slice(0, 36) || 'Hà Nội';
+        const displayFull = String(fullLocation || safeCity).trim().slice(0, 80);
 
         if (this.elements.weatherIcon) this.elements.weatherIcon.textContent = icon;
         if (this.elements.weatherTemp) this.elements.weatherTemp.textContent = `${rounded}°C`;
         if (this.elements.weatherCity) this.elements.weatherCity.textContent = safeCity;
-        this.elements.weatherPill.title = `${safeCity}: ${rounded}°C (${desc}) • Nhấn để xem dự báo & lịch âm chi tiết tại Weather 24h`;
+
+        const targetLink = this.elements.weatherLink || this.elements.weatherPill;
+        targetLink.title = `${displayFull}: ${rounded}°C (${desc}) • Nhấn để xem dự báo & lịch âm chi tiết tại Weather 24h`;
+
+        if (this.elements.weatherGpsBtn) {
+            this.elements.weatherGpsBtn.classList.toggle('is-gps', Boolean(isGps));
+            this.elements.weatherGpsBtn.title = isGps
+                ? `Đang lấy theo GPS: ${displayFull} (Nhấn để cập nhật lại)`
+                : 'Cập nhật vị trí chi tiết theo Xã/Phường (GPS)';
+        }
+    }
+
+    showWeatherToast(text) {
+        const toast = document.getElementById('tet-toast');
+        if (!toast) return;
+        toast.textContent = String(text || '');
+        toast.classList.remove('hidden');
+        if (window.toastTimer) clearTimeout(window.toastTimer);
+        window.toastTimer = setTimeout(() => toast.classList.add('hidden'), 2800);
     }
 
     async fetchJsonWithTimeout(url, timeoutMs = 4000) {
@@ -362,10 +383,83 @@ class TetCountdown {
         }
     }
 
-    async refreshWeather(cached = null) {
+    async reverseGeocodeWard(lat, lon) {
+        try {
+            const nomUrl = `https://nominatim.openstreetmap.org/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&format=json&addressdetails=1&accept-language=vi`;
+            const data = await this.fetchJsonWithTimeout(nomUrl, 3000);
+            const addr = data && data.address;
+            if (addr) {
+                const ward = addr.quarter || addr.suburb || addr.village || addr.hamlet || addr.town || addr.neighbourhood || addr.city_district || addr.county;
+                const province = addr.city || addr.state || addr.province;
+                if (ward || province) {
+                    const shortName = String(ward || province).trim();
+                    const fullName = [ward, province].filter((v, idx, arr) => v && arr.indexOf(v) === idx).join(', ');
+                    return { city: shortName, fullLocation: fullName || shortName };
+                }
+            }
+        } catch {
+            // Fall through to BigDataCloud reverse geocoder
+        }
+
+        try {
+            const bdcUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&localityLanguage=vi`;
+            const data = await this.fetchJsonWithTimeout(bdcUrl, 3200);
+            if (data) {
+                const ward = data.locality || data.city;
+                const province = data.principalSubdivision || data.city;
+                if (ward || province) {
+                    const shortName = String(ward || province).trim();
+                    const fullName = [ward, province].filter((v, idx, arr) => v && arr.indexOf(v) === idx).join(', ');
+                    return { city: shortName, fullLocation: fullName || shortName };
+                }
+            }
+        } catch {
+            // Ignore reverse geocode errors
+        }
+
+        return null;
+    }
+
+    async fetchAndSaveWeather(lat, lon, city, fullLocation, source = 'ip', fallbackCached = null) {
+        try {
+            const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&current=temperature_2m,weather_code,is_day,uv_index,cloud_cover,precipitation&timezone=auto`;
+            const data = await this.fetchJsonWithTimeout(apiUrl, 4000);
+            const cur = data && data.current;
+            if (cur && Number.isFinite(cur.temperature_2m)) {
+                const payload = {
+                    temp: cur.temperature_2m,
+                    code: this.calibrateWeatherCode(cur.weather_code, cur),
+                    isDay: Number.isFinite(cur.is_day) ? cur.is_day : 1,
+                    city,
+                    fullLocation: fullLocation || city,
+                    lat,
+                    lon,
+                    source,
+                    ts: Date.now()
+                };
+                this.renderWeatherPill(payload.temp, payload.city, payload.code, payload.isDay, payload.fullLocation, source === 'gps');
+                try {
+                    localStorage.setItem('tet-weather-cache-v2', JSON.stringify(payload));
+                } catch {}
+                return payload;
+            }
+        } catch {
+            // Fall through to clean offline fallback if no cache exists
+        }
+
+        if (!fallbackCached && this.elements.weatherTemp && this.elements.weatherCity) {
+            this.elements.weatherIcon && (this.elements.weatherIcon.textContent = '⛅');
+            this.elements.weatherTemp.textContent = 'Thời tiết';
+            this.elements.weatherCity.textContent = 'Weather 24h';
+        }
+        return null;
+    }
+
+    async refreshWeatherByIp(cached = null) {
         let lat = cached && Number.isFinite(cached.lat) ? cached.lat : 21.0285;
         let lon = cached && Number.isFinite(cached.lon) ? cached.lon : 105.8542;
         let city = (cached && cached.city) || 'Hà Nội';
+        let fullLocation = (cached && cached.fullLocation) || city;
 
         if (!cached || !Number.isFinite(cached.lat) || !Number.isFinite(cached.lon)) {
             try {
@@ -382,6 +476,7 @@ class TetCountdown {
                     lon = geo.longitude;
                     if (typeof geo.city === 'string' && geo.city.trim()) {
                         city = geo.city.trim().slice(0, 32);
+                        fullLocation = city;
                     }
                 }
             } catch {
@@ -389,39 +484,78 @@ class TetCountdown {
             }
         }
 
-        try {
-            const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&current=temperature_2m,weather_code,is_day,uv_index,cloud_cover,precipitation&timezone=auto`;
-            const data = await this.fetchJsonWithTimeout(apiUrl, 4000);
-            const cur = data && data.current;
-            if (cur && Number.isFinite(cur.temperature_2m)) {
-                const payload = {
-                    temp: cur.temperature_2m,
-                    code: this.calibrateWeatherCode(cur.weather_code, cur),
-                    isDay: Number.isFinite(cur.is_day) ? cur.is_day : 1,
-                    city,
-                    lat,
-                    lon,
-                    ts: Date.now()
-                };
-                this.renderWeatherPill(payload.temp, payload.city, payload.code, payload.isDay);
-                try {
-                    localStorage.setItem('tet-weather-cache-v2', JSON.stringify(payload));
-                } catch {}
-                return;
+        return this.fetchAndSaveWeather(lat, lon, city, fullLocation, 'ip', cached);
+    }
+
+    fetchWeatherByGps(manualClick = false) {
+        if (typeof navigator === 'undefined' || !navigator.geolocation) {
+            if (manualClick) {
+                this.showWeatherToast('⚠️ Trình duyệt không hỗ trợ định vị GPS.');
             }
-        } catch {
-            // Fall through to clean offline fallback if no cache exists
+            return Promise.resolve(null);
         }
 
-        if (!cached && this.elements.weatherTemp && this.elements.weatherCity) {
-            this.elements.weatherIcon && (this.elements.weatherIcon.textContent = '⛅');
-            this.elements.weatherTemp.textContent = 'Thời tiết';
-            this.elements.weatherCity.textContent = 'Weather 24h';
+        const btn = this.elements.weatherGpsBtn;
+        if (btn) btn.classList.add('is-loading');
+
+        return new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+                async (pos) => {
+                    const lat = pos.coords && pos.coords.latitude;
+                    const lon = pos.coords && pos.coords.longitude;
+                    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                        if (btn) btn.classList.remove('is-loading');
+                        resolve(null);
+                        return;
+                    }
+
+                    const place = await this.reverseGeocodeWard(lat, lon);
+                    const city = (place && place.city) || 'Vị trí của bạn';
+                    const fullLocation = (place && place.fullLocation) || city;
+                    const saved = await this.fetchAndSaveWeather(lat, lon, city, fullLocation, 'gps', true);
+
+                    if (btn) btn.classList.remove('is-loading');
+                    if (manualClick && saved) {
+                        this.showWeatherToast(`📍 Đã cập nhật thời tiết tại ${saved.fullLocation}!`);
+                    }
+                    resolve(saved);
+                },
+                (err) => {
+                    if (btn) btn.classList.remove('is-loading');
+                    if (manualClick) {
+                        const msg = err && err.code === 1
+                            ? '⚠️ Bạn đã từ chối quyền vị trí — vẫn giữ thời tiết khu vực hiện tại.'
+                            : '⚠️ Không lấy được tín hiệu GPS lúc này, vui lòng thử lại sau.';
+                        this.showWeatherToast(msg);
+                    }
+                    resolve(null);
+                },
+                { enableHighAccuracy: true, timeout: 8000, maximumAge: 300000 }
+            );
+        });
+    }
+
+    async isGeolocationGrantedSilently() {
+        if (!navigator.permissions || typeof navigator.permissions.query !== 'function') return false;
+        try {
+            const status = await navigator.permissions.query({ name: 'geolocation' });
+            return status.state === 'granted';
+        } catch {
+            return false;
         }
     }
 
-    initWeatherWidget() {
+    async initWeatherWidget() {
         if (!this.elements.weatherPill) return;
+
+        if (this.elements.weatherGpsBtn) {
+            this.elements.weatherGpsBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.tetAudio) window.tetAudio.playLuckyChime();
+                this.fetchWeatherByGps(true);
+            });
+        }
 
         const CACHE_KEY = 'tet-weather-cache-v2';
         const CACHE_TTL_MS = 20 * 60 * 1000;
@@ -434,21 +568,39 @@ class TetCountdown {
         } catch {}
 
         if (cached) {
-            this.renderWeatherPill(cached.temp, cached.city, cached.code, cached.isDay);
+            this.renderWeatherPill(
+                cached.temp,
+                cached.city,
+                cached.code,
+                cached.isDay,
+                cached.fullLocation,
+                cached.source === 'gps'
+            );
         }
 
-        if (!cached || Date.now() - cached.ts >= CACHE_TTL_MS) {
-            this.refreshWeather(cached);
+        const isExpired = !cached || Date.now() - cached.ts >= CACHE_TTL_MS;
+        const gpsAlreadyGranted = await this.isGeolocationGrantedSilently();
+
+        if (gpsAlreadyGranted && (isExpired || cached.source !== 'gps')) {
+            await this.fetchWeatherByGps(false);
+        } else if (isExpired) {
+            await this.refreshWeatherByIp(cached);
         }
 
-        this.weatherTimer = setInterval(() => {
-            if (!document.hidden) {
-                let latest = null;
-                try {
-                    const p = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
-                    if (p && Number.isFinite(p.lat) && Number.isFinite(p.lon)) latest = p;
-                } catch {}
-                this.refreshWeather(latest);
+        this.weatherTimer = setInterval(async () => {
+            if (document.hidden) return;
+            let latest = null;
+            try {
+                const p = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+                if (p && Number.isFinite(p.lat) && Number.isFinite(p.lon)) latest = p;
+            } catch {}
+
+            if (await this.isGeolocationGrantedSilently()) {
+                this.fetchWeatherByGps(false);
+            } else if (latest && latest.source === 'gps') {
+                this.fetchAndSaveWeather(latest.lat, latest.lon, latest.city, latest.fullLocation, 'gps', latest);
+            } else {
+                this.refreshWeatherByIp(latest);
             }
         }, CACHE_TTL_MS);
     }
