@@ -384,43 +384,75 @@ class TetCountdown {
     }
 
     async reverseGeocodeWard(lat, lon) {
-        try {
+        const formatPlace = (ward, province) => {
+            const w = typeof ward === 'string' ? ward.trim() : '';
+            const p = typeof province === 'string' ? province.trim() : '';
+            if (!w && !p) return null;
+            const shortName = w || p;
+            const fullName = [w, p].filter((v, idx, arr) => v && arr.indexOf(v) === idx).join(', ');
+            return { city: shortName, fullLocation: fullName || shortName };
+        };
+
+        const queryNominatim = async () => {
             const nomUrl = `https://nominatim.openstreetmap.org/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&format=json&addressdetails=1&accept-language=vi`;
-            const data = await this.fetchJsonWithTimeout(nomUrl, 3000);
+            const data = await this.fetchJsonWithTimeout(nomUrl, 3500);
             const addr = data && data.address;
-            if (addr) {
-                const ward = addr.quarter || addr.suburb || addr.village || addr.hamlet || addr.town || addr.neighbourhood || addr.city_district || addr.county;
-                const province = addr.city || addr.state || addr.province;
-                if (ward || province) {
-                    const shortName = String(ward || province).trim();
-                    const fullName = [ward, province].filter((v, idx, arr) => v && arr.indexOf(v) === idx).join(', ');
-                    return { city: shortName, fullLocation: fullName || shortName };
-                }
-            }
-        } catch {
-            // Fall through to BigDataCloud reverse geocoder
-        }
+            if (!addr) return null;
+            const ward = addr.quarter || addr.suburb || addr.neighbourhood || addr.village || addr.hamlet || addr.town || addr.city_district || addr.county;
+            const province = addr.city || addr.state || addr.province;
+            return formatPlace(ward, province);
+        };
 
-        try {
+        const queryBigDataCloud = async () => {
             const bdcUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&localityLanguage=vi`;
-            const data = await this.fetchJsonWithTimeout(bdcUrl, 3200);
-            if (data) {
-                const ward = data.locality || data.city;
-                const province = data.principalSubdivision || data.city;
-                if (ward || province) {
-                    const shortName = String(ward || province).trim();
-                    const fullName = [ward, province].filter((v, idx, arr) => v && arr.indexOf(v) === idx).join(', ');
-                    return { city: shortName, fullLocation: fullName || shortName };
+            const data = await this.fetchJsonWithTimeout(bdcUrl, 4000);
+            if (!data) return null;
+
+            let wardFromAdmin = '';
+            let districtFromAdmin = '';
+            if (data.localityInfo && Array.isArray(data.localityInfo.administrative)) {
+                for (const item of data.localityInfo.administrative) {
+                    const name = (item && item.name) || '';
+                    const desc = ((item && item.description) || '').toLowerCase();
+                    if (!wardFromAdmin && (desc.includes('phường') || desc.includes('xã') || desc.includes('thị trấn') || name.startsWith('Phường') || name.startsWith('Xã'))) {
+                        wardFromAdmin = name;
+                    } else if (!districtFromAdmin && (desc.includes('quận') || desc.includes('huyện') || desc.includes('thị xã'))) {
+                        districtFromAdmin = name;
+                    }
                 }
             }
-        } catch {
-            // Ignore reverse geocode errors
-        }
 
+            const ward = wardFromAdmin || data.locality || districtFromAdmin || data.city;
+            const province = data.principalSubdivision || data.city;
+            return formatPlace(ward, province);
+        };
+
+        const queryPhoton = async () => {
+            const phUrl = `https://photon.komoot.io/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
+            const data = await this.fetchJsonWithTimeout(phUrl, 4000);
+            const props = data && data.features && data.features[0] && data.features[0].properties;
+            if (!props) return null;
+            const ward = props.district || props.locality || props.suburb || props.city || props.county;
+            const province = props.state || props.city;
+            return formatPlace(ward, province);
+        };
+
+        // Run all 3 independent reverse geocoders in parallel so DNS/adblock on any single service never stalls or fails lookup
+        const [nomRes, bdcRes, phRes] = await Promise.allSettled([
+            queryNominatim(),
+            queryBigDataCloud(),
+            queryPhoton()
+        ]);
+
+        for (const res of [nomRes, bdcRes, phRes]) {
+            if (res.status === 'fulfilled' && res.value) {
+                return res.value;
+            }
+        }
         return null;
     }
 
-    async fetchAndSaveWeather(lat, lon, city, fullLocation, source = 'ip', fallbackCached = null) {
+    async fetchAndSaveWeather(lat, lon, city, fullLocation, source = 'ip', fallbackCached = null, persistCache = true) {
         try {
             const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&current=temperature_2m,weather_code,is_day,uv_index,cloud_cover,precipitation&timezone=auto`;
             const data = await this.fetchJsonWithTimeout(apiUrl, 4000);
@@ -438,9 +470,11 @@ class TetCountdown {
                     ts: Date.now()
                 };
                 this.renderWeatherPill(payload.temp, payload.city, payload.code, payload.isDay, payload.fullLocation, source === 'gps');
-                try {
-                    localStorage.setItem('tet-weather-cache-v2', JSON.stringify(payload));
-                } catch {}
+                if (persistCache) {
+                    try {
+                        localStorage.setItem('tet-weather-cache-v3', JSON.stringify(payload));
+                    } catch {}
+                }
                 return payload;
             }
         } catch {
@@ -455,6 +489,26 @@ class TetCountdown {
         return null;
     }
 
+    async resolveIpFallbackLocation() {
+        try {
+            const geo = await this.fetchJsonWithTimeout('https://ipwho.is/?fields=success,city,latitude,longitude', 3500);
+            if (
+                geo &&
+                geo.success !== false &&
+                Number.isFinite(geo.latitude) &&
+                Number.isFinite(geo.longitude) &&
+                Math.abs(geo.latitude) <= 90 &&
+                Math.abs(geo.longitude) <= 180
+            ) {
+                const city = (typeof geo.city === 'string' && geo.city.trim()) ? geo.city.trim().slice(0, 32) : 'Hà Nội';
+                return { lat: geo.latitude, lon: geo.longitude, city, fullLocation: city };
+            }
+        } catch {
+            // Ignore IP lookup failure
+        }
+        return null;
+    }
+
     async refreshWeatherByIp(cached = null) {
         let lat = cached && Number.isFinite(cached.lat) ? cached.lat : 21.0285;
         let lon = cached && Number.isFinite(cached.lon) ? cached.lon : 105.8542;
@@ -462,25 +516,12 @@ class TetCountdown {
         let fullLocation = (cached && cached.fullLocation) || city;
 
         if (!cached || !Number.isFinite(cached.lat) || !Number.isFinite(cached.lon)) {
-            try {
-                const geo = await this.fetchJsonWithTimeout('https://ipwho.is/?fields=success,city,latitude,longitude', 3500);
-                if (
-                    geo &&
-                    geo.success !== false &&
-                    Number.isFinite(geo.latitude) &&
-                    Number.isFinite(geo.longitude) &&
-                    Math.abs(geo.latitude) <= 90 &&
-                    Math.abs(geo.longitude) <= 180
-                ) {
-                    lat = geo.latitude;
-                    lon = geo.longitude;
-                    if (typeof geo.city === 'string' && geo.city.trim()) {
-                        city = geo.city.trim().slice(0, 32);
-                        fullLocation = city;
-                    }
-                }
-            } catch {
-                // Keep default Hà Nội coordinates if geo lookup is blocked/offline
+            const ipPlace = await this.resolveIpFallbackLocation();
+            if (ipPlace) {
+                lat = ipPlace.lat;
+                lon = ipPlace.lon;
+                city = ipPlace.city;
+                fullLocation = ipPlace.fullLocation;
             }
         }
 
@@ -509,14 +550,42 @@ class TetCountdown {
                         return;
                     }
 
-                    const place = await this.reverseGeocodeWard(lat, lon);
-                    const city = (place && place.city) || 'Vị trí của bạn';
-                    const fullLocation = (place && place.fullLocation) || city;
-                    const saved = await this.fetchAndSaveWeather(lat, lon, city, fullLocation, 'gps', true);
+                    let place = await this.reverseGeocodeWard(lat, lon);
+                    const hasExactPlace = Boolean(place && place.city);
+
+                    if (!hasExactPlace) {
+                        let prevCity = '';
+                        try {
+                            const old = JSON.parse(localStorage.getItem('tet-weather-cache-v3') || 'null');
+                            if (old && old.city && old.city !== 'Vị trí của bạn') prevCity = old.city;
+                        } catch {}
+                        if (!prevCity) {
+                            const ipPlace = await this.resolveIpFallbackLocation();
+                            if (ipPlace) prevCity = ipPlace.city;
+                        }
+                        place = {
+                            city: prevCity || 'Khu vực của bạn',
+                            fullLocation: prevCity || `${lat.toFixed(3)}, ${lon.toFixed(3)}`
+                        };
+                    }
+
+                    const saved = await this.fetchAndSaveWeather(
+                        lat,
+                        lon,
+                        place.city,
+                        place.fullLocation,
+                        'gps',
+                        true,
+                        hasExactPlace
+                    );
 
                     if (btn) btn.classList.remove('is-loading');
                     if (manualClick && saved) {
-                        this.showWeatherToast(`📍 Đã cập nhật thời tiết tại ${saved.fullLocation}!`);
+                        this.showWeatherToast(
+                            hasExactPlace
+                                ? `📍 Đã cập nhật thời tiết tại ${saved.fullLocation}!`
+                                : `📍 Đã cập nhật nhiệt độ theo GPS (${saved.city}).`
+                        );
                     }
                     resolve(saved);
                 },
@@ -557,7 +626,7 @@ class TetCountdown {
             });
         }
 
-        const CACHE_KEY = 'tet-weather-cache-v2';
+        const CACHE_KEY = 'tet-weather-cache-v3';
         const CACHE_TTL_MS = 20 * 60 * 1000;
         let cached = null;
         try {
