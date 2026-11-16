@@ -49,7 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const types = ['chrysanthemum', 'willow', 'ring', 'heart', 'strobe', 'flower', 'double_burst', 'starburst'];
         const randomType = types[Math.floor(Math.random() * types.length)];
-        fireworks.explodeAt(e.clientX, e.clientY, null, randomType, 1.5);
+        const burstMult = typeof fireworks.getClickBurstMultiplier === 'function' ? fireworks.getClickBurstMultiplier() : 1.5;
+        fireworks.explodeAt(e.clientX, e.clientY, null, randomType, burstMult, true);
     });
 
     // Auto-unlock Web AudioContext on first user interaction
@@ -375,6 +376,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Effect Quantity & Density Sliders Wiring
     const sliderFireworkDensity = document.getElementById('slider-firework-density');
     const badgeFireworkDensity = document.getElementById('badge-firework-density');
+    const sliderFireworkManualDensity = document.getElementById('slider-firework-manual-density');
+    const badgeFireworkManualDensity = document.getElementById('badge-firework-manual-density');
     const sliderPetalDensity = document.getElementById('slider-petal-density');
     const badgePetalDensity = document.getElementById('badge-petal-density');
     const sliderLanternCount = document.getElementById('slider-lantern-count');
@@ -400,6 +403,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const item = fireworkDensityMap[e.target.value] || fireworkDensityMap['3'];
             if (badgeFireworkDensity) badgeFireworkDensity.textContent = item.label;
             if (window.fireworks) window.fireworks.setDensity(item.key);
+        });
+    }
+
+    // 1b. Manual Fireworks Density Slider (Khi bấm nút Pháo Hoa hoặc nhấp màn hình)
+    const fireworkManualDensityMap = {
+        '1': { key: 'low', label: 'Nhẹ Nhàng ✨' },
+        '2': { key: 'medium', label: 'Sống Động 🎆' },
+        '3': { key: 'high', label: 'Đại Tiệc Rực Rỡ 🎇' },
+        '4': { key: 'ultra', label: 'Siêu Bùng Nổ 💥' }
+    };
+    if (sliderFireworkManualDensity) {
+        const savedManualDensity = localStorage.getItem('tet-firework-manual-density') || 'high';
+        const manualValMap = { low: '1', medium: '2', high: '3', ultra: '4' };
+        const initialManualVal = manualValMap[savedManualDensity] || '3';
+        sliderFireworkManualDensity.value = initialManualVal;
+        if (badgeFireworkManualDensity) badgeFireworkManualDensity.textContent = fireworkManualDensityMap[initialManualVal].label;
+
+        sliderFireworkManualDensity.addEventListener('input', (e) => {
+            const item = fireworkManualDensityMap[e.target.value] || fireworkManualDensityMap['3'];
+            if (badgeFireworkManualDensity) badgeFireworkManualDensity.textContent = item.label;
+            if (window.fireworks) window.fireworks.setManualDensity(item.key);
         });
     }
 

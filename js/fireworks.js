@@ -17,8 +17,9 @@ class FireworksSystem {
         this.flashes = [];
         this.rocketSparks = [];
 
-        // Density level from localStorage: 'low' | 'medium' | 'high'
+        // Density level from localStorage: auto ('low'|'medium'|'high') and manual button/click ('low'|'medium'|'high'|'ultra')
         this.density = localStorage.getItem('tet-firework-density') || 'high';
+        this.manualDensity = localStorage.getItem('tet-firework-manual-density') || 'high';
         this.updateDensityLimits();
 
         this.autoLaunchTimer = null;
@@ -95,6 +96,35 @@ class FireworksSystem {
             this.autoDelayBase = 580;
             this.autoDelayRandom = 640;
         }
+
+        const manualPresets = {
+            low: {
+                maxParticles: 1600,
+                baseCount: 64,
+                clickScale: 0.9,
+                frenzy: { fanCount: 3, crossPairs: 1, volleyCount: 8, volleyDelay: 120, finaleCount: 3, burstScale: 1.0, durationMs: 3200 }
+            },
+            medium: {
+                maxParticles: 2800,
+                baseCount: 98,
+                clickScale: 1.2,
+                frenzy: { fanCount: 5, crossPairs: 2, volleyCount: 15, volleyDelay: 95, finaleCount: 5, burstScale: 1.2, durationMs: 4000 }
+            },
+            high: {
+                maxParticles: 4500,
+                baseCount: 135,
+                clickScale: 1.5,
+                frenzy: { fanCount: 7, crossPairs: 3, volleyCount: 22, volleyDelay: 82, finaleCount: 7, burstScale: 1.38, durationMs: 4800 }
+            },
+            ultra: {
+                maxParticles: 6500,
+                baseCount: 168,
+                clickScale: 1.85,
+                frenzy: { fanCount: 9, crossPairs: 4, volleyCount: 34, volleyDelay: 62, finaleCount: 9, burstScale: 1.55, durationMs: 5400 }
+            }
+        };
+
+        this.manualConfig = manualPresets[this.manualDensity] || manualPresets.high;
     }
 
     setDensity(newDensity) {
@@ -105,6 +135,16 @@ class FireworksSystem {
             clearTimeout(this.autoLaunchTimer);
             this.scheduleNextAutoFire();
         }
+    }
+
+    setManualDensity(newDensity) {
+        this.manualDensity = newDensity;
+        localStorage.setItem('tet-firework-manual-density', newDensity);
+        this.updateDensityLimits();
+    }
+
+    getClickBurstMultiplier() {
+        return this.manualConfig ? this.manualConfig.clickScale : 1.5;
     }
 
     resize() {
@@ -187,11 +227,14 @@ class FireworksSystem {
         this.launchRocket(startX, startY, destX, destY, palette, type);
     }
 
-    launchRocket(startX, startY, destX, destY, palette = null, shellType = 'chrysanthemum', speedBoost = 1) {
-        if (this.fireworks.length > 36) return;
+    launchRocket(startX, startY, destX, destY, palette = null, shellType = 'chrysanthemum', speedBoost = 1, isManualBurst = false) {
+        const rocketCap = (this.isFrenzyRunning && this.manualDensity === 'ultra') ? 68 : 42;
+        if (this.fireworks.length > rocketCap) return;
 
         const pal = palette || this.pickPalette();
-        this.fireworks.push(new AdvancedRocket(startX, startY, destX, destY, pal, shellType, speedBoost));
+        const rocket = new AdvancedRocket(startX, startY, destX, destY, pal, shellType, speedBoost);
+        rocket.isManualBurst = Boolean(isManualBurst);
+        this.fireworks.push(rocket);
         this.wakeLoop();
 
         if (window.tetAudio) {
@@ -199,10 +242,14 @@ class FireworksSystem {
         }
     }
 
-    explodeAt(x, y, forcedPalette = null, shellType = 'chrysanthemum', countMultiplier = 1) {
+    explodeAt(x, y, forcedPalette = null, shellType = 'chrysanthemum', countMultiplier = 1, isManual = false) {
         this.wakeLoop();
         const palette = forcedPalette || this.pickPalette();
-        const availableSlots = this.maxParticles - this.particles.length;
+        const useManualLimits = isManual || this.isFrenzyRunning;
+        const effectiveMax = useManualLimits
+            ? Math.max(this.maxParticles, (this.manualConfig && this.manualConfig.maxParticles) || 4500)
+            : this.maxParticles;
+        const availableSlots = effectiveMax - this.particles.length;
         if (availableSlots < 12) return;
 
         const isLight = this.isLightMode();
@@ -215,8 +262,13 @@ class FireworksSystem {
         }
 
         let baseCount = 92;
-        if (this.density === 'low') baseCount = 58;
-        else if (this.density === 'high') baseCount = 135;
+        if (useManualLimits && this.manualConfig) {
+            baseCount = this.manualConfig.baseCount;
+        } else if (this.density === 'low') {
+            baseCount = 58;
+        } else if (this.density === 'high') {
+            baseCount = 135;
+        }
 
         const count = Math.min(availableSlots, Math.floor(baseCount * countMultiplier));
 
@@ -339,70 +391,72 @@ class FireworksSystem {
 
         const W = this.width;
         const H = this.height;
-
-        // Wave 1 (t = 0): 7-shell symmetrical fan barrage across the sky
-        const fanAngles = [-0.42, -0.28, -0.14, 0, 0.14, 0.28, 0.42];
-        fanAngles.forEach((angle, idx) => {
-            const startX = W * 0.5 + (idx - 3) * 44;
-            const destX = W * 0.5 + Math.sin(angle) * (W * 0.46);
-            const destY = H * 0.26 + Math.abs(idx - 3) * 28;
-            const pal = this.pickPalette(idx);
-            const type = idx === 3 ? 'flower' : idx % 2 === 0 ? 'chrysanthemum' : 'double_burst';
-            setTimeout(() => {
-                this.launchRocket(startX, H + 10, destX, destY, pal, type, 1.18);
-            }, idx * 60);
-        });
-
-        // Wave 2 (t = 420ms): 6 criss-crossing comets from both corners
-        setTimeout(() => {
-            this.launchRocket(60, H + 10, W * 0.36, H * 0.26, this.pickPalette(0), 'willow', 1.15);
-            this.launchRocket(140, H + 10, W * 0.52, H * 0.20, this.pickPalette(1), 'ring', 1.2);
-            this.launchRocket(220, H + 10, W * 0.65, H * 0.32, this.pickPalette(3), 'flower', 1.1);
-            this.launchRocket(W - 60, H + 10, W * 0.64, H * 0.26, this.pickPalette(4), 'willow', 1.15);
-            this.launchRocket(W - 140, H + 10, W * 0.48, H * 0.20, this.pickPalette(2), 'ring', 1.2);
-            this.launchRocket(W - 220, H + 10, W * 0.35, H * 0.32, this.pickPalette(5), 'starburst', 1.1);
-        }, 420);
-
-        // Wave 3 (t = 820ms - 2600ms): Rapid-fire volley of 22 comets across full height & width
-        let fired = 0;
+        const cfg = (this.manualConfig && this.manualConfig.frenzy) || {
+            fanCount: 7, crossPairs: 3, volleyCount: 22, volleyDelay: 82, finaleCount: 7, burstScale: 1.38, durationMs: 4800
+        };
         const types = ['heart', 'flower', 'strobe', 'willow', 'double_burst', 'starburst', 'ring', 'chrysanthemum'];
+
+        // Wave 1 (t = 0): Symmetrical fan barrage scaled by manual density
+        const fanHalf = (cfg.fanCount - 1) / 2;
+        for (let idx = 0; idx < cfg.fanCount; idx++) {
+            const norm = fanHalf > 0 ? (idx - fanHalf) / fanHalf : 0; // -1..1
+            const angle = norm * 0.44;
+            const startX = W * 0.5 + (idx - fanHalf) * 42;
+            const destX = W * 0.5 + Math.sin(angle) * (W * 0.45);
+            const destY = H * 0.24 + Math.abs(idx - fanHalf) * 26;
+            const pal = this.pickPalette(idx);
+            const type = idx === Math.floor(fanHalf) ? 'flower' : idx % 2 === 0 ? 'chrysanthemum' : 'double_burst';
+            setTimeout(() => {
+                this.launchRocket(startX, H + 10, destX, destY, pal, type, 1.18, true);
+            }, idx * 55);
+        }
+
+        // Wave 2 (t = 400ms): Criss-crossing comets from both corners
+        setTimeout(() => {
+            for (let pair = 0; pair < cfg.crossPairs; pair++) {
+                const offsetX = 60 + pair * 75;
+                const targetLX = W * (0.36 + pair * 0.13);
+                const targetRX = W * (0.64 - pair * 0.13);
+                const targetY = H * (pair % 2 === 0 ? 0.26 : 0.20);
+                this.launchRocket(offsetX, H + 10, Math.min(W - 80, targetLX), targetY, this.pickPalette(pair), pair % 2 === 0 ? 'willow' : 'ring', 1.16, true);
+                this.launchRocket(W - offsetX, H + 10, Math.max(80, targetRX), targetY, this.pickPalette(pair + 3), pair % 2 === 0 ? 'starburst' : 'flower', 1.16, true);
+            }
+        }, 400);
+
+        // Wave 3 (t = 780ms): Rapid-fire volley across full height & width
+        let fired = 0;
         const volleyTimer = setInterval(() => {
             const x = Math.random() * (W - 160) + 80;
             const y = Math.random() * (H * 0.5) + 55;
             const t = types[fired % types.length];
             const p = this.pickPalette(fired);
-            this.launchRocket(x + (Math.random() * 90 - 45), H + 10, x, y, p, t, 1.22);
+            this.launchRocket(x + (Math.random() * 90 - 45), H + 10, x, y, p, t, 1.22, true);
             fired++;
-            if (fired >= 22) {
+            if (fired >= cfg.volleyCount) {
                 clearInterval(volleyTimer);
             }
-        }, 82);
+        }, cfg.volleyDelay);
 
-        // Wave 4 (t = 2750ms): Grand Finale Salvo - 7 giant simultaneous mega bursts!
+        // Wave 4 (Grand Finale Salvo): Symmetrical giant bursts
+        const finaleStartMs = Math.max(1500, 780 + cfg.volleyCount * cfg.volleyDelay - 300);
         setTimeout(() => {
-            const finalePoints = [
-                { x: W * 0.12, y: H * 0.34, type: 'willow', pal: 4 },
-                { x: W * 0.25, y: H * 0.22, type: 'flower', pal: 5 },
-                { x: W * 0.38, y: H * 0.40, type: 'double_burst', pal: 1 },
-                { x: W * 0.50, y: H * 0.18, type: 'starburst', pal: 0 },
-                { x: W * 0.62, y: H * 0.40, type: 'double_burst', pal: 2 },
-                { x: W * 0.75, y: H * 0.22, type: 'heart', pal: 3 },
-                { x: W * 0.88, y: H * 0.34, type: 'willow', pal: 4 }
-            ];
+            const fCount = cfg.finaleCount;
+            for (let i = 0; i < fCount; i++) {
+                const ratio = fCount > 1 ? 0.12 + (i / (fCount - 1)) * 0.76 : 0.5;
+                const yRatio = i % 2 === 0 ? 0.34 : 0.20;
+                const ptType = types[(i + 2) % types.length];
+                this.launchRocket(W * ratio, H + 10, W * ratio, H * yRatio, this.pickPalette(i), ptType, cfg.burstScale, true);
+            }
+        }, finaleStartMs);
 
-            finalePoints.forEach(pt => {
-                this.launchRocket(pt.x, H + 10, pt.x, pt.y, this.pickPalette(pt.pal), pt.type, 1.38);
-            });
-        }, 2750);
-
-        // Reset Frenzy state after 4.8 seconds
+        // Reset Frenzy state smoothly after finale settles
         setTimeout(() => {
             this.isFrenzyRunning = false;
             if (frenzyBtn) {
                 frenzyBtn.classList.remove('frenzy-active');
                 frenzyBtn.setAttribute('title', 'Bắn pháo hoa liên hoàn cực đã mắt');
             }
-        }, 4800);
+        }, Math.max(cfg.durationMs, finaleStartMs + 1800));
     }
 
     // Backward compatibility with previous triggerFrenzy(count)
@@ -485,12 +539,15 @@ class FireworksSystem {
 
             if (rocket.hasReached()) {
                 const burstScale = rocket.speedBoost > 1.25 ? 1.35 : 1.08;
-                this.explodeAt(rocket.x, rocket.y, rocket.palette, rocket.shellType, burstScale);
+                this.explodeAt(rocket.x, rocket.y, rocket.palette, rocket.shellType, burstScale, rocket.isManualBurst);
                 this.fireworks.splice(i, 1);
             }
         }
 
         // 4. Update & Draw Particles (Batch render)
+        const activeMaxParticles = this.isFrenzyRunning
+            ? Math.max(this.maxParticles, (this.manualConfig && this.manualConfig.maxParticles) || 4500)
+            : this.maxParticles;
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
             p.update();
@@ -499,7 +556,7 @@ class FireworksSystem {
             // Handle micro-cracklers popping mid-air
             if (p.readyToCrackle && !p.hasCrackled) {
                 p.hasCrackled = true;
-                if (this.particles.length < this.maxParticles - 8) {
+                if (this.particles.length < activeMaxParticles - 8) {
                     const crackleColors = isLight ? ['#F59E0B', '#DC2626', '#FFFBEB'] : ['#FFF9C4', '#FFD700', '#FFFFFF'];
                     for (let c = 0; c < 5; c++) {
                         const ca = Math.random() * Math.PI * 2;
