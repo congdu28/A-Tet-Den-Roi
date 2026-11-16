@@ -2255,8 +2255,13 @@ body.light-mode .current-datetime-strip {
 }
 
 .weather-gps-btn.is-loading {
-    animation: pulse 0.9s ease-in-out infinite;
-    opacity: 0.85;
+    opacity: 0.9;
+    border-color: #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
+}
+
+.weather-gps-btn.is-loading svg {
+    animation: spin 0.85s linear infinite;
 }
 
 body.light-mode .weather-gps-btn {
