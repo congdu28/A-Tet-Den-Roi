@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bgGrad" cx="38%" cy="28%" r="76%">
+      <stop offset="0%" stop-color="#dc2626"/>
+      <stop offset="52%" stop-color="#991b1b"/>
+      <stop offset="100%" stop-color="#450a0a"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" gradientUnits="userSpaceOnUse" x1="40" y1="40" x2="472" y2="472">
+      <stop offset="0%" stop-color="#fffbeb"/>
+      <stop offset="35%" stop-color="#fde047"/>
+      <stop offset="70%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <radialGradient id="lanternGlow" cx="50%" cy="46%" r="48%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.95"/>
+      <stop offset="35%" stop-color="#fb923c" stop-opacity="0.72"/>
+      <stop offset="72%" stop-color="#dc2626" stop-opacity="0.88"/>
+      <stop offset="100%" stop-color="#7f1d1d" stop-opacity="1"/>
+    </radialGradient>
+    <radialGradient id="ambientHalo" cx="50%" cy="48%" r="42%">
+      <stop offset="0%" stop-color="#facc15" stop-opacity="0.45"/>
+      <stop offset="60%" stop-color="#f97316" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#f97316" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Imperial Rounded Square / Medallion Base -->
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bgGrad)"/>
+  <rect x="24" y="24" width="464" height="464" rx="104" fill="none" stroke="url(#goldGrad)" stroke-width="14"/>
+  <rect x="44" y="44" width="424" height="424" rx="86" fill="none" stroke="#fde047" stroke-opacity="0.4" stroke-width="3"/>
+
+  <!-- Warm Golden Halo behind Lantern -->
+  <circle cx="256" cy="245" r="190" fill="url(#ambientHalo)"/>
+
+  <!-- Top Hanging Cord & Gold Hook -->
+  <line x1="256" y1="44" x2="256" y2="108" stroke="url(#goldGrad)" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="256" cy="108" r="10" fill="none" stroke="url(#goldGrad)" stroke-width="6"/>
+
+  <!-- Lantern Top Cap -->
+  <rect x="196" y="114" width="120" height="22" rx="10" fill="url(#goldGrad)"/>
+
+  <!-- Lantern Body -->
+  <ellipse cx="256" cy="244" rx="116" ry="118" fill="url(#lanternGlow)" stroke="url(#goldGrad)" stroke-width="7"/>
+
+  <!-- Lantern Ribs -->
+  <ellipse cx="256" cy="244" rx="76" ry="117" fill="none" stroke="#fde047" stroke-opacity="0.55" stroke-width="4"/>
+  <ellipse cx="256" cy="244" rx="34" ry="117" fill="none" stroke="#fde047" stroke-opacity="0.55" stroke-width="4"/>
+  <line x1="142" y1="244" x2="370" y2="244" stroke="#fde047" stroke-opacity="0.35" stroke-width="3"/>
+
+  <!-- Center Lucky Diamond Emblem ("27") -->
+  <polygon points="256,190 306,244 256,298 206,244" fill="#7f1d1d" fill-opacity="0.72" stroke="url(#goldGrad)" stroke-width="5"/>
+  <text x="256" y="258" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="900" font-size="44" fill="#fef08a" letter-spacing="1">27</text>
+
+  <!-- Lantern Bottom Cap -->
+  <rect x="200" y="354" width="112" height="20" rx="9" fill="url(#goldGrad)"/>
+
+  <!-- Golden Tassel -->
+  <circle cx="256" cy="386" r="10" fill="url(#goldGrad)"/>
+  <line x1="256" y1="394" x2="256" y2="454" stroke="url(#goldGrad)" stroke-width="9" stroke-linecap="round"/>
+  <line x1="242" y1="396" x2="234" y2="446" stroke="#fbbf24" stroke-width="5" stroke-linecap="round"/>
+  <line x1="270" y1="396" x2="278" y2="446" stroke="#fbbf24" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Festive Blossom Sparkles -->
+  <g fill="#fef08a">
+    <circle cx="104" cy="138" r="7" opacity="0.9"/>
+    <circle cx="408" cy="144" r="6" opacity="0.85"/>
+    <circle cx="114" cy="378" r="5" opacity="0.75"/>
+    <circle cx="400" cy="366" r="7" opacity="0.85"/>
+  </g>
+</svg>

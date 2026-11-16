@@ -1,0 +1,26 @@
+{
+  "name": "Đếm Ngược Tết Đinh Mùi 2027",
+  "short_name": "Tết 2027",
+  "description": "Đếm ngược Tết Đinh Mùi 2027, Lịch Vạn Niên Âm-Dương, Hái Lộc Lì Xì, Xin Xăm Đầu Xuân & Tạo Thiệp Chúc Tết 4K.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#3a0710",
+  "theme_color": "#b91c1c",
+  "icons": [
+    {
+      "src": "/assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/assets/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
