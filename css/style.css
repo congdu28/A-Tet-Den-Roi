@@ -2142,7 +2142,7 @@ body.light-mode .current-datetime-strip {
 .current-datetime-left {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex: 1;
     min-width: 0;
 }
@@ -2211,6 +2211,8 @@ body.light-mode .current-datetime-strip {
 }
 
 .datetime-pill.weather-pill {
+    flex: 1.35 1 auto;
+    min-width: 0;
     text-decoration: none;
     cursor: pointer;
     gap: 8px;
@@ -2219,6 +2221,13 @@ body.light-mode .current-datetime-strip {
     background: linear-gradient(135deg, rgba(14, 165, 233, 0.22), rgba(245, 158, 11, 0.16));
     border: 1.5px solid rgba(56, 189, 248, 0.6);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 3px 10px rgba(14, 165, 233, 0.22);
+}
+
+.datetime-pill.solar-pill,
+.datetime-pill.lunar-pill {
+    flex: 0 1 auto;
+    padding: 0 11px;
+    gap: 6px;
 }
 
 .datetime-pill.weather-pill:hover {

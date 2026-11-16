@@ -311,14 +311,31 @@ class TetCountdown {
 
     describeWeather(code, isDay) {
         const day = isDay !== 0;
-        if (code === 0) return { icon: day ? '☀️' : '🌙', desc: day ? 'Trời quang nắng đẹp' : 'Đêm quang đãng' };
-        if (code === 1 || code === 2) return { icon: day ? '🌤️' : '☁️', desc: 'Ít mây, dễ chịu' };
-        if (code === 3) return { icon: '☁️', desc: 'Nhiều mây' };
+        if (code === 0) return { icon: day ? '☀️' : '🌙', desc: day ? 'Trời quang, nắng đẹp' : 'Đêm quang đãng' };
+        if (code === 1) return { icon: day ? '🌤️' : '🌙', desc: day ? 'Trời hầu như không mây' : 'Đêm ít mây' };
+        if (code === 2) return { icon: day ? '⛅' : '☁️', desc: day ? 'Mây rải rác, hửng nắng' : 'Đêm mây rải rác' };
+        if (code === 3) return { icon: '☁️', desc: 'Trời nhiều mây, u ám' };
         if (code === 45 || code === 48) return { icon: '🌫️', desc: 'Có sương mù' };
-        if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return { icon: '🌧️', desc: 'Có mưa' };
+        if (code >= 51 && code <= 57) return { icon: '🌦️', desc: 'Mưa phùn nhẹ hạt' };
+        if (code === 80) return { icon: day ? '🌦️' : '🌧️', desc: day ? 'Nắng xen mưa rào thoáng qua' : 'Mưa rào nhẹ thoáng qua' };
+        if ((code >= 61 && code <= 67) || (code >= 81 && code <= 82)) return { icon: '🌧️', desc: 'Có mưa rào' };
         if (code >= 71 && code <= 77) return { icon: '❄️', desc: 'Tuyết rơi' };
-        if (code >= 95) return { icon: '⛈️', desc: 'Có dông bão' };
-        return { icon: '⛅', desc: 'Thời tiết hiện tại' };
+        if (code >= 95) return { icon: '⛈️', desc: 'Mưa dông kèm sấm chớp' };
+        return { icon: day ? '⛅' : '☁️', desc: 'Thời tiết hiện tại' };
+    }
+
+    calibrateWeatherCode(rawCode, cur) {
+        let code = Number.isFinite(rawCode) ? rawCode : 2;
+        const uv = cur && Number.isFinite(cur.uv_index) ? cur.uv_index : 0;
+        const cloud = cur && Number.isFinite(cur.cloud_cover) ? cur.cloud_cover : 50;
+        const precip = cur && Number.isFinite(cur.precipitation) ? cur.precipitation : 0;
+        const rainCodes = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99];
+        const isSunnyOrPartlyClear = (uv >= 2 && cloud <= 60) || (uv >= 1.5 && cloud <= 45);
+
+        if (rainCodes.includes(code) && (isSunnyOrPartlyClear || (precip <= 0.2 && cloud <= 55))) {
+            code = cloud <= 25 ? 0 : cloud <= 50 ? 1 : 2;
+        }
+        return code;
     }
 
     renderWeatherPill(temp, city, code, isDay) {
@@ -373,13 +390,13 @@ class TetCountdown {
         }
 
         try {
-            const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&current=temperature_2m,weather_code,is_day&timezone=auto`;
+            const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&current=temperature_2m,weather_code,is_day,uv_index,cloud_cover,precipitation&timezone=auto`;
             const data = await this.fetchJsonWithTimeout(apiUrl, 4000);
             const cur = data && data.current;
             if (cur && Number.isFinite(cur.temperature_2m)) {
                 const payload = {
                     temp: cur.temperature_2m,
-                    code: Number.isFinite(cur.weather_code) ? cur.weather_code : 2,
+                    code: this.calibrateWeatherCode(cur.weather_code, cur),
                     isDay: Number.isFinite(cur.is_day) ? cur.is_day : 1,
                     city,
                     lat,
@@ -388,7 +405,7 @@ class TetCountdown {
                 };
                 this.renderWeatherPill(payload.temp, payload.city, payload.code, payload.isDay);
                 try {
-                    localStorage.setItem('tet-weather-cache-v1', JSON.stringify(payload));
+                    localStorage.setItem('tet-weather-cache-v2', JSON.stringify(payload));
                 } catch {}
                 return;
             }
@@ -406,10 +423,11 @@ class TetCountdown {
     initWeatherWidget() {
         if (!this.elements.weatherPill) return;
 
+        const CACHE_KEY = 'tet-weather-cache-v2';
         const CACHE_TTL_MS = 20 * 60 * 1000;
         let cached = null;
         try {
-            const parsed = JSON.parse(localStorage.getItem('tet-weather-cache-v1') || 'null');
+            const parsed = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
             if (parsed && Number.isFinite(parsed.temp) && Number.isFinite(parsed.ts)) {
                 cached = parsed;
             }
@@ -427,7 +445,7 @@ class TetCountdown {
             if (!document.hidden) {
                 let latest = null;
                 try {
-                    const p = JSON.parse(localStorage.getItem('tet-weather-cache-v1') || 'null');
+                    const p = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
                     if (p && Number.isFinite(p.lat) && Number.isFinite(p.lon)) latest = p;
                 } catch {}
                 this.refreshWeather(latest);
