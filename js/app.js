@@ -1850,5 +1850,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })();
 
+    // PWA Service Worker & Standalone App Install Prompt
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+
+    const installPwaBtn = document.getElementById('btn-install-pwa');
+    const pwaStatusEl = document.getElementById('pwa-install-status');
+    let deferredInstallPrompt = null;
+
+    const isStandaloneMode = () =>
+        window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    const updatePwaInstallUi = () => {
+        if (!installPwaBtn) return;
+        if (isStandaloneMode()) {
+            installPwaBtn.textContent = '✓ Đang mở ở chế độ Ứng dụng riêng';
+            installPwaBtn.disabled = true;
+            installPwaBtn.style.opacity = '0.75';
+            installPwaBtn.style.cursor = 'default';
+            if (pwaStatusEl) {
+                pwaStatusEl.innerHTML =
+                    '✅ Bạn đang dùng ở chế độ <strong>cửa sổ ứng dụng riêng</strong>!<br>' +
+                    '• <strong>Edge:</strong> Mở <code>edge://apps</code> → bấm <strong>⋮</strong> cạnh app → bật <em>Auto-start on device login</em> để tự mở khi bật máy.<br>' +
+                    '• <strong>Chrome:</strong> Mở <code>chrome://apps</code> → chuột phải vào app → bật <em>Start app when you sign in</em>.';
+            }
+        }
+    };
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        if (installPwaBtn && !isStandaloneMode()) {
+            installPwaBtn.innerHTML = '<span>📲</span> Cài Đặt Thành App Ngay (1 Bấm)';
+        }
+    });
+
+    window.addEventListener('appinstalled', () => {
+        deferredInstallPrompt = null;
+        if (installPwaBtn) {
+            installPwaBtn.innerHTML = '✓ Đã Cài Đặt Thành App';
+        }
+        showToast('🎉 Đã cài đặt thành App cửa sổ riêng! Bật tự khởi động trong edge://apps hoặc chrome://apps nhé.');
+    });
+
+    if (installPwaBtn) {
+        installPwaBtn.addEventListener('click', async () => {
+            if (isStandaloneMode()) return;
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                const { outcome } = await deferredInstallPrompt.userChoice;
+                deferredInstallPrompt = null;
+                if (outcome === 'accepted') {
+                    showToast('📲 Đang cài đặt ứng dụng Đếm Ngược Tết 2027...');
+                }
+            } else {
+                showToast('💡 Hãy bấm biểu tượng Cài đặt (⊕ / 🖥️) trên thanh địa chỉ Chrome/Edge để mở thành cửa sổ App riêng!');
+            }
+        });
+    }
+
+    updatePwaInstallUi();
+
     console.log("🌸 Tết Đinh Mùi 2027: Font chữ đồng bộ 100% & Trình phát nhạc MP3 sẵn sàng! 🌸");
 });

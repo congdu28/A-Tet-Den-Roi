@@ -42,7 +42,7 @@ function isAllowedPublicPath(relPath) {
     const normalized = relPath.split(path.sep).join('/');
     // Deny dotfiles (.git, .gitignore, .env) and server/config/markdown files
     if (normalized.split('/').some(seg => seg.startsWith('.'))) return false;
-    if (normalized === 'index.html') return true;
+    if (normalized === 'index.html' || normalized === 'sw.js') return true;
     return (
         normalized.startsWith('css/') ||
         normalized.startsWith('js/') ||
