@@ -7,6 +7,7 @@ class TetCountdown {
         this.targets = {
             tet: {
                 date: new Date('2027-02-06T00:00:00+07:00'),
+                mainTitle: 'ĐẾM NGƯỢC ĐẾN TẾT',
                 badgeLabel: '🗓️ MÙNG 1 TẾT NGUYÊN ĐÁN:',
                 badgeValue: 'Thứ Bảy, ngày 06/02/2027 Dương Lịch (00:00:00)',
                 progressPrefix: 'Hành trình năm cũ tới Tết Đinh Mùi',
@@ -15,6 +16,7 @@ class TetCountdown {
             },
             yep: {
                 date: new Date('2027-01-23T00:00:00+07:00'),
+                mainTitle: 'YEAR END PARTY PANCAKE 2027',
                 badgeLabel: '🥂 YEAR END PARTY PANCAKE:',
                 badgeValue: 'Thứ Bảy, ngày 23/01/2027 Dương Lịch (00:00:00)',
                 progressPrefix: 'Hành trình tới Year End Party Pancake',
@@ -91,6 +93,7 @@ class TetCountdown {
             glitterCanvas: document.getElementById('progress-glitter-canvas'),
             headerProgressBar: document.getElementById('header-progress-bar'),
             progressText: document.getElementById('year-progress-text'),
+            mainTitle: document.getElementById('main-countdown-title'),
             targetDateLabel: document.getElementById('target-date-label'),
             targetDateValue: document.getElementById('target-date-value'),
             progressDestLabel: document.getElementById('progress-dest-label'),
@@ -338,6 +341,9 @@ class TetCountdown {
             });
         }
 
+        if (this.elements.mainTitle) {
+            this.elements.mainTitle.textContent = cfg.mainTitle;
+        }
         if (this.elements.targetDateLabel) {
             this.elements.targetDateLabel.textContent = cfg.badgeLabel;
         }
