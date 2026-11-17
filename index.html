@@ -175,8 +175,8 @@
             </div>
             <h1 class="main-title">ĐẾM NGƯỢC ĐẾN TẾT</h1>
             <div class="target-date-badge">
-                <span>🗓️ MÙNG 1 TẾT NGUYÊN ĐÁN:</span>
-                <strong>Thứ Bảy, ngày 06/02/2027 Dương Lịch (00:00:00)</strong>
+                <span id="target-date-label">🗓️ MÙNG 1 TẾT NGUYÊN ĐÁN:</span>
+                <strong id="target-date-value">Thứ Bảy, ngày 06/02/2027 Dương Lịch (00:00:00)</strong>
             </div>
         </section>
 
@@ -239,12 +239,17 @@
                 </div>
             </div>
 
-            <!-- Timer Footer (Đã bỏ phần đếm ms theo yêu cầu) -->
+            <!-- Bộ chuyển đổi mục tiêu đếm ngược (Tết 2027 / Year End Party Pancake) -->
             <div class="timer-footer">
-                <div class="timer-fireworks-hint">
-                    <span class="hint-sparkle">✨</span>
-                    <span>Nhấp chuột bất kỳ đâu trên màn hình để bắn chùm pháo hoa rực rỡ!</span>
-                    <span class="hint-sparkle">🎆</span>
+                <div class="countdown-target-switcher" role="group" aria-label="Chọn sự kiện đếm ngược">
+                    <button type="button" id="btn-target-tet" class="target-switch-btn active" data-target="tet" aria-pressed="true">
+                        <span>🧧</span>
+                        <span>Tết Đinh Mùi (06/02)</span>
+                    </button>
+                    <button type="button" id="btn-target-yep" class="target-switch-btn" data-target="yep" aria-pressed="false">
+                        <span>🥂</span>
+                        <span>Year End Party Pancake (23/01)</span>
+                    </button>
                 </div>
             </div>
 
@@ -256,8 +261,8 @@
                         <span id="year-progress-text">Hành trình năm cũ tới Tết Đinh Mùi: 0%</span>
                     </div>
                     <div class="progress-dest-badge">
-                        <span>🧧 Đích đến:</span>
-                        <strong>Tết Đinh Mùi 2027</strong>
+                        <span id="progress-dest-label">🧧 Đích đến:</span>
+                        <strong id="progress-dest-value">Tết Đinh Mùi 2027</strong>
                     </div>
                 </div>
                 <div class="progress-bar-stage" id="year-progress-stage">

@@ -4,7 +4,27 @@
  */
 class TetCountdown {
     constructor() {
-        this.targetDate = new Date('2027-02-06T00:00:00+07:00');
+        this.targets = {
+            tet: {
+                date: new Date('2027-02-06T00:00:00+07:00'),
+                badgeLabel: '🗓️ MÙNG 1 TẾT NGUYÊN ĐÁN:',
+                badgeValue: 'Thứ Bảy, ngày 06/02/2027 Dương Lịch (00:00:00)',
+                progressPrefix: 'Hành trình năm cũ tới Tết Đinh Mùi',
+                destLabel: '🧧 Đích đến:',
+                destValue: 'Tết Đinh Mùi 2027'
+            },
+            yep: {
+                date: new Date('2027-01-23T00:00:00+07:00'),
+                badgeLabel: '🥂 YEAR END PARTY PANCAKE:',
+                badgeValue: 'Thứ Bảy, ngày 23/01/2027 Dương Lịch (00:00:00)',
+                progressPrefix: 'Hành trình tới Year End Party Pancake',
+                destLabel: '🥂 Đích đến:',
+                destValue: 'YEP Pancake 23/01/2027'
+            }
+        };
+        const savedTarget = localStorage.getItem('tet_countdown_target_v1');
+        this.activeTargetKey = (savedTarget && this.targets[savedTarget]) ? savedTarget : 'tet';
+        this.targetDate = this.targets[this.activeTargetKey].date;
         this.startDate = new Date('2026-02-17T00:00:00+07:00');
 
         this.milestones = [
@@ -71,6 +91,11 @@ class TetCountdown {
             glitterCanvas: document.getElementById('progress-glitter-canvas'),
             headerProgressBar: document.getElementById('header-progress-bar'),
             progressText: document.getElementById('year-progress-text'),
+            targetDateLabel: document.getElementById('target-date-label'),
+            targetDateValue: document.getElementById('target-date-value'),
+            progressDestLabel: document.getElementById('progress-dest-label'),
+            progressDestValue: document.getElementById('progress-dest-value'),
+            targetSwitchBtns: document.querySelectorAll('.target-switch-btn'),
             celebrationBanner: document.getElementById('celebration-banner'),
             countdownBox: document.getElementById('countdown-main-box'),
             milestoneList: document.getElementById('milestones-container'),
@@ -272,7 +297,67 @@ class TetCountdown {
         this.glitterRafId = requestAnimationFrame(tick);
     }
 
+    initTargetSwitcher() {
+        const btns = this.elements.targetSwitchBtns;
+        if (!btns || !btns.length) return;
+
+        btns.forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const key = btn.getAttribute('data-target');
+                if (key && this.targets[key] && key !== this.activeTargetKey) {
+                    this.setCountdownTarget(key);
+                }
+            });
+        });
+
+        this.setCountdownTarget(this.activeTargetKey, { skipSave: true, skipUpdate: true });
+    }
+
+    setCountdownTarget(targetKey, options = {}) {
+        const cfg = this.targets[targetKey];
+        if (!cfg) return;
+
+        this.activeTargetKey = targetKey;
+        this.targetDate = cfg.date;
+        this.prevValues = { d: -1, h: -1, m: -1, s: -1 };
+
+        if (!options.skipSave) {
+            try {
+                localStorage.setItem('tet_countdown_target_v1', targetKey);
+            } catch {
+                // ignore storage quota errors
+            }
+        }
+
+        if (this.elements.targetSwitchBtns) {
+            this.elements.targetSwitchBtns.forEach((btn) => {
+                const isActive = btn.getAttribute('data-target') === targetKey;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+        }
+
+        if (this.elements.targetDateLabel) {
+            this.elements.targetDateLabel.textContent = cfg.badgeLabel;
+        }
+        if (this.elements.targetDateValue) {
+            this.elements.targetDateValue.textContent = cfg.badgeValue;
+        }
+        if (this.elements.progressDestLabel) {
+            this.elements.progressDestLabel.textContent = cfg.destLabel;
+        }
+        if (this.elements.progressDestValue) {
+            this.elements.progressDestValue.textContent = cfg.destValue;
+        }
+
+        if (!options.skipUpdate) {
+            this.updateMain();
+        }
+    }
+
     start() {
+        this.initTargetSwitcher();
         this.renderMilestones();
         this.updateMain();
         this.initProgressGlitter();
@@ -866,7 +951,8 @@ class TetCountdown {
             this.elements.headerProgressBar.style.width = `${percent}%`;
         }
         if (this.elements.progressText) {
-            this.elements.progressText.textContent = `Hành trình năm cũ tới Tết Đinh Mùi: ${percent}%`;
+            const cfg = this.targets[this.activeTargetKey] || this.targets.tet;
+            this.elements.progressText.textContent = `${cfg.progressPrefix}: ${percent}%`;
         }
     }
 
@@ -881,6 +967,19 @@ class TetCountdown {
         if (this.elements.headerProgressBar) {
             this.elements.headerProgressBar.style.width = '100%';
         }
+        if (this.elements.progressText) {
+            const cfg = this.targets[this.activeTargetKey] || this.targets.tet;
+            this.elements.progressText.textContent = `${cfg.progressPrefix}: 100.0%`;
+        }
+
+        if (this.activeTargetKey !== 'tet') {
+            if (this.elements.days) this.elements.days.textContent = '00';
+            if (this.elements.hours) this.elements.hours.textContent = '00';
+            if (this.elements.minutes) this.elements.minutes.textContent = '00';
+            if (this.elements.seconds) this.elements.seconds.textContent = '00';
+            return;
+        }
+
         if (this.elements.countdownBox) {
             this.elements.countdownBox.classList.add('hidden');
         }
