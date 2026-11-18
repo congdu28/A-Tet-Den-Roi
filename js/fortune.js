@@ -1305,7 +1305,11 @@ class FortuneSystem {
             return lbl.endsWith(':') ? `${lbl} ${dsc}` : `${lbl}: ${dsc}`;
         };
 
-        const text = `🎋 [SỚ QUẺ XĂM TẾT ĐINH MÙI 2027] 🎋\n${title}\nCấp bậc: ${grade}\n🎯 Ý nguyện: ${config.name}\n\n📜 THƠ KHAI VẬN:\n${poem}\n\n⭐ ${focusTitle}:\n${focusDesc}\n\n${fmtSub(1)}\n${fmtSub(2)}\n${fmtSub(3)}\n${fmtSub(4)}\n\n🔢 Số may mắn: ${number}\n🧭 Hướng xuất hành: ${direction}\n\n${advice}\n\nCung chúc tân xuân 2027 vạn sự như ý!`;
+        const activeCycle = (window.LunarEngine && typeof window.LunarEngine.getCurrentTetCycle === 'function')
+            ? window.LunarEngine.getCurrentTetCycle(7)
+            : { year: 2027, canChi: 'Đinh Mùi' };
+
+        const text = `🎋 [SỚ QUẺ XĂM TẾT ${activeCycle.canChi.toUpperCase()} ${activeCycle.year}] 🎋\n${title}\nCấp bậc: ${grade}\n🎯 Ý nguyện: ${config.name}\n\n📜 THƠ KHAI VẬN:\n${poem}\n\n⭐ ${focusTitle}:\n${focusDesc}\n\n${fmtSub(1)}\n${fmtSub(2)}\n${fmtSub(3)}\n${fmtSub(4)}\n\n🔢 Số may mắn: ${number}\n🧭 Hướng xuất hành: ${direction}\n\n${advice}\n\nCung chúc tân xuân ${activeCycle.year} vạn sự như ý!`;
 
         const onCopied = () => {
             this.showToast('📋 Đã sao chép nội dung quẻ xăm vào bộ nhớ tạm! Bạn có thể chia sẻ cho người thân!', 3000);

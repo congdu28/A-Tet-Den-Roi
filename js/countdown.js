@@ -4,6 +4,7 @@
  */
 class TetCountdown {
     constructor() {
+        this.activeTetYear = null;
         this.targets = {
             tet: {
                 date: new Date('2027-02-06T00:00:00+07:00'),
@@ -24,62 +25,8 @@ class TetCountdown {
                 destValue: 'YEP Pancake 23/01/2027'
             }
         };
-        const savedTarget = localStorage.getItem('tet_countdown_target_v1');
-        this.activeTargetKey = (savedTarget && this.targets[savedTarget]) ? savedTarget : 'tet';
-        this.targetDate = this.targets[this.activeTargetKey].date;
         this.startDate = new Date('2026-02-17T00:00:00+07:00');
-
-        this.milestones = [
-            {
-                id: 'ong-tao',
-                name: '23 Tháng Chạp - Tiễn Ông Táo',
-                desc: 'Thả cá chép đỏ đưa Táo Quân chầu trời',
-                date: new Date('2027-01-30T00:00:00+07:00'),
-                icon: '🐟'
-            },
-            {
-                id: 'banh-chung',
-                name: '28 Tháng Chạp - Nồi Bánh Chưng Xanh',
-                desc: 'Quây quần bên bếp lửa hồng canh nồi bánh',
-                date: new Date('2027-02-04T00:00:00+07:00'),
-                icon: '🎋'
-            },
-            {
-                id: 'tat-nien',
-                name: '29 Tháng Chạp - Cúng Tất Niên',
-                desc: 'Bữa cơm sum họp gia đình chiều cuối năm',
-                date: new Date('2027-02-05T00:00:00+07:00'),
-                icon: '🍲'
-            },
-            {
-                id: 'giao-thua',
-                name: 'Đêm Giao Thừa Thiêng Liêng',
-                desc: 'Thời khắc chuyển giao năm mới Đinh Mùi',
-                date: new Date('2027-02-06T00:00:00+07:00'),
-                icon: '🎆'
-            },
-            {
-                id: 'mung-1',
-                name: 'Mùng 1 Tết Cha',
-                desc: 'Khai xuân đón lộc, chúc thọ ông bà cha mẹ',
-                date: new Date('2027-02-06T00:00:00+07:00'),
-                icon: '🧧'
-            },
-            {
-                id: 'mung-2',
-                name: 'Mùng 2 Tết Mẹ',
-                desc: 'Về bên ngoại sum vầy chúc Tết họ hàng',
-                date: new Date('2027-02-07T00:00:00+07:00'),
-                icon: '🌸'
-            },
-            {
-                id: 'mung-3',
-                name: 'Mùng 3 Tết Thầy',
-                desc: 'Uống nước nhớ nguồn, tri ân thầy cô giáo',
-                date: new Date('2027-02-08T00:00:00+07:00'),
-                icon: '📚'
-            }
-        ];
+        this.milestones = [];
 
         this.elements = {
             days: document.getElementById('count-days'),
@@ -100,6 +47,12 @@ class TetCountdown {
             progressDestLabel: document.getElementById('progress-dest-label'),
             progressDestValue: document.getElementById('progress-dest-value'),
             targetSwitchBtns: document.querySelectorAll('.target-switch-btn'),
+            btnTargetTet: document.getElementById('btn-target-tet'),
+            btnTargetYep: document.getElementById('btn-target-yep'),
+            navBrandTitle: document.getElementById('nav-brand-title'),
+            milestonesTitle: document.getElementById('milestones-section-title'),
+            mascotBtn: document.getElementById('mascot-goat-btn'),
+            mascotBubble: document.querySelector('.mascot-speech-bubble'),
             celebrationBanner: document.getElementById('celebration-banner'),
             countdownBox: document.getElementById('countdown-main-box'),
             milestoneList: document.getElementById('milestones-container'),
@@ -130,10 +83,139 @@ class TetCountdown {
         this.glitterStageWidth = 0;
         this.glitterStageHeight = 0;
 
+        this.syncActiveTetCycle({ initial: true });
+
+        const savedTarget = localStorage.getItem('tet_countdown_target_v1');
+        const yepAllowed = this.activeTetYear === 2027;
+        this.activeTargetKey = (savedTarget && this.targets[savedTarget] && (savedTarget !== 'yep' || yepAllowed))
+            ? savedTarget
+            : 'tet';
+        this.targetDate = this.targets[this.activeTargetKey].date;
+
         // Initialize lunar calendar engine if available
         if (window.TetLunarCalendar) {
             this.lunarCalendar = new window.TetLunarCalendar();
         }
+    }
+
+    /**
+     * Automatically computes upcoming Tết cycle (switches to next year's Tết after 15/01 Âm lịch)
+     */
+    syncActiveTetCycle(options = {}) {
+        if (!window.LunarEngine || typeof window.LunarEngine.getCurrentTetCycle !== 'function') return false;
+        const cycle = window.LunarEngine.getCurrentTetCycle(7);
+        if (!cycle || cycle.year === this.activeTetYear) return false;
+
+        this.activeTetYear = cycle.year;
+        this.hasTriggeredTetCelebration = false;
+        this.startDate = new Date(cycle.prevMung1.isoMidnight);
+
+        this.targets.tet = {
+            date: new Date(cycle.mung1.isoMidnight),
+            mainTitle: 'ĐẾM NGƯỢC ĐẾN TẾT',
+            badgeLabel: '🗓️ MÙNG 1 TẾT NGUYÊN ĐÁN:',
+            badgeValue: `${cycle.mung1.dayOfWeekName}, ngày ${cycle.mung1.dateStr} Dương Lịch (00:00:00)`,
+            progressPrefix: `Hành trình năm cũ tới Tết ${cycle.canChi}`,
+            destLabel: '🧧 Đích đến:',
+            destValue: `Tết ${cycle.canChi} ${cycle.year}`
+        };
+
+        this.milestones = [
+            {
+                id: 'ong-tao',
+                name: '23 Tháng Chạp - Tiễn Ông Táo',
+                desc: 'Thả cá chép đỏ đưa Táo Quân chầu trời',
+                date: new Date(cycle.ongTao.isoMidnight),
+                icon: '🐟'
+            },
+            {
+                id: 'banh-chung',
+                name: '28 Tháng Chạp - Nồi Bánh Chưng Xanh',
+                desc: 'Quây quần bên bếp lửa hồng canh nồi bánh',
+                date: new Date(cycle.banhChung.isoMidnight),
+                icon: '🎋'
+            },
+            {
+                id: 'tat-nien',
+                name: `${cycle.tatNien.lunarDay} Tháng Chạp - Cúng Tất Niên`,
+                desc: 'Bữa cơm sum họp gia đình chiều cuối năm',
+                date: new Date(cycle.tatNien.isoMidnight),
+                icon: '🍲'
+            },
+            {
+                id: 'giao-thua',
+                name: 'Đêm Giao Thừa Thiêng Liêng',
+                desc: `Thời khắc chuyển giao năm mới ${cycle.canChi} ${cycle.year}`,
+                date: new Date(cycle.mung1.isoMidnight),
+                icon: '🎆'
+            },
+            {
+                id: 'mung-1',
+                name: 'Mùng 1 Tết Cha',
+                desc: 'Khai xuân đón lộc, chúc thọ ông bà cha mẹ',
+                date: new Date(cycle.mung1.isoMidnight),
+                icon: '🧧'
+            },
+            {
+                id: 'mung-2',
+                name: 'Mùng 2 Tết Mẹ',
+                desc: 'Về bên ngoại sum vầy chúc Tết họ hàng',
+                date: new Date(cycle.mung2.isoMidnight),
+                icon: '🌸'
+            },
+            {
+                id: 'mung-3',
+                name: 'Mùng 3 Tết Thầy',
+                desc: 'Uống nước nhớ nguồn, tri ân thầy cô giáo',
+                date: new Date(cycle.mung3.isoMidnight),
+                icon: '📚'
+            },
+            {
+                id: 'ram-thang-gieng',
+                name: '15 Tháng Giêng - Tết Nguyên Tiêu',
+                desc: 'Rằm tháng Giêng viên mãn, khép lại mùa lễ Tết',
+                date: new Date(cycle.ramThangGieng.isoMidnight),
+                icon: '🏮'
+            }
+        ];
+
+        if (this.elements.btnTargetTet) {
+            this.elements.btnTargetTet.innerHTML = `<span>🧧</span><span>Tết ${cycle.canChi} (${cycle.mung1.shortStr})</span>`;
+        }
+        if (this.elements.btnTargetYep) {
+            this.elements.btnTargetYep.classList.toggle('hidden', cycle.year !== 2027);
+        }
+        if (this.elements.navBrandTitle) {
+            this.elements.navBrandTitle.textContent = `TẾT ${cycle.canChi.toUpperCase()} ${cycle.year}`;
+        }
+        if (this.elements.milestonesTitle) {
+            this.elements.milestonesTitle.textContent = `📅 Các Cột Mốc Đón Tết ${cycle.canChi} ${cycle.year}`;
+        }
+        if (this.elements.mascotBtn && cycle.mascot) {
+            this.elements.mascotBtn.textContent = cycle.mascot.icon;
+            this.elements.mascotBtn.title = `Nhấp vào bé ${cycle.mascot.animal} để nghe lời chúc Tết!`;
+        }
+        if (this.elements.mascotBubble && cycle.year !== 2027) {
+            this.elements.mascotBubble.textContent = `Chào bạn! Năm ${cycle.canChi} ${cycle.year} vạn sự đại cát nhé! ✨`;
+        }
+        if (this.elements.celebrationBanner) {
+            const h2 = this.elements.celebrationBanner.querySelector('h2');
+            const p = this.elements.celebrationBanner.querySelector('p');
+            if (h2) h2.textContent = `🎉 CHÚC MỪNG NĂM MỚI ${cycle.year} 🎉`;
+            if (p) p.textContent = `NĂM ${cycle.canChi.toUpperCase()} ĐẠI THẮNG • VẠN SỰ NHƯ Ý • AN KHANG THỊNH VƯỢNG!`;
+        }
+        if (cycle.year !== 2027 && typeof document !== 'undefined') {
+            document.title = `Đếm Ngược Tết ${cycle.year} - Xuân ${cycle.canChi} Rực Rỡ & May Mắn`;
+        }
+
+        if (!options.initial) {
+            if (cycle.year !== 2027 && this.activeTargetKey === 'yep') {
+                this.activeTargetKey = 'tet';
+            }
+            this.setCountdownTarget(this.activeTargetKey, { skipSave: true, skipUpdate: true });
+            this.renderMilestones();
+        }
+        return true;
     }
 
     initProgressGlitter() {
@@ -921,7 +1003,6 @@ class TetCountdown {
 
     updateMain() {
         const nowMs = Date.now();
-        const diff = this.targetDate.getTime() - nowMs;
 
         // Vietnam UTC+7 Wall-Clock & Calendar Date
         const vnNow = (window.LunarEngine && typeof window.LunarEngine.getVietnamNow === 'function')
@@ -952,6 +1033,9 @@ class TetCountdown {
         if (this.prevDateString !== dateKey) {
             const shouldRefreshMilestones = Boolean(this.prevDateString);
             this.prevDateString = dateKey;
+            // Auto-rollover to next year's Tết when passing 15/01 Âm lịch -> 16/01 Âm lịch
+            const cycleChanged = this.syncActiveTetCycle();
+
             const dayNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
             const dayName = dayNames[vnNow.dayOfWeek];
             const d = String(vnNow.day).padStart(2, '0');
@@ -980,10 +1064,12 @@ class TetCountdown {
                 }
             }
 
-            if (shouldRefreshMilestones) {
+            if (shouldRefreshMilestones && !cycleChanged) {
                 this.renderMilestones();
             }
         }
+
+        const diff = this.targetDate.getTime() - nowMs;
 
         if (diff <= 0) {
             this.handleTetArrived();

@@ -6543,6 +6543,67 @@ body.light-mode .cal-nav-toolbar {
     white-space: nowrap;
 }
 
+.cal-month-year-pickers {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.cal-picker-slash {
+    color: rgba(255, 215, 0, 0.7);
+    font-weight: 800;
+    font-size: 1rem;
+}
+
+body.light-mode .cal-picker-slash {
+    color: rgba(185, 28, 28, 0.55);
+}
+
+.cal-quick-select {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 215, 0, 0.38);
+    border-radius: 10px;
+    padding: 4px 8px;
+    color: #ffffff;
+    font-family: var(--font-heading);
+    font-size: 1.02rem;
+    font-weight: 800;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.cal-quick-select:hover,
+.cal-quick-select:focus {
+    border-color: #ffd700;
+    background: rgba(255, 215, 0, 0.16);
+}
+
+.cal-quick-select option {
+    background: #220408;
+    color: #ffffff;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+}
+
+body.light-mode .cal-quick-select {
+    background: #fff1f2;
+    border: 1.5px solid rgba(225, 29, 72, 0.25);
+    color: #0f172a;
+}
+
+body.light-mode .cal-quick-select:hover,
+body.light-mode .cal-quick-select:focus {
+    border-color: #e11d48;
+    background: #ffe4e6;
+}
+
+body.light-mode .cal-quick-select option {
+    background: #ffffff;
+    color: #0f172a;
+}
+
 .month-title {
     font-family: var(--font-heading);
     font-size: 1.25rem;

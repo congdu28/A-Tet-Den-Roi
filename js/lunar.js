@@ -176,8 +176,140 @@
         return { day: lunarDay, month: lunarMonth, year: lunarYear, isLeap: isLeap, jd: dayNumber };
     }
 
+    const ZODIAC_MASCOTS = [
+        { chi: 'Tý', icon: '🐭', animal: 'Chuột Vàng' },
+        { chi: 'Sửu', icon: '🐮', animal: 'Trâu Vàng' },
+        { chi: 'Dần', icon: '🐯', animal: 'Hổ Vàng' },
+        { chi: 'Mão', icon: '🐱', animal: 'Mèo Vàng' },
+        { chi: 'Thìn', icon: '🐲', animal: 'Rồng Vàng' },
+        { chi: 'Tỵ', icon: '🐍', animal: 'Rắn Vàng' },
+        { chi: 'Ngọ', icon: '🐴', animal: 'Ngựa Vàng' },
+        { chi: 'Mùi', icon: '🐐', animal: 'Dê Vàng' },
+        { chi: 'Thân', icon: '🐵', animal: 'Khỉ Vàng' },
+        { chi: 'Dậu', icon: '🐔', animal: 'Gà Vàng' },
+        { chi: 'Tuất', icon: '🐶', animal: 'Chó Vàng' },
+        { chi: 'Hợi', icon: '🐷', animal: 'Heo Vàng' }
+    ];
+    const DAY_NAMES_VI = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+
+    function jdToDate(jd) {
+        let a, b, c;
+        if (jd > 2299160) {
+            a = jd + 32044;
+            b = INT((4 * a + 3) / 146097);
+            c = a - INT((b * 146097) / 4);
+        } else {
+            b = 0;
+            c = jd + 32082;
+        }
+        let d = INT((4 * c + 3) / 1461);
+        let e = c - INT((1461 * d) / 4);
+        let m = INT((5 * e + 2) / 153);
+        let day = e - INT((153 * m + 2) / 5) + 1;
+        let month = m + 3 - 12 * INT(m / 10);
+        let year = b * 100 + d - 4800 + INT(m / 10);
+        return [day, month, year];
+    }
+
+    function convertLunar2Solar(lunarDay, lunarMonth, lunarYear, lunarLeap = 0, timeZone = 7) {
+        let a11, b11;
+        if (lunarMonth < 11) {
+            a11 = getLunarMonth11(lunarYear - 1, timeZone);
+            b11 = getLunarMonth11(lunarYear, timeZone);
+        } else {
+            a11 = getLunarMonth11(lunarYear, timeZone);
+            b11 = getLunarMonth11(lunarYear + 1, timeZone);
+        }
+        let k = INT(0.5 + (a11 - 2415021.076998695) / 29.530588853);
+        let off = lunarMonth - 11;
+        if (off < 0) off += 12;
+        if (b11 - a11 > 365) {
+            let leapOff = getLeapMonthOffset(a11, timeZone);
+            let leapMonth = leapOff - 2;
+            if (leapMonth < 0) leapMonth += 12;
+            if (lunarLeap !== 0 && lunarMonth !== leapMonth) {
+                return { day: 0, month: 0, year: 0, jd: 0 };
+            } else if (lunarLeap !== 0 || off >= leapOff) {
+                off += 1;
+            }
+        }
+        let monthStart = getNewMoonDay(k + off, timeZone);
+        let jd = monthStart + lunarDay - 1;
+        let [d, m, y] = jdToDate(jd);
+        return { day: d, month: m, year: y, jd };
+    }
+
+    function formatSolarMilestone(jd) {
+        const [d, m, y] = jdToDate(jd);
+        const dd = String(d).padStart(2, '0');
+        const mm = String(m).padStart(2, '0');
+        const dow = DAY_NAMES_VI[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+        return {
+            day: d,
+            month: m,
+            year: y,
+            dd,
+            mm,
+            jd,
+            dayOfWeekName: dow,
+            dateStr: `${dd}/${mm}/${y}`,
+            shortStr: `${dd}/${mm}`,
+            isoMidnight: `${y}-${mm}-${dd}T00:00:00+07:00`
+        };
+    }
+
+    function getZodiacMascot(lunarYear) {
+        return ZODIAC_MASCOTS[((lunarYear + 8) % 12 + 12) % 12];
+    }
+
+    function getTetInfoForYear(tetLunarYear, timeZone = 7) {
+        const m1 = convertLunar2Solar(1, 1, tetLunarYear, 0, timeZone);
+        const prevM1 = convertLunar2Solar(1, 1, tetLunarYear - 1, 0, timeZone);
+        const mung1 = formatSolarMilestone(m1.jd);
+        const prevMung1 = formatSolarMilestone(prevM1.jd);
+
+        const tatNienJd = m1.jd - 1;
+        const [tnD, tnM, tnY] = jdToDate(tatNienJd);
+        const tatNienLunar = convertSolar2Lunar(tnD, tnM, tnY, timeZone);
+        const chapDays = tatNienLunar.day; // 29 or 30
+
+        const tatNien = { ...formatSolarMilestone(tatNienJd), lunarDay: chapDays };
+        const banhChung = formatSolarMilestone(tatNienJd - (chapDays - 28));
+        const ongTao = formatSolarMilestone(tatNienJd - (chapDays - 23));
+        const mung2 = formatSolarMilestone(m1.jd + 1);
+        const mung3 = formatSolarMilestone(m1.jd + 2);
+        const ramThangGieng = formatSolarMilestone(m1.jd + 14);
+
+        return {
+            year: tetLunarYear,
+            canChi: getCanChiYear(tetLunarYear),
+            mascot: getZodiacMascot(tetLunarYear),
+            mung1,
+            prevMung1,
+            ongTao,
+            banhChung,
+            tatNien,
+            mung2,
+            mung3,
+            ramThangGieng
+        };
+    }
+
+    // Rule: Up through 15/01 Âm lịch (non-leap) stays in current Lunar year's Tết; from 16/01 ÂL onwards switches to next year's Tết
+    function getTetCycleForLunar(lunar, timeZone = 7) {
+        const isWithinFirst15SpringDays = (lunar.month === 1 && !lunar.isLeap && lunar.day <= 15);
+        const targetYear = isWithinFirst15SpringDays ? lunar.year : (lunar.year + 1);
+        return getTetInfoForYear(targetYear, timeZone);
+    }
+
+    function getCurrentTetCycle(timeZone = 7) {
+        const vn = getVietnamNow();
+        const lunar = convertSolar2Lunar(vn.day, vn.month, vn.year, timeZone);
+        return getTetCycleForLunar(lunar, timeZone);
+    }
+
     function getCanChiYear(year) {
-        return CAN[(year + 6) % 10] + ' ' + CHI[(year + 8) % 12];
+        return CAN[((year + 6) % 10 + 10) % 10] + ' ' + CHI[((year + 8) % 12 + 12) % 12];
     }
 
     function getCanChiDay(jd) {
@@ -273,9 +405,8 @@
                 year: vnToday.year
             };
 
-            this.tetTargetJd = jdFromDate(6, 2, 2027);
-
             this.initDOM();
+            this.populateQuickPickers();
             this.bindEvents();
         }
 
@@ -285,6 +416,8 @@
             this.closeBtn = document.getElementById('btn-close-calendar');
             this.gridContainer = document.getElementById('cal-days-grid');
             this.monthTitle = document.getElementById('cal-month-title');
+            this.monthSelect = document.getElementById('cal-select-month');
+            this.yearSelect = document.getElementById('cal-select-year');
             this.monthLunarSubtitle = document.getElementById('cal-month-lunar-subtitle');
             this.prevBtn = document.getElementById('btn-cal-prev-month');
             this.nextBtn = document.getElementById('btn-cal-next-month');
@@ -293,14 +426,45 @@
             this.detailBox = document.getElementById('cal-selected-day-details');
         }
 
+        populateQuickPickers() {
+            if (this.monthSelect && this.monthSelect.options.length === 0) {
+                for (let m = 1; m <= 12; m++) {
+                    const opt = document.createElement('option');
+                    opt.value = String(m);
+                    opt.textContent = `Tháng ${String(m).padStart(2, '0')}`;
+                    this.monthSelect.appendChild(opt);
+                }
+            }
+            if (this.yearSelect && this.yearSelect.options.length === 0) {
+                for (let y = 1950; y <= 2100; y++) {
+                    const opt = document.createElement('option');
+                    opt.value = String(y);
+                    opt.textContent = `${y} (${getCanChiYear(y)})`;
+                    this.yearSelect.appendChild(opt);
+                }
+            }
+        }
+
+        getJumpTetYear() {
+            const activeCycle = getCurrentTetCycle(7);
+            const vnToday = getVietnamNow();
+            if (this.viewYear === vnToday.year && this.viewMonth === vnToday.month) {
+                return activeCycle.year;
+            }
+            const midLunar = convertSolar2Lunar(15, this.viewMonth, this.viewYear, 7);
+            return getTetCycleForLunar(midLunar, 7).year;
+        }
+
         syncSelectedDateForViewMonth() {
             const vnToday = getVietnamNow();
             if (this.viewYear === vnToday.year && this.viewMonth === vnToday.month) {
                 this.selectedDate = { day: vnToday.day, month: vnToday.month, year: vnToday.year };
                 return;
             }
-            if (this.viewYear === 2027 && this.viewMonth === 2) {
-                this.selectedDate = { day: 6, month: 2, year: 2027 };
+            // If viewing the month that contains Mùng 1 Tết of this Solar year, auto-select Mùng 1 Tết!
+            const tetOfViewYear = convertLunar2Solar(1, 1, this.viewYear, 0, 7);
+            if (tetOfViewYear.year === this.viewYear && tetOfViewYear.month === this.viewMonth) {
+                this.selectedDate = { day: tetOfViewYear.day, month: tetOfViewYear.month, year: tetOfViewYear.year };
                 return;
             }
             const daysInMonth = new Date(Date.UTC(this.viewYear, this.viewMonth, 0)).getUTCDate();
@@ -347,6 +511,26 @@
                     this.render();
                 });
             }
+            if (this.monthSelect) {
+                this.monthSelect.addEventListener('change', (e) => {
+                    const m = parseInt(e.target.value, 10);
+                    if (m >= 1 && m <= 12) {
+                        this.viewMonth = m;
+                        this.syncSelectedDateForViewMonth();
+                        this.render();
+                    }
+                });
+            }
+            if (this.yearSelect) {
+                this.yearSelect.addEventListener('change', (e) => {
+                    const y = parseInt(e.target.value, 10);
+                    if (y >= 1900 && y <= 2100) {
+                        this.viewYear = y;
+                        this.syncSelectedDateForViewMonth();
+                        this.render();
+                    }
+                });
+            }
             if (this.todayBtn) {
                 this.todayBtn.addEventListener('click', () => {
                     const vnToday = getVietnamNow();
@@ -362,10 +546,14 @@
             }
             if (this.tetJumpBtn) {
                 this.tetJumpBtn.addEventListener('click', () => {
-                    this.viewYear = 2027;
-                    this.viewMonth = 2;
-                    this.selectedDate = { day: 6, month: 2, year: 2027 };
-                    this.render();
+                    const targetTetYear = this.getJumpTetYear();
+                    const m1 = convertLunar2Solar(1, 1, targetTetYear, 0, 7);
+                    if (m1.year >= 1900 && m1.year <= 2100) {
+                        this.viewYear = m1.year;
+                        this.viewMonth = m1.month;
+                        this.selectedDate = { day: m1.day, month: m1.month, year: m1.year };
+                        this.render();
+                    }
                 });
             }
         }
@@ -389,9 +577,20 @@
         render() {
             if (!this.gridContainer) return;
 
-            // Month titles
+            // Sync month/year title & quick-select dropdowns
             if (this.monthTitle) {
                 this.monthTitle.textContent = `Tháng ${String(this.viewMonth).padStart(2, '0')} / ${this.viewYear}`;
+            }
+            if (this.monthSelect) {
+                this.monthSelect.value = String(this.viewMonth);
+            }
+            if (this.yearSelect) {
+                this.yearSelect.value = String(this.viewYear);
+            }
+            if (this.tetJumpBtn) {
+                const jumpYear = this.getJumpTetYear();
+                this.tetJumpBtn.textContent = `🧧 Tết ${jumpYear}`;
+                this.tetJumpBtn.title = `Nhảy tới Mùng 1 Tết ${getCanChiYear(jumpYear)} ${jumpYear}`;
             }
 
             const daysInMonth = new Date(Date.UTC(this.viewYear, this.viewMonth, 0)).getUTCDate();
@@ -535,24 +734,33 @@
             const hoangDaoList = HOANG_DAO_TABLE[canChiDay.chi] || [];
             const tetTag = getTetEventTag(day, month, year, lunar);
 
-            // Calculate exact calendar-day diff from selected date to Tet 2027 via Julian Day Number (timezone-immune)
-            const diffDays = this.tetTargetJd - lunar.jd;
+            // Dynamic multi-year Tết cycle: stays on current Tết through 15/01 ÂL, then switches to next year's Tết
+            const tetCycle = getTetCycleForLunar(lunar, 7);
+            const diffDays = tetCycle.mung1.jd - lunar.jd;
             const vnToday = getVietnamNow();
             const isSelectedToday = (day === vnToday.day && month === vnToday.month && year === vnToday.year);
 
+            let countdownLabel = `🏮 Đếm ngược Tết ${tetCycle.year}:`;
             let diffText = '';
             if (diffDays === 0) {
+                countdownLabel = `🏮 Mùng 1 Tết ${tetCycle.year}:`;
                 diffText = isSelectedToday
-                    ? '🎉 <strong>HÔM NAY CHÍNH LÀ MÙNG 1 TẾT ĐINH MÙI 2027!</strong>'
-                    : '🎉 <strong>NGÀY NÀY CHÍNH LÀ MÙNG 1 TẾT ĐINH MÙI 2027!</strong>';
+                    ? `🎉 <strong>HÔM NAY CHÍNH LÀ MÙNG 1 TẾT ${tetCycle.canChi.toUpperCase()} ${tetCycle.year}!</strong>`
+                    : `🎉 <strong>NGÀY NÀY CHÍNH LÀ MÙNG 1 TẾT ${tetCycle.canChi.toUpperCase()} ${tetCycle.year}!</strong>`;
             } else if (diffDays > 0) {
-                diffText = `⏳ Còn đúng <strong>${diffDays} ngày</strong> tính tới Mùng 1 Tết Đinh Mùi 2027!`;
+                diffText = `⏳ Còn đúng <strong>${diffDays} ngày</strong> tới Mùng 1 Tết ${tetCycle.canChi} ${tetCycle.year} (${tetCycle.mung1.dateStr})!`;
             } else {
-                diffText = `✨ Sau Mùng 1 Tết Đinh Mùi <strong>${Math.abs(diffDays)} ngày</strong>.`;
+                countdownLabel = `🏮 Xuân ${tetCycle.canChi} ${tetCycle.year}:`;
+                if (lunar.day === 15) {
+                    const nextCanChi = getCanChiYear(tetCycle.year + 1);
+                    diffText = `🌕 <strong>Rằm Tháng Giêng ${tetCycle.canChi} ${tetCycle.year}</strong> (từ 16/01 ÂL tự chuyển đếm Tết ${nextCanChi} ${tetCycle.year + 1}).`;
+                } else {
+                    const lunarDayLabel = lunar.day <= 10 ? `Mùng ${lunar.day} Tết` : `${lunar.day} Tháng Giêng`;
+                    diffText = `🌸 Đang trong 15 ngày đầu Xuân (<strong>${lunarDayLabel}</strong> — còn ${15 - lunar.day} ngày đến Rằm Tháng Giêng).`;
+                }
             }
 
-            const dayNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-            const solarDayOfWeek = dayNames[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
+            const solarDayOfWeek = DAY_NAMES_VI[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
 
             let eventNoticeHtml = '';
             if (tetTag) {
@@ -590,7 +798,7 @@
                             <span>🌿 Tiết Khí:</span> <strong>${tietKhi}</strong>
                         </div>
                         <div class="cal-info-item">
-                            <span>🏮 Đếm ngược Tết 2027:</span> <span>${diffText}</span>
+                            <span>${countdownLabel}</span> <span>${diffText}</span>
                         </div>
                         <div class="cal-info-item full-width">
                             <div class="cal-hd-header">
@@ -610,11 +818,17 @@
     // Expose engine & calendar class globally
     window.LunarEngine = {
         convertSolar2Lunar,
+        convertLunar2Solar,
+        jdFromDate,
+        jdToDate,
         getCanChiYear,
         getCanChiDay,
         getSolarTermName,
         getVietnamNow,
-        jdFromDate,
+        getZodiacMascot,
+        getTetInfoForYear,
+        getTetCycleForLunar,
+        getCurrentTetCycle,
         HOANG_DAO_TABLE
     };
     window.TetLunarCalendar = TetLunarCalendar;

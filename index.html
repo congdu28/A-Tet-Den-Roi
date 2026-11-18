@@ -137,7 +137,7 @@
             <div class="brand-badge-wrap">
                 <div class="brand-badge">
                     <span class="badge-icon">🏮</span>
-                    <span class="brand-title-text">TẾT ĐINH MÙI 2027</span>
+                    <span class="brand-title-text" id="nav-brand-title">TẾT ĐINH MÙI 2027</span>
                 </div>
                 <div class="nav-datetime-badge" id="nav-datetime-badge" title="Thời gian thực ngày giờ Tết">
                     <span class="live-clock-dot"></span>
@@ -1097,7 +1097,7 @@
         <section id="section-milestones" class="app-section">
             <div class="section-card">
                 <div class="section-header">
-                    <h2 class="section-title">📅 Các Cột Mốc Đón Tết Đinh Mùi 2027</h2>
+                    <h2 class="section-title" id="milestones-section-title">📅 Các Cột Mốc Đón Tết Đinh Mùi 2027</h2>
                     <p class="section-subtitle">Hành trình chuẩn bị những phong tục truyền thống đậm đà bản sắc Tết Việt Nam</p>
                 </div>
 
@@ -1815,7 +1815,11 @@
                             ◀
                         </button>
                         <div class="cal-current-month-display">
-                            <div class="month-title" id="cal-month-title">Tháng 11 / 2026</div>
+                            <div class="cal-month-year-pickers">
+                                <select id="cal-select-month" class="cal-quick-select" aria-label="Chọn tháng Dương lịch"></select>
+                                <span class="cal-picker-slash">/</span>
+                                <select id="cal-select-year" class="cal-quick-select" aria-label="Chọn năm Dương lịch"></select>
+                            </div>
                             <div class="month-lunar-subtitle" id="cal-month-lunar-subtitle">(Tháng 10 năm Bính Ngọ)</div>
                         </div>
                         <button type="button" id="btn-cal-next-month" class="cal-nav-btn cal-nav-arrow" title="Tháng sau" aria-label="Tháng sau">

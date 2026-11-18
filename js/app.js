@@ -1078,20 +1078,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 11. Mascot Goat Interaction
+    // 11. Mascot Zodiac Interaction (auto-adapts to active Tết year & zodiac animal)
     const mascotBtn = document.getElementById('mascot-goat-btn');
     const mascotBubble = document.querySelector('.mascot-speech-bubble');
     if (mascotBtn || mascotBubble) {
-        const mascotWishes = [
-            "Chúc bạn năm Đinh Mùi 2027 vạn sự đại cát, tấn tài tấn lộc! 🌸",
-            "Năm con Dê vàng: Sức khỏe dồi dào, tiền vào rủng rỉnh! 💰",
-            "Tết đến trăm điều như ý, xuân sang vạn sự bình an! 🧧",
-            "Công danh rạng rỡ, tình duyên phơi phới, cả năm ngập tràn tiếng cười! ✨",
-            "Đắc thời đắc lợi, khai xuân đắc lộc, tấn tới bình an! 🎋",
-            "Tết sum vầy đầm ấm, phát tài phát lộc, vạn sự hanh thông! 🏮"
-        ];
         let wishIndex = 0;
         const triggerMascotWish = () => {
+            const cycle = (window.LunarEngine && typeof window.LunarEngine.getCurrentTetCycle === 'function')
+                ? window.LunarEngine.getCurrentTetCycle(7)
+                : { year: 2027, canChi: 'Đinh Mùi', mascot: { animal: 'Dê Vàng' } };
+            const mascotWishes = [
+                `Chúc bạn năm ${cycle.canChi} ${cycle.year} vạn sự đại cát, tấn tài tấn lộc! 🌸`,
+                `Năm ${cycle.mascot ? cycle.mascot.animal : cycle.canChi}: Sức khỏe dồi dào, tiền vào rủng rỉnh! 💰`,
+                "Tết đến trăm điều như ý, xuân sang vạn sự bình an! 🧧",
+                "Công danh rạng rỡ, tình duyên phơi phới, cả năm ngập tràn tiếng cười! ✨",
+                "Đắc thời đắc lợi, khai xuân đắc lộc, tấn tới bình an! 🎋",
+                "Tết sum vầy đầm ấm, phát tài phát lộc, vạn sự hanh thông! 🏮"
+            ];
             if (window.tetAudio) window.tetAudio.playLuckyChime();
             fireworks.explodeAt(window.innerWidth / 2, window.innerHeight * 0.25);
             const bubble = document.querySelector('.mascot-speech-bubble');
