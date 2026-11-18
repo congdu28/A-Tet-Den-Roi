@@ -448,11 +448,10 @@
         getJumpTetYear() {
             const activeCycle = getCurrentTetCycle(7);
             const vnToday = getVietnamNow();
-            if (this.viewYear === vnToday.year && this.viewMonth === vnToday.month) {
+            if (this.viewYear === vnToday.year) {
                 return activeCycle.year;
             }
-            const midLunar = convertSolar2Lunar(15, this.viewMonth, this.viewYear, 7);
-            return getTetCycleForLunar(midLunar, 7).year;
+            return this.viewYear;
         }
 
         syncSelectedDateForViewMonth() {
