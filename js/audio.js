@@ -5,20 +5,31 @@
 class TetAudioEngine {
     constructor() {
         this.ctx = null;
-        this.isMuted = false;
+        let savedVol = 0.6;
+        let savedMuted = false;
+        try {
+            const rawVol = parseFloat(localStorage.getItem('tet-audio-volume'));
+            if (Number.isFinite(rawVol)) savedVol = Math.max(0, Math.min(1, rawVol));
+            savedMuted = localStorage.getItem('tet-audio-muted') === 'true';
+        } catch {}
+
+        this.isMuted = savedMuted;
         this.bgmPlaying = false;
         this.bgmTimer = null;
         this.masterGain = null;
         this.sfxGain = null;
         this.bgmGain = null;
         this.currentSongIndex = 0;
-        this.volume = 0.6;
+        this.volume = savedVol;
+        this.lastNonZeroVolume = savedVol > 0 ? savedVol : 0.6;
+        this._playReqId = 0;
 
         // Custom HTML5 Audio element for user-uploaded MP3 songs (Có lời)
         this.customAudio = new Audio();
         this.customAudio.preload = 'metadata';
         this.customAudio.loop = false;
         this.customAudio.volume = this.volume;
+        this.customAudio.muted = this.isMuted;
         this.isCustomTrack = false;
         this.customTrackName = '';
 
@@ -67,43 +78,69 @@ class TetAudioEngine {
 
     init() {
         if (!this.ctx && typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext)) {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            this.ctx = new AudioContext();
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
 
-            this.masterGain = this.ctx.createGain();
-            this.masterGain.gain.value = this.volume;
-            this.masterGain.connect(this.ctx.destination);
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.gain.value = this.isMuted ? 0 : this.volume;
+                this.masterGain.connect(this.ctx.destination);
 
-            this.sfxGain = this.ctx.createGain();
-            this.sfxGain.gain.value = 0.9;
-            this.sfxGain.connect(this.masterGain);
+                this.sfxGain = this.ctx.createGain();
+                this.sfxGain.gain.value = 0.9;
+                this.sfxGain.connect(this.masterGain);
 
-            this.bgmGain = this.ctx.createGain();
-            this.bgmGain.gain.value = 0.45;
-            this.bgmGain.connect(this.masterGain);
+                this.bgmGain = this.ctx.createGain();
+                this.bgmGain.gain.value = 0.45;
+                this.bgmGain.connect(this.masterGain);
+            } catch (err) {
+                console.warn('Không khởi tạo được Web Audio API:', err);
+                this.ctx = null;
+            }
         }
         if (this.ctx && this.ctx.state === 'suspended') {
-            this.ctx.resume();
+            this.ctx.resume().catch(() => {});
         }
     }
 
-    setVolume(val) {
+    setVolume(val, autoUnmute = false) {
         this.volume = Math.max(0, Math.min(1, val));
-        if (this.masterGain && !this.isMuted) {
-            this.masterGain.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.05);
+        if (this.volume > 0) {
+            this.lastNonZeroVolume = this.volume;
+            if (autoUnmute && this.isMuted) {
+                this.isMuted = false;
+            }
+        }
+        try {
+            localStorage.setItem('tet-audio-volume', String(this.volume));
+            localStorage.setItem('tet-audio-muted', String(this.isMuted));
+        } catch {}
+
+        if (this.masterGain && this.ctx) {
+            this.masterGain.gain.setTargetAtTime(this.isMuted ? 0 : this.volume, this.ctx.currentTime, 0.05);
         }
         if (this.customAudio) {
-            this.customAudio.volume = this.isMuted ? 0 : this.volume;
+            this.customAudio.volume = this.volume;
+            this.customAudio.muted = this.isMuted;
         }
     }
 
     toggleMute() {
         this.isMuted = !this.isMuted;
-        if (this.masterGain) {
+        if (!this.isMuted && this.volume === 0) {
+            this.volume = this.lastNonZeroVolume > 0 ? this.lastNonZeroVolume : 0.6;
+        }
+        try {
+            localStorage.setItem('tet-audio-muted', String(this.isMuted));
+            localStorage.setItem('tet-audio-volume', String(this.volume));
+        } catch {}
+
+        if (this.masterGain && this.ctx) {
             this.masterGain.gain.setTargetAtTime(this.isMuted ? 0 : this.volume, this.ctx.currentTime, 0.05);
         }
         if (this.customAudio) {
             this.customAudio.muted = this.isMuted;
+            this.customAudio.volume = this.volume;
         }
         return this.isMuted;
     }
@@ -188,13 +225,8 @@ class TetAudioEngine {
             if (Array.isArray(saved) && saved.length > 0) {
                 let hasAdded = false;
                 saved.forEach(item => {
-                    const itemName = (item.name || '').toLowerCase();
-                    // Prevent duplicate if this song is already in the default playlist
-                    const isAlreadyDefault = this.playlist.some(p => {
-                        const pName = p.name.toLowerCase();
-                        return itemName.includes(pName) || pName.includes(itemName);
-                    });
-                    if (isAlreadyDefault) return;
+                    if (!item || !item.id || !item.blob) return;
+                    if (this.playlist.some(p => p.id === item.id)) return;
 
                     try {
                         const url = URL.createObjectURL(item.blob);
@@ -292,7 +324,9 @@ class TetAudioEngine {
         this.playlist.splice(idx, 1);
         await this.deleteSongFromDB(id);
 
-        if (this.currentSongIndex >= this.playlist.length) {
+        if (idx < this.currentSongIndex) {
+            this.currentSongIndex = Math.max(0, this.currentSongIndex - 1);
+        } else if (this.currentSongIndex >= this.playlist.length) {
             this.currentSongIndex = Math.max(0, this.playlist.length - 1);
         }
 
@@ -300,9 +334,13 @@ class TetAudioEngine {
             this.onPlaylistChange(this.playlist);
         }
 
-        if (wasCurrent && wasPlaying && this.playlist.length > 0) {
+        if (wasCurrent && this.playlist.length > 0) {
             this.selectSong(this.currentSongIndex);
-            this.startBGM();
+            if (wasPlaying) {
+                this.startBGM();
+            } else if (typeof this.onSongChange === 'function') {
+                this.onSongChange(this.playlist[this.currentSongIndex]);
+            }
         }
 
         return true;
@@ -311,11 +349,16 @@ class TetAudioEngine {
     playCustomAudio() {
         this.isCustomTrack = true;
         if (this.customAudio) {
-            this.customAudio.volume = this.isMuted ? 0 : this.volume;
+            const seq = ++this._playReqId;
+            this.customAudio.volume = this.volume;
+            this.customAudio.muted = this.isMuted;
             this.bgmPlaying = true;
             return this.customAudio.play().then(() => {
                 return true;
             }).catch(err => {
+                if (seq !== this._playReqId || (err && err.name === 'AbortError')) {
+                    return false;
+                }
                 this.bgmPlaying = false;
                 if (!err || err.name !== 'NotAllowedError') {
                     console.warn("Lỗi phát audio:", err);
@@ -331,6 +374,7 @@ class TetAudioEngine {
     }
 
     pauseCustomAudio() {
+        this._playReqId++;
         this.bgmPlaying = false;
         if (this.customAudio) {
             this.customAudio.pause();
@@ -338,6 +382,7 @@ class TetAudioEngine {
     }
 
     stopAudioPlayback() {
+        this._playReqId++;
         if (this.customAudio) {
             this.customAudio.pause();
         }
@@ -353,6 +398,7 @@ class TetAudioEngine {
     playFireworkExplode() {
         if (this.isMuted) return;
         this.init();
+        if (!this.ctx) return;
         const now = this.ctx.currentTime;
 
         const boomOsc = this.ctx.createOscillator();
@@ -400,6 +446,7 @@ class TetAudioEngine {
     playFireworkLaunch() {
         if (this.isMuted) return;
         this.init();
+        if (!this.ctx) return;
         const now = this.ctx.currentTime;
 
         const osc = this.ctx.createOscillator();
@@ -422,6 +469,7 @@ class TetAudioEngine {
     playLuckyChime() {
         if (this.isMuted) return;
         this.init();
+        if (!this.ctx) return;
         const now = this.ctx.currentTime;
         const notes = [1046.50, 1318.51, 1567.98, 2093.00];
 
@@ -447,6 +495,7 @@ class TetAudioEngine {
     playBambooShake() {
         if (this.isMuted) return;
         this.init();
+        if (!this.ctx) return;
         const now = this.ctx.currentTime;
 
         // Âm thanh lắc ống xăm tre tự nhiên: chuỗi va chạm lách cách sống động
@@ -481,6 +530,7 @@ class TetAudioEngine {
     playLionDrum(type = 'tung') {
         if (this.isMuted) return;
         this.init();
+        if (!this.ctx) return;
         const now = this.ctx.currentTime;
 
         if (type === 'tung') {
@@ -556,7 +606,8 @@ class TetAudioEngine {
                 this.customTrackName = song.name;
                 if (this.customAudio) {
                     this.customAudio.src = song.url;
-                    this.customAudio.volume = this.isMuted ? 0 : this.volume;
+                    this.customAudio.volume = this.volume;
+                    this.customAudio.muted = this.isMuted;
                 }
                 if (wasPlaying) {
                     this.playCustomAudio();
@@ -584,7 +635,8 @@ class TetAudioEngine {
             this.customTrackName = song.name;
             if (this.customAudio) {
                 this.customAudio.src = song.url;
-                this.customAudio.volume = this.isMuted ? 0 : this.volume;
+                this.customAudio.volume = this.volume;
+                this.customAudio.muted = this.isMuted;
             }
         } else {
             this.isCustomTrack = false;
@@ -609,7 +661,8 @@ class TetAudioEngine {
             this.customTrackName = song.name;
             if (this.customAudio) {
                 this.customAudio.src = song.url;
-                this.customAudio.volume = this.isMuted ? 0 : this.volume;
+                this.customAudio.volume = this.volume;
+                this.customAudio.muted = this.isMuted;
             }
         } else {
             this.isCustomTrack = false;
@@ -669,7 +722,7 @@ class TetAudioEngine {
     }
 
     scheduleMelodyLoop() {
-        if (!this.bgmPlaying || this.isCustomTrack) return;
+        if (!this.bgmPlaying || this.isCustomTrack || !this.ctx) return;
 
         const currentSong = this.playlist[this.currentSongIndex];
         const melody = currentSong.melody;

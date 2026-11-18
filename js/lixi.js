@@ -96,7 +96,7 @@ class LixiSystem {
                 wish: "Các nấc thang thành công mở rộng trước mắt! Học vị thăng tiến, sự nghiệp vang dội, vạn người ngưỡng mộ!"
             },
             {
-                amount: "100 ĐIỂM HẠNH PHÚC",
+                amount: "1.000.000 VNĐ + 100 ĐIỂM HẠNH PHÚC",
                 numVal: 1000000,
                 meaning: "VIÊN MÃN TRỌN ĐỜI",
                 wish: "Món quà tinh thần quý giá nhất: Gia đình sum họp đầm ấm, người thân khỏe mạnh, vạn sự thuận hòa!"
@@ -115,23 +115,32 @@ class LixiSystem {
             }
         ];
 
+        const envelopeCount = document.querySelectorAll('.hanging-lixi').length || 18;
+        this.wishOrder = Array.from({ length: this.wishes.length }, (_, i) => i);
         this.openedIndices = new Set();
         this.totalAmountCollected = 0;
 
-        // Restore saved session only if openedIndices are valid
+        // Restore saved permutation & openedIndices safely within envelope bounds
         try {
-            const savedOpened = JSON.parse(localStorage.getItem('tet-lixi-opened') || '[]');
-            const savedTotal = parseInt(localStorage.getItem('tet-lixi-total'), 10) || 0;
-            const validOpened = Array.isArray(savedOpened)
-                ? savedOpened.filter(i => Number.isInteger(i) && i >= 0 && i < 36)
-                : [];
-            if (validOpened.length > 0) {
-                this.openedIndices = new Set(validOpened);
-                this.totalAmountCollected = Math.max(0, savedTotal);
-            } else {
-                this.openedIndices = new Set();
-                this.totalAmountCollected = 0;
+            const savedOrder = JSON.parse(localStorage.getItem('tet-lixi-order') || 'null');
+            if (
+                Array.isArray(savedOrder) &&
+                savedOrder.length === this.wishes.length &&
+                new Set(savedOrder).size === this.wishes.length &&
+                savedOrder.every(idx => Number.isInteger(idx) && idx >= 0 && idx < this.wishes.length)
+            ) {
+                this.wishOrder = savedOrder;
             }
+
+            const savedOpened = JSON.parse(localStorage.getItem('tet-lixi-opened') || '[]');
+            const validOpened = Array.isArray(savedOpened)
+                ? savedOpened.filter(i => Number.isInteger(i) && i >= 0 && i < envelopeCount)
+                : [];
+            this.openedIndices = new Set(validOpened);
+            this.totalAmountCollected = Array.from(this.openedIndices).reduce((sum, idx) => {
+                const wishIdx = this.wishOrder[idx % this.wishOrder.length];
+                return sum + (this.wishes[wishIdx] ? this.wishes[wishIdx].numVal : 0);
+            }, 0);
         } catch (e) {
             this.openedIndices = new Set();
             this.totalAmountCollected = 0;
@@ -139,6 +148,14 @@ class LixiSystem {
 
         this.bindEvents();
         this.updateStatsUI();
+    }
+
+    closeModal() {
+        const modal = document.getElementById('lixi-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            if (window.syncModalScrollLock) window.syncModalScrollLock();
+        }
     }
 
     bindEvents() {
@@ -158,14 +175,15 @@ class LixiSystem {
         const closeBtn = document.getElementById('btn-close-lixi');
         const acceptBtn = document.getElementById('btn-accept-lixi');
         const modal = document.getElementById('lixi-modal');
-        if (closeBtn && modal) {
-            closeBtn.addEventListener('click', () => {
-                modal.classList.add('hidden');
-            });
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.closeModal());
         }
-        if (acceptBtn && modal) {
-            acceptBtn.addEventListener('click', () => {
-                modal.classList.add('hidden');
+        if (acceptBtn) {
+            acceptBtn.addEventListener('click', () => this.closeModal());
+        }
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) this.closeModal();
             });
         }
     }
@@ -187,6 +205,7 @@ class LixiSystem {
         }
 
         try {
+            localStorage.setItem('tet-lixi-order', JSON.stringify(this.wishOrder));
             localStorage.setItem('tet-lixi-opened', JSON.stringify(Array.from(this.openedIndices)));
             localStorage.setItem('tet-lixi-total', String(this.totalAmountCollected));
         } catch (e) {}
@@ -210,8 +229,9 @@ class LixiSystem {
             window.fireworks.explodeAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
         }
 
-        // Pick wish based on index or shuffle
-        const data = this.wishes[index % this.wishes.length];
+        // Pick wish using persisted shuffled permutation
+        const wishIdx = this.wishOrder[index % this.wishOrder.length];
+        const data = this.wishes[wishIdx];
 
         if (isNewOpen) {
             this.totalAmountCollected += data.numVal;
@@ -229,16 +249,19 @@ class LixiSystem {
         const modal = document.getElementById('lixi-modal');
         if (modal) {
             modal.classList.remove('hidden');
+            if (window.syncModalScrollLock) window.syncModalScrollLock();
         }
     }
 
     resetTree() {
         this.openedIndices.clear();
-        this.totalAmountCollected = 0; // Reset total money to 0!
-        try {
-            localStorage.removeItem('tet-lixi-opened');
-            localStorage.removeItem('tet-lixi-total');
-        } catch (e) {}
+        this.totalAmountCollected = 0;
+
+        // Shuffle wish permutation & persist
+        for (let i = this.wishOrder.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [this.wishOrder[i], this.wishOrder[j]] = [this.wishOrder[j], this.wishOrder[i]];
+        }
 
         const envelopes = document.querySelectorAll('.hanging-lixi');
         envelopes.forEach(env => {
@@ -246,12 +269,6 @@ class LixiSystem {
             env.classList.add('lixi-popped');
             setTimeout(() => env.classList.remove('lixi-popped'), 600);
         });
-
-        // Shuffle wishes order
-        for (let i = this.wishes.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [this.wishes[i], this.wishes[j]] = [this.wishes[j], this.wishes[i]];
-        }
 
         this.updateStatsUI();
 
@@ -262,12 +279,13 @@ class LixiSystem {
             window.fireworks.explodeAt(window.innerWidth / 2, window.innerHeight * 0.4);
         }
 
-        // Show toast
+        // Show toast with shared timer
         const toast = document.getElementById('tet-toast');
         if (toast) {
             toast.textContent = '🎋 Cây Lộc 18 Bao Lì Xì mới đã được treo lên! Hãy chọn những phong bao may mắn tiếp theo!';
             toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 3000);
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => toast.classList.add('hidden'), 3000);
         }
     }
 }

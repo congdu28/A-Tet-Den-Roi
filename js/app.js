@@ -30,20 +30,20 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => fireworks.start(), 120);
     });
 
-    // 4. Click anywhere to explode fireworks (ignoring UI buttons/inputs)
+    // Centralized body scroll lock for all modals
+    window.syncModalScrollLock = () => {
+        const hasOpenModal = Boolean(document.querySelector('.modal-overlay:not(.hidden)'));
+        document.body.style.overflow = hasOpenModal ? 'hidden' : '';
+    };
+
+    // 4. Click anywhere to explode fireworks (ignoring UI buttons, links, labels, controls & open modals)
     document.addEventListener('click', (e) => {
-        const tag = e.target.tagName.toLowerCase();
+        if (!e.target || typeof e.target.closest !== 'function') return;
+        if (document.querySelector('.modal-overlay:not(.hidden)')) return;
         if (
-            tag === 'input' || 
-            tag === 'button' || 
-            tag === 'select' || 
-            tag === 'textarea' || 
-            e.target.closest('.btn-ctrl') ||
-            e.target.closest('.nav-tab-btn') ||
-            e.target.closest('.modal-content') ||
-            e.target.closest('.interactive-clickable') ||
-            e.target.closest('.music-player-panel') ||
-            e.target.closest('.custom-select-ctrl')
+            e.target.closest(
+                'button, a, label, input, select, textarea, [role="button"], .modal-overlay, .btn-ctrl, .nav-tab-btn, .modal-content, .interactive-clickable, .music-player-panel, .custom-select-ctrl, .hanging-lixi, #fortune-cup-element, #mascot-goat-btn, .mascot-speech-bubble'
+            )
         ) {
             return;
         }
@@ -73,14 +73,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const setLightMode = (isLight, playSound = false) => {
         document.body.classList.toggle('light-mode', isLight);
-        if (modeIcon) modeIcon.textContent = isLight ? '🌙' : '☀️';
-        if (modeText) modeText.textContent = isLight ? 'Tối' : 'Sáng';
+        if (modeIcon) modeIcon.textContent = isLight ? '☀️' : '🌙';
+        if (modeText) modeText.textContent = isLight ? 'Sáng' : 'Tối';
+        if (lightDarkToggleBtn) {
+            lightDarkToggleBtn.setAttribute('aria-pressed', isLight ? 'false' : 'true');
+            lightDarkToggleBtn.setAttribute(
+                'title',
+                isLight ? 'Đang ở Giao diện Sáng (Nắng Xuân) — Bấm để chuyển sang Tối' : 'Đang ở Giao diện Tối (Hội Đêm) — Bấm để chuyển sang Sáng'
+            );
+        }
         if (modeLightBtn) modeLightBtn.classList.toggle('active', isLight);
         if (modeDarkBtn) modeDarkBtn.classList.toggle('active', !isLight);
         localStorage.setItem('tet-theme-mode', isLight ? 'light' : 'dark');
-
-        const accBadgeMode = document.getElementById('acc-badge-mode');
-        if (accBadgeMode) accBadgeMode.textContent = isLight ? 'Nắng Xuân (Sáng)' : 'Hội Đêm (Tối)';
 
         if (playSound && window.tetAudio) {
             window.tetAudio.init();
@@ -94,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    setLightMode(savedMode === 'light', false);
+    setLightMode(savedMode !== 'dark', false);
 
     if (lightDarkToggleBtn) {
         lightDarkToggleBtn.addEventListener('click', () => {
@@ -124,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const openSettings = () => {
         if (settingsModal) {
             settingsModal.classList.remove('hidden');
+            window.syncModalScrollLock();
             if (window.tetAudio) {
                 window.tetAudio.init();
                 window.tetAudio.playLuckyChime();
@@ -132,7 +137,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const closeSettings = () => {
-        if (settingsModal) settingsModal.classList.add('hidden');
+        if (settingsModal) {
+            settingsModal.classList.add('hidden');
+            window.syncModalScrollLock();
+        }
     };
 
     if (openSettingsBtn) openSettingsBtn.addEventListener('click', openSettings);
@@ -228,19 +236,14 @@ document.addEventListener('DOMContentLoaded', () => {
         'theme-tay-bac': 'assets/backgrounds/tet-hoa-dao-bac-bo.svg'
     };
 
-    const applyTheme = (themeClass, syncPresetBg = false) => {
+    const applyTheme = (rawThemeClass, syncPresetBg = false) => {
+        const themeClass = allThemes.includes(rawThemeClass) ? rawThemeClass : 'theme-red-gold';
         allThemes.forEach(t => document.body.classList.remove(t));
         document.body.classList.add(themeClass);
-        if (themeSelect) themeSelect.value = themeClass;
         themeChips.forEach(chip => {
             chip.classList.toggle('active', chip.getAttribute('data-theme') === themeClass);
         });
         localStorage.setItem('tet-theme', themeClass);
-
-        const accBadgeTheme = document.getElementById('acc-badge-theme');
-        if (accBadgeTheme) {
-            accBadgeTheme.textContent = THEME_DISPLAY_NAMES[themeClass] || 'Giao Diện Tết';
-        }
 
         if (syncPresetBg) {
             const activeToken = localStorage.getItem('tet-custom-bg-active') || 'none';
@@ -366,6 +369,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (petalFilterSelect) {
+        if (window.petals && window.petals.mode) {
+            petalFilterSelect.value = window.petals.mode;
+        }
         petalFilterSelect.addEventListener('change', (e) => {
             if (window.petals) window.petals.setFilter(e.target.value);
         });
@@ -538,9 +544,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const text = (marqueeState.text || '').trim() || defaultMarqueeState.text;
             const speedInfo = speedDurationMap[marqueeState.speed] || speedDurationMap[2];
 
+            const validStyles = ['multi', 'single', 'diagonal'];
+            const safeStyle = validStyles.includes(marqueeState.style) ? marqueeState.style : 'multi';
+            marqueeState.style = safeStyle;
+
             bgMarqueeLayer.classList.toggle('hidden', !marqueeState.enabled);
             bgMarqueeLayer.classList.remove('style-multi', 'style-single', 'style-diagonal');
-            bgMarqueeLayer.classList.add(`style-${marqueeState.style || 'multi'}`);
+            bgMarqueeLayer.classList.add(`style-${safeStyle}`);
 
             bgMarqueeLayer.style.setProperty('--marquee-opacity', (marqueeState.opacity / 100).toFixed(2));
             bgMarqueeLayer.style.setProperty('--marquee-size', `${marqueeState.size}px`);
@@ -670,18 +680,12 @@ document.addEventListener('DOMContentLoaded', () => {
         'font-montserrat', 'font-jakarta'
     ];
 
-    const applyFont = (fontClass) => {
+    const applyFont = (rawFontClass) => {
+        const fontClass = allFonts.includes(rawFontClass) ? rawFontClass : 'font-uvn-thuphap';
         allFonts.forEach(f => document.body.classList.remove(f));
         document.body.classList.add(fontClass);
         if (fontSelect) fontSelect.value = fontClass;
         localStorage.setItem('tet-font', fontClass);
-
-        const accBadgeFont = document.getElementById('acc-badge-font');
-        if (accBadgeFont && fontSelect && fontSelect.selectedIndex >= 0) {
-            const rawText = fontSelect.options[fontSelect.selectedIndex].textContent;
-            const match = rawText.match(/\d+\.\s*([A-Za-z0-9\s-]+)\s*—/);
-            accBadgeFont.textContent = match ? match[1].trim() : rawText.split('—')[0].trim();
-        }
 
         const previewSample = document.getElementById('font-live-preview-sample');
         if (previewSample) {
@@ -811,6 +815,7 @@ document.addEventListener('DOMContentLoaded', () => {
             actionsWrap.className = 'custom-song-actions';
 
             const playBtn = document.createElement('button');
+            playBtn.type = 'button';
             playBtn.className = 'btn-song-play-mini';
             playBtn.title = 'Phát bài này';
             playBtn.textContent = isPlaying ? '⏸️ Tạm Dừng' : '▶️ Phát';
@@ -819,6 +824,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let deleteBtn = null;
             if (!song.isDefault) {
                 deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
                 deleteBtn.className = 'btn-song-delete-mini';
                 deleteBtn.title = 'Xóa khỏi danh sách phát';
                 deleteBtn.textContent = '🗑️';
@@ -856,14 +862,24 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const playerVolIcon = document.getElementById('player-vol-icon');
-    const updateVolIcon = (val) => {
-        if (!playerVolIcon) return;
-        if (val === 0 || (window.tetAudio && window.tetAudio.isMuted)) {
-            playerVolIcon.textContent = '🔇';
-        } else if (val < 0.45) {
-            playerVolIcon.textContent = '🔉';
-        } else {
-            playerVolIcon.textContent = '🔊';
+    const muteBtn = document.getElementById('btn-toggle-mute');
+
+    const syncAudioControlsUI = () => {
+        if (!window.tetAudio) return;
+        const isMuted = window.tetAudio.isMuted || window.tetAudio.volume === 0;
+        const vol = window.tetAudio.volume;
+        if (volumeSlider) {
+            volumeSlider.value = String(window.tetAudio.isMuted ? 0 : vol);
+        }
+        if (playerVolIcon) {
+            if (isMuted) playerVolIcon.textContent = '🔇';
+            else if (vol < 0.45) playerVolIcon.textContent = '🔉';
+            else playerVolIcon.textContent = '🔊';
+        }
+        if (muteBtn) {
+            muteBtn.classList.toggle('active', window.tetAudio.isMuted);
+            muteBtn.setAttribute('aria-pressed', window.tetAudio.isMuted ? 'true' : 'false');
+            muteBtn.innerHTML = window.tetAudio.isMuted ? `<span>🔇</span> Tắt Âm` : `<span>🔊</span> Bật Âm`;
         }
     };
 
@@ -912,12 +928,13 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCustomSongsSettingsList();
         };
 
-        // Initial populate
+        // Initial populate & sync persisted volume/mute state
         renderSongDropdown(window.tetAudio.playlist);
         renderCustomSongsSettingsList();
+        syncAudioControlsUI();
 
         // Tự động phát nhạc ngay khi vào trang; nếu trình duyệt chặn autoplay thì tự phát ở tương tác đầu tiên
-        let pendingAutoPlay = true;
+        let pendingAutoPlay = !window.tetAudio.isMuted;
         const cleanupAutoPlayListeners = () => {
             document.removeEventListener('pointerdown', handleFirstInteractionPlay, true);
             document.removeEventListener('keydown', handleFirstInteractionPlay, true);
@@ -928,9 +945,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!pendingAutoPlay || !window.tetAudio) return;
             pendingAutoPlay = false;
 
-            // Nếu người dùng bấm trực tiếp vào nút Play/Mute/chọn bài, nhường sự kiện click của nút đó xử lý
+            // Nếu người dùng bấm trực tiếp vào nút điều khiển nhạc/âm thanh, nhường sự kiện của nút đó xử lý
             const targetEl = e && e.target && e.target.closest
-                ? e.target.closest('#btn-music-play, #btn-toggle-mute, #music-mute-btn, .song-item-card, #music-song-select')
+                ? e.target.closest('#btn-music-play, #btn-music-prev, #btn-music-next, #btn-upload-music, #btn-modal-upload-music, #btn-toggle-mute, #player-vol-icon, .custom-song-item, #music-song-select')
                 : null;
             if (targetEl || window.tetAudio.bgmPlaying || window.tetAudio.isMuted) return;
 
@@ -942,7 +959,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         (async () => {
-            if (!window.tetAudio || window.tetAudio.bgmPlaying) {
+            if (!window.tetAudio || window.tetAudio.bgmPlaying || window.tetAudio.isMuted) {
                 pendingAutoPlay = false;
                 return;
             }
@@ -994,20 +1011,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (volumeSlider) {
         volumeSlider.addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);
-            window.tetAudio.setVolume(val);
-            updateVolIcon(val);
+            window.tetAudio.setVolume(val, true);
+            syncAudioControlsUI();
         });
     }
 
     if (playerVolIcon) {
         playerVolIcon.style.cursor = 'pointer';
         playerVolIcon.addEventListener('click', () => {
-            const isMuted = window.tetAudio.toggleMute();
-            if (muteBtn) {
-                muteBtn.classList.toggle('active', isMuted);
-                muteBtn.innerHTML = isMuted ? `<span>🔇</span> Tắt Âm` : `<span>🔊</span> Bật Âm`;
-            }
-            updateVolIcon(isMuted ? 0 : window.tetAudio.volume);
+            window.tetAudio.toggleMute();
+            syncAudioControlsUI();
         });
     }
 
@@ -1047,13 +1060,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 8. Global Mute Button
-    const muteBtn = document.getElementById('btn-toggle-mute');
     if (muteBtn) {
         muteBtn.addEventListener('click', () => {
-            const isMuted = window.tetAudio.toggleMute();
-            muteBtn.classList.toggle('active', isMuted);
-            muteBtn.innerHTML = isMuted ? `<span>🔇</span> Tắt Âm` : `<span>🔊</span> Bật Âm`;
-            updateVolIcon(isMuted ? 0 : window.tetAudio.volume);
+            window.tetAudio.toggleMute();
+            syncAudioControlsUI();
         });
     }
 
@@ -1065,14 +1075,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.tetAudio.init();
             }
             fireworks.triggerMegaFrenzy();
-        });
-    }
-
-    // 10. Petals Mode Selector
-    const petalSelector = document.getElementById('petal-flower-filter');
-    if (petalSelector) {
-        petalSelector.addEventListener('change', (e) => {
-            petals.setMode(e.target.value);
         });
     }
 
@@ -1116,9 +1118,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (fortuneModal) fortuneModal.classList.add('hidden');
             if (lixiModal) lixiModal.classList.add('hidden');
             if (calendarModal) calendarModal.classList.add('hidden');
+            window.syncModalScrollLock();
             return;
         }
-        if (['input', 'textarea', 'select'].includes(document.activeElement.tagName.toLowerCase())) return;
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        const activeTag = document.activeElement && document.activeElement.tagName
+            ? document.activeElement.tagName.toLowerCase()
+            : '';
+        if (['input', 'textarea', 'select'].includes(activeTag) || (document.activeElement && document.activeElement.isContentEditable)) return;
         if (e.key === 'f' || e.key === 'F') {
             fireworks.explodeAt(Math.random() * window.innerWidth, window.innerHeight * 0.35);
         }
@@ -1450,11 +1457,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    const findPresetCardByUrl = (presetUrl) =>
+        Array.from(bgPresetCards).find(c => c.getAttribute('data-preset-url') === presetUrl) || null;
+
     const getActiveBgTone = () => {
         const activeToken = localStorage.getItem(BG_KEY_ACTIVE) || 'none';
         if (activeToken.startsWith('preset:')) {
             const presetUrl = activeToken.slice(7);
-            const card = document.querySelector(`.bg-preset-card[data-preset-url="${presetUrl.replace(/"/g, '\\"')}"]`);
+            const card = findPresetCardByUrl(presetUrl);
             return (card && card.getAttribute('data-preset-tone')) || 'dark';
         }
         return 'custom';
@@ -1497,7 +1507,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeToken = localStorage.getItem(BG_KEY_ACTIVE) || 'none';
         if (activeToken.startsWith('preset:') && customBgImage) {
             const canonicalUrl = activeToken.slice(7);
-            const card = document.querySelector(`.bg-preset-card[data-preset-url="${canonicalUrl.replace(/"/g, '\\"')}"]`);
+            const card = findPresetCardByUrl(canonicalUrl);
             const modeUrl = resolvePresetImageUrl(card, canonicalUrl);
             if (modeUrl) {
                 customBgImage.style.backgroundImage = `url("${escapeCssUrl(modeUrl)}")`;
@@ -1558,12 +1568,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    let activeSessionBlobUrl = null;
+    const revokeSessionBlobUrl = () => {
+        if (activeSessionBlobUrl) {
+            try { URL.revokeObjectURL(activeSessionBlobUrl); } catch {}
+            activeSessionBlobUrl = null;
+        }
+    };
+
     const setActiveCustomBg = (url, label, activeToken) => {
         if (!customBgLayer || !customBgImage) return;
 
         if (!url || activeToken === 'none') {
+            revokeSessionBlobUrl();
             customBgLayer.classList.add('hidden');
             customBgImage.style.backgroundImage = '';
+            if (bgPreviewThumb) bgPreviewThumb.removeAttribute('src');
             if (bgPreviewWrap) bgPreviewWrap.classList.add('hidden');
             if (bgControlsGrid) bgControlsGrid.classList.add('hidden');
             localStorage.setItem(BG_KEY_ACTIVE, 'none');
@@ -1572,12 +1592,20 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        localStorage.setItem(BG_KEY_ACTIVE, activeToken);
+        if (activeToken === 'session:blob') {
+            if (activeSessionBlobUrl && activeSessionBlobUrl !== url) {
+                revokeSessionBlobUrl();
+            }
+            activeSessionBlobUrl = url;
+        } else {
+            revokeSessionBlobUrl();
+            localStorage.setItem(BG_KEY_ACTIVE, activeToken);
+        }
 
         let displayUrl = url;
         if (activeToken.startsWith('preset:')) {
             const canonicalUrl = activeToken.slice(7);
-            const card = document.querySelector(`.bg-preset-card[data-preset-url="${canonicalUrl.replace(/"/g, '\\"')}"]`);
+            const card = findPresetCardByUrl(canonicalUrl);
             displayUrl = resolvePresetImageUrl(card, url);
         }
 
@@ -1698,7 +1726,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderSavedBgGrid();
                 setActiveCustomBg(objUrl, cleanName, `idb:${id}`);
             } else {
-                setActiveCustomBg(objUrl, cleanName, 'none');
+                setActiveCustomBg(objUrl, cleanName, 'session:blob');
             }
 
             if (window.tetAudio) {
@@ -1839,13 +1867,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }));
         renderSavedBgGrid();
 
-        if (initialBgToken && initialBgToken.startsWith('idb:')) {
+        if (
+            initialBgToken &&
+            initialBgToken.startsWith('idb:') &&
+            localStorage.getItem(BG_KEY_ACTIVE) === initialBgToken
+        ) {
             const id = initialBgToken.slice(4);
             const found = savedBgItems.find(item => item.id === id);
             if (found) {
                 setActiveCustomBg(found.url, found.name, initialBgToken);
             } else {
-                localStorage.setItem(BG_KEY_ACTIVE, 'none');
+                setActiveCustomBg(DEFAULT_PRESET_BG_URL, DEFAULT_PRESET_BG_NAME, DEFAULT_PRESET_BG_TOKEN);
             }
         }
     })();

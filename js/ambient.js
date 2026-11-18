@@ -62,9 +62,11 @@ class AmbientSystem {
     resize() {
         this.width = window.innerWidth;
         this.height = window.innerHeight;
-        if (this.canvas) {
-            this.canvas.width = this.width;
-            this.canvas.height = this.height;
+        this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+        if (this.canvas && this.ctx) {
+            this.canvas.width = Math.round(this.width * this.dpr);
+            this.canvas.height = Math.round(this.height * this.dpr);
+            this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
         }
     }
 
@@ -364,14 +366,16 @@ class AmbientSystem {
                     c.x = Math.random() * this.width;
                 }
 
-                const scaleX = Math.cos(c.rotationY);
-                const scaleY = Math.sin(c.rotationX);
+                const dpr = this.dpr || 1;
+                const scaleX = Math.cos(c.rotationY) * dpr;
+                const scaleY = Math.sin(c.rotationX) * dpr;
 
-                ctx.setTransform(scaleX, 0, 0, scaleY, c.x, c.y);
+                ctx.setTransform(scaleX, 0, 0, scaleY, c.x * dpr, c.y * dpr);
                 ctx.fillStyle = c.color;
                 ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
             }
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            const dpr = this.dpr || 1;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
 
         // 5. Draw Lucky Coins & Envelopes (Tài lộc rơi)
@@ -401,8 +405,10 @@ class AmbientSystem {
 
     drawSkyLantern(x, y, scale, flicker) {
         const ctx = this.ctx;
+        const dpr = this.dpr || 1;
+        const s = scale * dpr;
         const candleFlicker = Math.sin(flicker) * 0.15 + 0.85;
-        ctx.setTransform(scale, 0, 0, scale, x, y);
+        ctx.setTransform(s, 0, 0, s, x * dpr, y * dpr);
         ctx.drawImage(this.lanternSprite, -52, -52);
 
         // Inner warm flickering flame
@@ -412,27 +418,29 @@ class AmbientSystem {
         ctx.globalAlpha = 0.88 * candleFlicker;
         ctx.fill();
         ctx.globalAlpha = 1;
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     drawLuckyCoin(x, y, size, rot) {
         const ctx = this.ctx;
+        const dpr = this.dpr || 1;
         const cos = Math.cos(rot);
         const sin = Math.sin(rot);
-        const s = size / 32;
-        ctx.setTransform(cos * s, sin * s, -sin * s, cos * s, x, y);
+        const s = (size / 32) * dpr;
+        ctx.setTransform(cos * s, sin * s, -sin * s, cos * s, x * dpr, y * dpr);
         ctx.drawImage(this.coinSprite, -20, -20);
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     drawMiniEnvelope(x, y, size, rot) {
         const ctx = this.ctx;
+        const dpr = this.dpr || 1;
         const cos = Math.cos(rot);
         const sin = Math.sin(rot);
-        const s = size / 24;
-        ctx.setTransform(cos * s, sin * s, -sin * s, cos * s, x, y);
+        const s = (size / 24) * dpr;
+        ctx.setTransform(cos * s, sin * s, -sin * s, cos * s, x * dpr, y * dpr);
         ctx.drawImage(this.envelopeSprite, -20, -27);
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     // Toggle controls

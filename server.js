@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { pipeline } = require('stream');
 
 const PORT = process.env.PORT || 3000;
 const ROOT_DIR = path.resolve(__dirname);
@@ -73,9 +74,14 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    const relativeTarget = decodedPath === '/' ? 'index.html' : decodedPath.replace(/^\/+/, '');
+    let relativeTarget = decodedPath === '/' ? 'index.html' : decodedPath.replace(/^\/+/, '');
+    if (relativeTarget === 'favicon.ico') {
+        relativeTarget = 'assets/favicon-32x32.png';
+    }
+
     const filePath = path.resolve(ROOT_DIR, relativeTarget);
     const relFromRoot = path.relative(ROOT_DIR, filePath);
+    const normalizedRel = relFromRoot.split(path.sep).join('/');
 
     // Strict root confinement & public allowlist check
     if (
@@ -98,9 +104,13 @@ const server = http.createServer((req, res) => {
 
         const ext = path.extname(filePath).toLowerCase();
         const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-        const cacheControl = ext === '.html' ? 'no-cache' : 'public, max-age=3600';
+        const isNoCacheAsset = ext === '.html' || ext === '.webmanifest' || normalizedRel === 'sw.js';
+        const cacheControl = isNoCacheAsset ? 'no-cache' : 'public, max-age=3600';
+        const corpHeader = normalizedRel === 'assets/og-thumbnail.png' ? 'cross-origin' : 'same-origin';
+
         const baseHeaders = {
             ...SECURITY_HEADERS,
+            'Cross-Origin-Resource-Policy': corpHeader,
             'Content-Type': contentType,
             'Accept-Ranges': 'bytes',
             'Cache-Control': cacheControl
@@ -139,7 +149,7 @@ const server = http.createServer((req, res) => {
             if (req.method === 'HEAD') {
                 res.end();
             } else {
-                fs.createReadStream(filePath, { start, end }).pipe(res);
+                pipeline(fs.createReadStream(filePath, { start, end }), res, () => {});
             }
         } else {
             res.writeHead(200, {
@@ -149,7 +159,7 @@ const server = http.createServer((req, res) => {
             if (req.method === 'HEAD') {
                 res.end();
             } else {
-                fs.createReadStream(filePath).pipe(res);
+                pipeline(fs.createReadStream(filePath), res, () => {});
             }
         }
     });

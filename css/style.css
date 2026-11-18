@@ -106,16 +106,16 @@ body.font-lora {
 
 /* 4. SVN-Athena — Có chân | Nghệ thuật, sắc sảo, tiêu đề lớn */
 body.font-svn-athena {
-    --font-heading: 'SVN-Athena', 'Playfair Display', serif;
+    --font-heading: 'SVN-Athena', 'Cormorant Garamond', 'Playfair Display', serif;
     --font-body: 'Lora', serif;
-    --font-artistic: 'SVN-Athena', 'Playfair Display', serif;
+    --font-artistic: 'SVN-Athena', 'Cormorant Garamond', 'Playfair Display', serif;
 }
 
 /* 5. SVN-Didot — Có chân | Thời trang, tinh tế, thanh lịch */
 body.font-svn-didot {
-    --font-heading: 'SVN-Didot', 'Playfair Display', serif;
+    --font-heading: 'SVN-Didot', 'EB Garamond', 'Playfair Display', serif;
     --font-body: 'Lora', serif;
-    --font-artistic: 'SVN-Didot', 'Playfair Display', serif;
+    --font-artistic: 'SVN-Didot', 'EB Garamond', 'Playfair Display', serif;
 }
 
 /* 6. Dancing Script — Viết tay | Phóng khoáng, uyển chuyển, nhẹ nhàng */
@@ -127,16 +127,16 @@ body.font-dancing {
 
 /* 7. SVN-Angellina — Viết tay | Nét cọ tự nhiên, cảm xúc, trích dẫn */
 body.font-svn-angellina {
-    --font-heading: 'SVN-Angellina', 'Dancing Script', cursive, sans-serif;
+    --font-heading: 'SVN-Angellina', 'Charm', 'Dancing Script', cursive, sans-serif;
     --font-body: 'Plus Jakarta Sans', sans-serif;
-    --font-artistic: 'SVN-Angellina', 'Dancing Script', cursive, sans-serif;
+    --font-artistic: 'SVN-Angellina', 'Charm', 'Dancing Script', cursive, sans-serif;
 }
 
 /* 8. SVN-Brusher — Viết tay | Nét cọ mạnh mẽ, phá cách, làm poster */
 body.font-svn-brusher {
-    --font-heading: 'SVN-Brusher', 'Dancing Script', cursive, sans-serif;
+    --font-heading: 'SVN-Brusher', 'Pacifico', 'Dancing Script', cursive, sans-serif;
     --font-body: 'Plus Jakarta Sans', sans-serif;
-    --font-artistic: 'SVN-Brusher', 'Dancing Script', cursive, sans-serif;
+    --font-artistic: 'SVN-Brusher', 'Pacifico', 'Dancing Script', cursive, sans-serif;
 }
 
 /* 9. UVN Thư Pháp — Thư pháp | Truyền thống Việt Nam, đậm chất cổ */
@@ -148,9 +148,9 @@ body.font-uvn-thuphap {
 
 /* 10. HP-Thư Pháp — Thư pháp | Thư pháp mềm mại, mang tính nghệ thuật */
 body.font-hp-thuphap {
-    --font-heading: 'HP-ThuPhap', 'Dancing Script', cursive, sans-serif;
+    --font-heading: 'HP-ThuPhap', 'Mali', 'Patrick Hand', cursive, sans-serif;
     --font-body: 'Lora', serif;
-    --font-artistic: 'HP-ThuPhap', 'Dancing Script', cursive, sans-serif;
+    --font-artistic: 'HP-ThuPhap', 'Mali', 'Patrick Hand', cursive, sans-serif;
 }
 
 /* 11. Montserrat — Không chân | Mạnh mẽ, vuông vức, đa dụng */
@@ -307,7 +307,7 @@ body.theme-cyber-tet {
     --card-inner-bg: linear-gradient(180deg, #3d0566 0%, #1a0133 100%);
     --card-border: 1px solid rgba(0, 240, 255, 0.45);
     --badge-bg: rgba(255, 0, 127, 0.22);
-    --btn-primary-bg: linear-gradient(135deg, #ff007f, #00f0ff);
+    --btn-primary-bg: linear-gradient(135deg, #d90479, #7c3aed);
     --btn-primary-color: #ffffff;
 }
 
@@ -411,7 +411,7 @@ body.light-mode.theme-mai-vang {
     --color-accent-gold: #b45309;
     --color-accent-gold-light: #78350f;
     --btn-primary-bg: linear-gradient(135deg, #f59e0b, #d97706);
-    --btn-primary-color: #ffffff;
+    --btn-primary-color: #200c02;
 }
 
 body.light-mode.theme-dao-hong {
@@ -516,7 +516,7 @@ body.light-mode.theme-ho-phach {
     --color-accent-gold: #b45309;
     --color-accent-gold-light: #78350f;
     --btn-primary-bg: linear-gradient(135deg, #f59e0b, #d97706);
-    --btn-primary-color: #ffffff;
+    --btn-primary-color: #200c02;
 }
 
 /* 7 Giao Diện Mới Độc Đáo (Nắng Xuân / Sáng) */
@@ -661,6 +661,13 @@ body.light-mode .btn-ctrl:hover {
     border-color: var(--color-accent-gold);
 }
 
+.btn-ctrl.btn-highlight {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-color);
+    border-color: var(--color-accent-gold);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 body.light-mode .btn-ctrl.btn-highlight {
     background: var(--btn-primary-bg);
     color: var(--btn-primary-color);
@@ -713,7 +720,7 @@ body.light-mode .settings-select optgroup {
 
 body.light-mode .music-player-panel {
     background: var(--card-bg);
-    border-color: var(--card-border);
+    border: var(--card-border);
 }
 
 body.light-mode .music-song-title {
@@ -1891,13 +1898,16 @@ body.light-mode .mobile-couplet-separator {
     color: #fef08a;
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 1400px) {
     .couplet-column { display: none; }
     .mobile-couplet-bar { display: block; }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1340px) {
     .hanging-lantern { display: none; }
+}
+
+@media (max-width: 768px) {
     .mobile-couplet-verse { font-size: 1.1rem; }
     .mobile-couplet-flex { gap: 8px; flex-direction: column; }
     .mobile-couplet-separator { display: none; }
@@ -2081,7 +2091,7 @@ body.light-mode .mascot-speech-bubble::after {
 
 body.light-mode .target-date-badge {
     background: rgba(255, 255, 255, 0.9);
-    border: 1px solid var(--card-border);
+    border: var(--card-border);
     color: var(--color-text-main);
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
 }
@@ -2474,6 +2484,11 @@ body.light-mode .btn-lunar-calendar {
     transform: translateY(-3px);
     border-color: var(--color-accent-gold);
     box-shadow: inset 0 2px 8px rgba(255, 215, 0, 0.32), 0 14px 28px rgba(0, 0, 0, 0.45);
+}
+
+body.light-mode .timer-card {
+    border: var(--card-border);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
 .timer-card:last-child {
@@ -3741,6 +3756,7 @@ body.light-mode .cup-pedestal-base {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    min-width: 0;
 }
 
 /* Studio 4-Tab Navigation */
@@ -3886,13 +3902,15 @@ body.light-mode .font-slider-label {
     color: rgba(60, 15, 25, 0.88);
 }
 
-.font-slider-label span:last-child {
+.font-slider-label span:last-child,
+.font-slider-label strong {
     color: #ffd700;
     font-variant-numeric: tabular-nums;
 }
 
-body.light-mode .font-slider-label span:last-child {
-    color: #b3122b;
+body.light-mode .font-slider-label span:last-child,
+body.light-mode .font-slider-label strong {
+    color: var(--color-accent-gold);
 }
 
 .font-slider-item input[type="range"] {
@@ -4089,8 +4107,39 @@ body.light-mode .form-control {
 }
 
 body.light-mode .form-control:focus {
-    border-color: #e11d48;
+    border-color: var(--color-accent-gold);
     box-shadow: 0 0 10px rgba(225, 29, 72, 0.2);
+}
+
+.form-control option {
+    background: #2b0207;
+    color: #ffffff;
+}
+
+.form-control optgroup {
+    background: #1a0104;
+    color: #ffd700;
+    font-weight: 700;
+}
+
+body.light-mode .form-control option {
+    background: #ffffff;
+    color: #1e293b;
+}
+
+body.light-mode .form-control optgroup {
+    background: #fff1f2;
+    color: #9f1239;
+    font-weight: 700;
+}
+
+.preset-wish-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 6px;
 }
 
 textarea.form-control {
@@ -4558,11 +4607,12 @@ body.light-mode .overlay-label {
 .card-preview-wrapper {
     position: relative;
     width: 100%;
+    min-width: 0;
 }
 
 .card-preview-sticky-box {
     position: sticky;
-    top: 86px;
+    top: 112px;
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -4632,7 +4682,7 @@ body.light-mode .stage-easel-corner {
 }
 
 #card-preview-canvas {
-    width: 100%;
+    width: auto;
     max-width: 100%;
     height: auto;
     max-height: 520px;
@@ -4952,7 +5002,7 @@ body.light-mode .milestone-badge {
     width: 100vw;
     height: 100vh;
     background: rgba(0, 0, 0, 0.85);
-    z-index: 999;
+    z-index: 2000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -5205,9 +5255,9 @@ body.light-mode .theme-chip-btn {
 }
 
 body.light-mode .theme-chip-btn.active {
-    background: rgba(225, 29, 72, 0.12);
-    color: #b91c1c;
-    border-color: #b91c1c;
+    background: var(--badge-bg);
+    color: var(--color-accent-gold);
+    border-color: var(--color-accent-gold);
 }
 
 .theme-dot {
@@ -6353,6 +6403,13 @@ body.light-mode .fortune-advice-box-compact strong {
 }
 
 /* Lì Xì Modal Text & Currency */
+.lixi-result-card {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .lixi-amount-display {
     font-family: var(--font-heading);
     font-size: clamp(2.2rem, 5vw, 2.9rem);
@@ -6781,6 +6838,16 @@ body.light-mode .cal-day-cell.tet-king {
 
 body.light-mode .cal-day-cell.tet-milestone {
     background: #fef3c7;
+}
+
+.cal-day-cell.tet-highlight {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.34), rgba(220, 38, 38, 0.3));
+    box-shadow: inset 0 0 0 1.5px rgba(255, 215, 0, 0.75);
+}
+
+body.light-mode .cal-day-cell.tet-highlight {
+    background: linear-gradient(135deg, #fef3c7, #ffe4e6);
+    box-shadow: inset 0 0 0 1.5px #f59e0b;
 }
 
 /* Day Solar & Lunar numbers */
@@ -7653,7 +7720,8 @@ body.light-mode .hd-pill {
         height: 180px;
     }
 
-    .btn-shake-fortune {
+    .btn-shake-fortune,
+    .fortune-shake-btn {
         padding: 11px 24px;
         font-size: 0.95rem;
         width: 100%;
@@ -8153,17 +8221,119 @@ body.light-mode .saved-bg-thumb-item.active {
     background: #dc2626;
 }
 
+html {
+    scroll-padding-top: 96px;
+}
+
+.celebration-banner {
+    margin: 14px auto 20px auto;
+    padding: 24px 22px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 50%, #7f1d1d 100%);
+    border: 2px solid #ffd700;
+    box-shadow: 0 12px 32px rgba(185, 28, 28, 0.4), 0 0 24px rgba(255, 215, 0, 0.35);
+    text-align: center;
+    color: #fffdf0;
+}
+
+.celebration-banner h2 {
+    font-family: var(--font-heading);
+    font-size: clamp(1.6rem, 3.6vw, 2.35rem);
+    color: #ffd700;
+    margin: 0 0 8px 0;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.celebration-banner p {
+    font-size: clamp(0.98rem, 2vw, 1.22rem);
+    font-weight: 700;
+    margin: 0;
+    color: #fef3c7;
+}
+
+.milestone-card.active-today {
+    border-color: #ffd700;
+    box-shadow: 0 0 18px rgba(255, 215, 0, 0.32);
+}
+
+.spin-icon {
+    display: inline-block;
+    animation: spin 0.9s linear infinite;
+}
+
+/* Responsive polish for medium tablets & compact mobile screens */
+@media (max-width: 1060px) and (min-width: 769px) {
+    .current-datetime-strip {
+        flex-wrap: wrap;
+    }
+    .current-datetime-left {
+        flex: 1 1 100%;
+    }
+    .btn-lunar-calendar {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    html {
+        scroll-padding-top: 132px;
+    }
+    .cal-weekday-header {
+        font-size: 0.72rem;
+        padding: 8px 0;
+    }
+    .cal-nav-toolbar {
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 8px 10px;
+    }
+    .cal-toolbar-left,
+    .cal-toolbar-right {
+        flex: 0 0 auto;
+    }
+    .card-quality-chips {
+        flex-wrap: wrap;
+    }
+    .bg-overlay-control {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .slider-overlay {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 380px) {
+    .quick-controls {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px;
+    }
+    .nav-clock-time {
+        font-size: 0.82rem;
+    }
+    .nav-clock-date,
+    .nav-clock-lunar {
+        font-size: 0.72rem;
+    }
+    .current-datetime-left {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .bg-marquee-track,
+    .header-progress-fill,
     .header-progress-fill::after,
-    .header-progress-spark,
-    .progress-bar-fill,
-    .progress-bar-fill::after,
-    .progress-head-flare,
-    .progress-head-sparkle,
-    .lantern-left,
-    .lantern-right,
-    .mascot-badge {
+    .progress-fill,
+    .progress-fill::before,
+    .progress-fill::after,
+    .progress-spark-head,
+    .hanging-lantern,
+    .mascot-goat,
+    .hanging-lixi,
+    .vinyl-disk.spinning {
         animation: none !important;
     }
 }

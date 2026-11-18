@@ -10,7 +10,10 @@ class PetalsSystem {
         this.ctx = this.canvas.getContext('2d', { alpha: true });
         this.petals = [];
         this.maxPetals = parseInt(localStorage.getItem('tet-petal-density') || '35', 10);
-        this.mode = 'all'; // 'mai', 'dao', 'all'
+        if (!Number.isFinite(this.maxPetals)) this.maxPetals = 35;
+        this.maxPetals = Math.max(12, Math.min(80, this.maxPetals));
+        const savedMode = localStorage.getItem('tet-petal-mode');
+        this.mode = ['all', 'mai', 'dao', 'none'].includes(savedMode) ? savedMode : 'all';
         this.isRunning = false;
         this.wind = 0.3;
         this.targetWind = 0.3;
@@ -102,21 +105,39 @@ class PetalsSystem {
     }
 
     resize() {
+        if (!this.canvas || !this.ctx) return;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         this.width = window.innerWidth;
         this.height = window.innerHeight;
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
+        this.canvas.width = Math.round(this.width * dpr);
+        this.canvas.height = Math.round(this.height * dpr);
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    syncPetalPool() {
+        const activeMode = this.mode === 'none' ? 'all' : this.mode;
+        while (this.petals.length < this.maxPetals) {
+            this.petals.push(new OptimizedPetal(this.width, this.height, activeMode, this.sprites));
+        }
+        if (this.petals.length > this.maxPetals) {
+            this.petals.length = this.maxPetals;
+        }
     }
 
     setMode(mode) {
-        this.mode = mode;
-        if (mode === 'none') {
+        const validMode = ['all', 'mai', 'dao', 'none'].includes(mode) ? mode : 'all';
+        this.mode = validMode;
+        try {
+            localStorage.setItem('tet-petal-mode', validMode);
+        } catch {}
+        if (validMode === 'none') {
             this.stop();
             if (this.ctx) this.ctx.clearRect(0, 0, this.width, this.height);
             return;
         }
-        if (!this.isRunning) this.start();
+        this.syncPetalPool();
         this.petals.forEach(p => p.reset(this.width, this.height, this.mode, true));
+        if (!this.isRunning && !document.hidden) this.start();
     }
 
     setFilter(mode) {
@@ -124,26 +145,19 @@ class PetalsSystem {
     }
 
     setDensity(count) {
-        this.maxPetals = Math.max(12, Math.min(80, parseInt(count, 10)));
-        localStorage.setItem('tet-petal-density', this.maxPetals);
-        if (this.isRunning && this.mode !== 'none') {
-            while (this.petals.length < this.maxPetals) {
-                this.petals.push(new OptimizedPetal(this.width, this.height, this.mode, this.sprites));
-            }
-            if (this.petals.length > this.maxPetals) {
-                this.petals.length = this.maxPetals;
-            }
-        }
+        const parsed = parseInt(count, 10);
+        if (!Number.isFinite(parsed)) return;
+        this.maxPetals = Math.max(12, Math.min(80, parsed));
+        try {
+            localStorage.setItem('tet-petal-density', String(this.maxPetals));
+        } catch {}
+        this.syncPetalPool();
     }
 
     start() {
-        if (this.isRunning) return;
+        if (this.isRunning || this.mode === 'none') return;
         this.isRunning = true;
-        if (this.petals.length === 0) {
-            for (let i = 0; i < this.maxPetals; i++) {
-                this.petals.push(new OptimizedPetal(this.width, this.height, this.mode, this.sprites));
-            }
-        }
+        this.syncPetalPool();
         this.animate();
     }
 

@@ -979,8 +979,8 @@ class FortuneSystem {
         if (!toast) return;
         toast.textContent = message;
         toast.classList.remove('hidden');
-        if (this.toastTimer) clearTimeout(this.toastTimer);
-        this.toastTimer = setTimeout(() => {
+        clearTimeout(window.toastTimer);
+        window.toastTimer = setTimeout(() => {
             toast.classList.add('hidden');
         }, duration);
     }
@@ -1001,7 +1001,9 @@ class FortuneSystem {
 
         if (remaining.length === 0) {
             // Đã rút hết vòng quẻ của ý nguyện này -> reset vòng mới, tránh trùng ngay quẻ vừa rút
-            const lastId = this.lastDrawnByCategory[catKey];
+            const lastId = this.lastDrawnByCategory[catKey] !== undefined
+                ? this.lastDrawnByCategory[catKey]
+                : usedIds[usedIds.length - 1];
             this.drawnHistory[catKey] = [];
             remaining = pool.length > 1 && lastId != null
                 ? pool.filter(f => f.id !== lastId)
@@ -1068,6 +1070,7 @@ class FortuneSystem {
 
         filterBtns.forEach(btn => {
             btn.addEventListener('click', () => {
+                if (this.isShaking) return;
                 filterBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 this.selectedCategory = btn.getAttribute('data-category') || 'all';
@@ -1084,21 +1087,26 @@ class FortuneSystem {
             });
         });
 
+        const hideFortuneModal = () => {
+            if (modal) {
+                modal.classList.add('hidden');
+                if (window.syncModalScrollLock) window.syncModalScrollLock();
+            }
+        };
+
         if (closeModal) {
-            closeModal.addEventListener('click', () => {
-                if (modal) modal.classList.add('hidden');
-            });
+            closeModal.addEventListener('click', hideFortuneModal);
         }
 
         if (modal) {
             modal.addEventListener('click', (e) => {
-                if (e.target === modal) modal.classList.add('hidden');
+                if (e.target === modal) hideFortuneModal();
             });
         }
 
         if (reShakeBtn) {
             reShakeBtn.addEventListener('click', () => {
-                if (modal) modal.classList.add('hidden');
+                hideFortuneModal();
                 setTimeout(() => this.shake(), 300);
             });
         }
@@ -1111,12 +1119,13 @@ class FortuneSystem {
     shake() {
         if (this.isShaking) return;
         this.isShaking = true;
+        const shakeCategory = this.selectedCategory;
 
         const cup = document.getElementById('fortune-cup-element');
         const stick = document.getElementById('fortune-bamboo-stick');
         const bundle = cup ? cup.querySelector('.bamboo-sticks-bundle') : null;
         const shakeBtn = document.getElementById('btn-shake-fortune');
-        const config = this.intentConfigs[this.selectedCategory] || this.intentConfigs['all'];
+        const config = this.intentConfigs[shakeCategory] || this.intentConfigs['all'];
 
         if (shakeBtn) {
             shakeBtn.disabled = true;
@@ -1172,18 +1181,19 @@ class FortuneSystem {
                 this.updateIntentUI(this.selectedCategory);
             }
             this.isShaking = false;
-            this.showFortuneByCategory();
+            this.showFortuneByCategory(shakeCategory);
         }, 1800);
     }
 
-    showFortuneByCategory() {
-        const config = this.intentConfigs[this.selectedCategory] || this.intentConfigs['all'];
-        const item = this.drawNextFortune(this.selectedCategory);
+    showFortuneByCategory(categoryArg) {
+        const category = categoryArg || this.selectedCategory;
+        const config = this.intentConfigs[category] || this.intentConfigs['all'];
+        const item = this.drawNextFortune(category);
 
-        const titleEl = document.getElementById('fortune-res-title');
         const numPillEl = document.getElementById('fortune-res-num-pill');
         const nameTextEl = document.getElementById('fortune-res-name-text');
         const gradeEl = document.getElementById('fortune-res-grade');
+        const focusPillEl = document.querySelector('#fortune-modal .focus-card-pill');
         const poemEl = document.getElementById('fortune-res-poem');
         const numberEl = document.getElementById('fortune-res-number');
         const directionEl = document.getElementById('fortune-res-direction');
@@ -1193,14 +1203,20 @@ class FortuneSystem {
         const adviceBox = document.getElementById('fortune-res-advice-box');
 
         const titleParts = item.title.split(':');
-        if (numPillEl && nameTextEl && titleParts.length > 1) {
-            numPillEl.textContent = titleParts[0].trim();
-            nameTextEl.textContent = titleParts.slice(1).join(':').trim();
-        } else if (titleEl) {
-            titleEl.textContent = item.title;
+        if (numPillEl && nameTextEl) {
+            if (titleParts.length > 1) {
+                numPillEl.textContent = titleParts[0].trim();
+                nameTextEl.textContent = titleParts.slice(1).join(':').trim();
+            } else {
+                numPillEl.textContent = 'QUẺ CÁT';
+                nameTextEl.textContent = item.title;
+            }
         }
 
         if (gradeEl) gradeEl.textContent = item.grade;
+        if (focusPillEl) {
+            focusPillEl.textContent = (item.grade || 'ĐẠI CÁT').split('(')[0].trim();
+        }
         if (poemEl) poemEl.textContent = item.poem;
         if (numberEl) numberEl.textContent = item.luckyNumber;
         if (directionEl) directionEl.textContent = item.direction;
@@ -1210,14 +1226,14 @@ class FortuneSystem {
         }
 
         const domains = {
-            career: { label: '💼 Công Danh', text: item.career },
-            wealth: { label: '💰 Tài Lộc', text: item.wealth },
-            love: { label: '❤️ Tình Duyên', text: item.love },
-            health: { label: '🩺 Sức Khỏe', text: item.health },
-            study: { label: '🎓 Khoa Cử', text: item.study }
+            career: { label: '💼 Công Danh:', text: item.career },
+            wealth: { label: '💰 Tài Lộc:', text: item.wealth },
+            love: { label: '❤️ Tình Duyên:', text: item.love },
+            health: { label: '🩺 Sức Khỏe:', text: item.health },
+            study: { label: '🎓 Khoa Cử:', text: item.study }
         };
 
-        const focusConfig = this.categoryFocusMap[this.selectedCategory] || this.categoryFocusMap.all;
+        const focusConfig = this.categoryFocusMap[category] || this.categoryFocusMap.all;
         if (focusTitle) focusTitle.textContent = focusConfig.title;
 
         const focusText = focusConfig.key
@@ -1240,6 +1256,7 @@ class FortuneSystem {
         const modal = document.getElementById('fortune-modal');
         if (modal) {
             modal.classList.remove('hidden');
+            if (window.syncModalScrollLock) window.syncModalScrollLock();
         }
 
         if (window.fireworks) {
@@ -1251,11 +1268,29 @@ class FortuneSystem {
         }
     }
 
+    fallbackCopyText(text) {
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            ta.style.top = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            const ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+            return Boolean(ok);
+        } catch {
+            return false;
+        }
+    }
+
     copyFortuneText() {
         const config = this.intentConfigs[this.selectedCategory] || this.intentConfigs['all'];
         const numPill = document.getElementById('fortune-res-num-pill')?.textContent;
         const nameText = document.getElementById('fortune-res-name-text')?.textContent;
-        const title = numPill && nameText ? `${numPill}: ${nameText}` : (document.getElementById('fortune-res-title')?.textContent || '');
+        const title = numPill && nameText ? `${numPill}: ${nameText}` : '';
         const grade = document.getElementById('fortune-res-grade')?.textContent || '';
         const poem = document.getElementById('fortune-res-poem')?.textContent || '';
         const focusTitle = document.getElementById('fortune-focus-title')?.textContent || '';
@@ -1264,18 +1299,30 @@ class FortuneSystem {
         const direction = document.getElementById('fortune-res-direction')?.textContent || '';
         const advice = document.getElementById('fortune-res-advice-box')?.innerText || '';
 
-        const sub1 = document.getElementById('sub-card-label-1')?.textContent + ' ' + document.getElementById('sub-card-desc-1')?.textContent;
-        const sub2 = document.getElementById('sub-card-label-2')?.textContent + ' ' + document.getElementById('sub-card-desc-2')?.textContent;
-        const sub3 = document.getElementById('sub-card-label-3')?.textContent + ' ' + document.getElementById('sub-card-desc-3')?.textContent;
-        const sub4 = document.getElementById('sub-card-label-4')?.textContent + ' ' + document.getElementById('sub-card-desc-4')?.textContent;
+        const fmtSub = (n) => {
+            const lbl = (document.getElementById(`sub-card-label-${n}`)?.textContent || '').trim();
+            const dsc = (document.getElementById(`sub-card-desc-${n}`)?.textContent || '').trim();
+            return lbl.endsWith(':') ? `${lbl} ${dsc}` : `${lbl}: ${dsc}`;
+        };
 
-        const text = `🎋 [SỚ QUẺ XĂM TẾT ĐINH MÙI 2027] 🎋\n${title}\nCấp bậc: ${grade}\n🎯 Ý nguyện: ${config.name}\n\n📜 THƠ KHAI VẬN:\n${poem}\n\n⭐ ${focusTitle}:\n${focusDesc}\n\n${sub1}\n${sub2}\n${sub3}\n${sub4}\n\n🔢 Số may mắn: ${number}\n🧭 Hướng xuất hành: ${direction}\n\n${advice}\n\nCung chúc tân xuân 2027 vạn sự như ý!`;
+        const text = `🎋 [SỚ QUẺ XĂM TẾT ĐINH MÙI 2027] 🎋\n${title}\nCấp bậc: ${grade}\n🎯 Ý nguyện: ${config.name}\n\n📜 THƠ KHAI VẬN:\n${poem}\n\n⭐ ${focusTitle}:\n${focusDesc}\n\n${fmtSub(1)}\n${fmtSub(2)}\n${fmtSub(3)}\n${fmtSub(4)}\n\n🔢 Số may mắn: ${number}\n🧭 Hướng xuất hành: ${direction}\n\n${advice}\n\nCung chúc tân xuân 2027 vạn sự như ý!`;
 
-        navigator.clipboard.writeText(text).then(() => {
+        const onCopied = () => {
             this.showToast('📋 Đã sao chép nội dung quẻ xăm vào bộ nhớ tạm! Bạn có thể chia sẻ cho người thân!', 3000);
-        }).catch(() => {
-            this.showToast('⚠️ Trình duyệt không cho phép sao chép tự động, vui lòng bôi đen để chép.', 3000);
-        });
+        };
+        const onCopyFailed = () => {
+            if (this.fallbackCopyText(text)) {
+                onCopied();
+            } else {
+                this.showToast('⚠️ Trình duyệt không cho phép sao chép tự động, vui lòng bôi đen để chép.', 3000);
+            }
+        };
+
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+            navigator.clipboard.writeText(text).then(onCopied).catch(onCopyFailed);
+        } else {
+            onCopyFailed();
+        }
     }
 }
 

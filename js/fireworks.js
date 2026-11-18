@@ -29,6 +29,9 @@ class FireworksSystem {
         this.autoFireEnabled = true;
         this.animFrameId = null;
         this.isFrenzyRunning = false;
+        this.frenzyTimers = [];
+        this.frenzyIntervals = [];
+        this.dpr = 1;
         this.resizeTimer = null;
 
         this.darkPalettes = [
@@ -150,9 +153,28 @@ class FireworksSystem {
     resize() {
         this.width = window.innerWidth;
         this.height = window.innerHeight;
-        if (this.canvas) {
-            this.canvas.width = this.width;
-            this.canvas.height = this.height;
+        if (this.canvas && this.ctx) {
+            this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+            this.canvas.width = Math.round(this.width * this.dpr);
+            this.canvas.height = Math.round(this.height * this.dpr);
+            this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+        }
+    }
+
+    cancelFrenzy() {
+        if (this.frenzyTimers && this.frenzyTimers.length) {
+            this.frenzyTimers.forEach(t => clearTimeout(t));
+            this.frenzyTimers = [];
+        }
+        if (this.frenzyIntervals && this.frenzyIntervals.length) {
+            this.frenzyIntervals.forEach(iv => clearInterval(iv));
+            this.frenzyIntervals = [];
+        }
+        this.isFrenzyRunning = false;
+        const frenzyBtn = document.getElementById('btn-fireworks-frenzy');
+        if (frenzyBtn) {
+            frenzyBtn.classList.remove('frenzy-active');
+            frenzyBtn.setAttribute('title', 'Bắn pháo hoa liên hoàn cực đã mắt');
         }
     }
 
@@ -162,10 +184,10 @@ class FireworksSystem {
         this.wakeLoop();
         // Immediate opening salvo so the sky feels alive right away
         setTimeout(() => {
-            if (this.isRunning && this.autoFireEnabled) {
+            if (this.isRunning && this.autoFireEnabled && !document.hidden) {
                 this.launchRandomShell();
                 if (this.density !== 'low') {
-                    setTimeout(() => this.launchRandomShell(), 220);
+                    setTimeout(() => this.isRunning && !document.hidden && this.launchRandomShell(), 220);
                 }
             }
         }, 280);
@@ -183,6 +205,7 @@ class FireworksSystem {
     stop() {
         this.isRunning = false;
         this.loopActive = false;
+        this.cancelFrenzy();
         if (this.autoLaunchTimer) {
             clearTimeout(this.autoLaunchTimer);
             this.autoLaunchTimer = null;
@@ -380,13 +403,21 @@ class FireworksSystem {
      * Launches 40+ multi-type shells in timed artistic waves across the screen!
      */
     triggerMegaFrenzy() {
-        if (this.isFrenzyRunning) return;
+        if (this.isFrenzyRunning) {
+            this.cancelFrenzy();
+            return;
+        }
+        if (!this.isRunning) {
+            this.start();
+        }
         this.isFrenzyRunning = true;
+        this.frenzyTimers = [];
+        this.frenzyIntervals = [];
 
         const frenzyBtn = document.getElementById('btn-fireworks-frenzy');
         if (frenzyBtn) {
             frenzyBtn.classList.add('frenzy-active');
-            frenzyBtn.setAttribute('title', 'Đang bắn đại tiệc pháo hoa rực rỡ!');
+            frenzyBtn.setAttribute('title', 'Đang bắn đại tiệc pháo hoa — bấm lại để dừng');
         }
 
         const W = this.width;
@@ -395,6 +426,13 @@ class FireworksSystem {
             fanCount: 7, crossPairs: 3, volleyCount: 22, volleyDelay: 82, finaleCount: 7, burstScale: 1.38, durationMs: 4800
         };
         const types = ['heart', 'flower', 'strobe', 'willow', 'double_burst', 'starburst', 'ring', 'chrysanthemum'];
+        const safeTimeout = (fn, ms) => {
+            const id = setTimeout(() => {
+                if (!this.isRunning || !this.isFrenzyRunning || document.hidden) return;
+                fn();
+            }, ms);
+            this.frenzyTimers.push(id);
+        };
 
         // Wave 1 (t = 0): Symmetrical fan barrage scaled by manual density
         const fanHalf = (cfg.fanCount - 1) / 2;
@@ -406,13 +444,13 @@ class FireworksSystem {
             const destY = H * 0.24 + Math.abs(idx - fanHalf) * 26;
             const pal = this.pickPalette(idx);
             const type = idx === Math.floor(fanHalf) ? 'flower' : idx % 2 === 0 ? 'chrysanthemum' : 'double_burst';
-            setTimeout(() => {
+            safeTimeout(() => {
                 this.launchRocket(startX, H + 10, destX, destY, pal, type, 1.18, true);
             }, idx * 55);
         }
 
         // Wave 2 (t = 400ms): Criss-crossing comets from both corners
-        setTimeout(() => {
+        safeTimeout(() => {
             for (let pair = 0; pair < cfg.crossPairs; pair++) {
                 const offsetX = 60 + pair * 75;
                 const targetLX = W * (0.36 + pair * 0.13);
@@ -426,6 +464,10 @@ class FireworksSystem {
         // Wave 3 (t = 780ms): Rapid-fire volley across full height & width
         let fired = 0;
         const volleyTimer = setInterval(() => {
+            if (!this.isRunning || !this.isFrenzyRunning || document.hidden) {
+                clearInterval(volleyTimer);
+                return;
+            }
             const x = Math.random() * (W - 160) + 80;
             const y = Math.random() * (H * 0.5) + 55;
             const t = types[fired % types.length];
@@ -436,10 +478,11 @@ class FireworksSystem {
                 clearInterval(volleyTimer);
             }
         }, cfg.volleyDelay);
+        this.frenzyIntervals.push(volleyTimer);
 
         // Wave 4 (Grand Finale Salvo): Symmetrical giant bursts
         const finaleStartMs = Math.max(1500, 780 + cfg.volleyCount * cfg.volleyDelay - 300);
-        setTimeout(() => {
+        safeTimeout(() => {
             const fCount = cfg.finaleCount;
             for (let i = 0; i < fCount; i++) {
                 const ratio = fCount > 1 ? 0.12 + (i / (fCount - 1)) * 0.76 : 0.5;
@@ -450,18 +493,17 @@ class FireworksSystem {
         }, finaleStartMs);
 
         // Reset Frenzy state smoothly after finale settles
-        setTimeout(() => {
-            this.isFrenzyRunning = false;
-            if (frenzyBtn) {
-                frenzyBtn.classList.remove('frenzy-active');
-                frenzyBtn.setAttribute('title', 'Bắn pháo hoa liên hoàn cực đã mắt');
-            }
+        const endId = setTimeout(() => {
+            this.cancelFrenzy();
         }, Math.max(cfg.durationMs, finaleStartMs + 1800));
+        this.frenzyTimers.push(endId);
     }
 
     // Backward compatibility with previous triggerFrenzy(count)
     triggerFrenzy(count = 10) {
-        this.triggerMegaFrenzy();
+        if (!this.isFrenzyRunning) {
+            this.triggerMegaFrenzy();
+        }
     }
 
     animate() {
@@ -476,7 +518,7 @@ class FireworksSystem {
 
         if (!hasWork) {
             this.idleFrames++;
-            if (this.idleFrames > 20) {
+            if (this.idleFrames > 16) {
                 this.ctx.clearRect(0, 0, this.width, this.height);
                 this.loopActive = false;
                 this.animFrameId = null;
@@ -488,9 +530,9 @@ class FireworksSystem {
 
         const isLight = this.isLightMode();
 
-        // Clear canvas with graceful trail fade
+        // Clear canvas with graceful trail fade (higher alpha prevents 8-bit rounding residual smudges)
         this.ctx.globalCompositeOperation = 'destination-out';
-        this.ctx.fillStyle = isLight ? 'rgba(0, 0, 0, 0.28)' : 'rgba(0, 0, 0, 0.19)';
+        this.ctx.fillStyle = isLight ? 'rgba(0, 0, 0, 0.32)' : 'rgba(0, 0, 0, 0.22)';
         this.ctx.fillRect(0, 0, this.width, this.height);
 
         // Dark mode glows richly with additive blending; Light mode uses crisp alpha compositing so colors stay vibrant over light cards

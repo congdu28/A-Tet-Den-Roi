@@ -46,7 +46,7 @@ class TetCountdown {
             },
             {
                 id: 'tat-nien',
-                name: '30 Tháng Chạp - Cúng Tất Niên',
+                name: '29 Tháng Chạp - Cúng Tất Niên',
                 desc: 'Bữa cơm sum họp gia đình chiều cuối năm',
                 date: new Date('2027-02-05T00:00:00+07:00'),
                 icon: '🍲'
@@ -86,7 +86,8 @@ class TetCountdown {
             hours: document.getElementById('count-hours'),
             minutes: document.getElementById('count-minutes'),
             seconds: document.getElementById('count-seconds'),
-            millis: document.getElementById('count-millis'),
+            timerGrid: document.querySelector('#countdown-main-box .timer-grid'),
+            progressTrack: document.querySelector('#year-progress-stage .progress-track'),
             progressBar: document.getElementById('year-progress-bar'),
             progressHead: document.getElementById('year-progress-head'),
             progressStage: document.getElementById('year-progress-stage'),
@@ -120,8 +121,10 @@ class TetCountdown {
         this.prevValues = { d: -1, h: -1, m: -1, s: -1 };
         this.prevDateString = '';
         this.mainTimer = null;
-        this.millisTimer = null;
         this.currentPercent = 0;
+        this.hasTriggeredTetCelebration = false;
+        this.weatherReqId = 0;
+        this.isGpsLoading = false;
         this.glitterParticles = [];
         this.glitterRafId = null;
         this.glitterStageWidth = 0;
@@ -207,97 +210,116 @@ class TetCountdown {
             }
         };
 
-        stage.addEventListener('click', (e) => {
-            e.stopPropagation();
-            spawnBurst(26, true);
-        });
-
         let isStageVisible = true;
         const prefersReducedMotion = typeof window.matchMedia === 'function'
             ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
             : false;
 
+        let lastEmitTime = 0;
+        const ensureTick = () => {
+            if (this.glitterRafId) return;
+            if (document.hidden || !isStageVisible) return;
+            if (prefersReducedMotion && this.glitterParticles.length === 0) return;
+            this.glitterRafId = requestAnimationFrame(tick);
+        };
+
+        stage.addEventListener('click', (e) => {
+            e.stopPropagation();
+            spawnBurst(26, true);
+            ensureTick();
+        });
+
         if (typeof IntersectionObserver !== 'undefined') {
             this.glitterVisibilityObserver = new IntersectionObserver((entries) => {
                 isStageVisible = entries.some(entry => entry.isIntersecting);
+                if (isStageVisible) ensureTick();
             }, { threshold: 0.01 });
             this.glitterVisibilityObserver.observe(stage);
         }
 
-        let lastEmitTime = 0;
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) ensureTick();
+        });
+
         const tick = (now) => {
-            if (!document.hidden && isStageVisible && this.glitterStageWidth > 0) {
-                ctx.clearRect(0, 0, this.glitterStageWidth, this.glitterStageHeight);
-
-                if (!prefersReducedMotion && now - lastEmitTime > 48) {
-                    spawnBurst(2, false);
-                    lastEmitTime = now;
-                }
-
-                for (let i = this.glitterParticles.length - 1; i >= 0; i--) {
-                    const p = this.glitterParticles[i];
-                    p.vx *= p.drag;
-                    p.vy = p.vy * p.drag + p.gravity;
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.rot += p.rotSpeed;
-                    p.twinklePhase += 0.28;
-                    p.life -= p.decay;
-
-                    if (p.life <= 0) {
-                        this.glitterParticles.splice(i, 1);
-                        continue;
-                    }
-
-                    const twinkle = 0.6 + 0.4 * Math.abs(Math.sin(p.twinklePhase));
-                    const alpha = Math.max(0, Math.min(1, p.life * twinkle));
-
-                    ctx.save();
-                    ctx.translate(p.x, p.y);
-                    ctx.rotate(p.rot);
-                    ctx.fillStyle = p.color;
-
-                    // Soft additive halo without expensive Canvas 2D shadowBlur
-                    if (p.size >= 3.2 && alpha > 0.25) {
-                        ctx.globalAlpha = alpha * 0.28;
-                        ctx.beginPath();
-                        ctx.arc(0, 0, p.size * 1.45, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-
-                    ctx.globalAlpha = alpha;
-                    if (p.shape === 'star') {
-                        const s = p.size;
-                        ctx.beginPath();
-                        ctx.moveTo(0, -s);
-                        ctx.lineTo(s * 0.3, -s * 0.3);
-                        ctx.lineTo(s, 0);
-                        ctx.lineTo(s * 0.3, s * 0.3);
-                        ctx.lineTo(0, s);
-                        ctx.lineTo(-s * 0.3, s * 0.3);
-                        ctx.lineTo(-s, 0);
-                        ctx.lineTo(-s * 0.3, -s * 0.3);
-                        ctx.closePath();
-                        ctx.fill();
-                    } else if (p.shape === 'diamond') {
-                        const s = p.size;
-                        ctx.beginPath();
-                        ctx.moveTo(0, -s);
-                        ctx.lineTo(s * 0.65, 0);
-                        ctx.lineTo(0, s);
-                        ctx.lineTo(-s * 0.65, 0);
-                        ctx.closePath();
-                        ctx.fill();
-                    } else {
-                        ctx.fillRect(-p.size * 0.7, -p.size * 0.35, p.size * 1.4, p.size * 0.7);
-                    }
-                    ctx.restore();
-                }
+            this.glitterRafId = null;
+            if (document.hidden || !isStageVisible || this.glitterStageWidth <= 0) {
+                return;
             }
-            this.glitterRafId = requestAnimationFrame(tick);
+
+            ctx.clearRect(0, 0, this.glitterStageWidth, this.glitterStageHeight);
+
+            if (!prefersReducedMotion && now - lastEmitTime > 48) {
+                spawnBurst(2, false);
+                lastEmitTime = now;
+            }
+
+            for (let i = this.glitterParticles.length - 1; i >= 0; i--) {
+                const p = this.glitterParticles[i];
+                p.vx *= p.drag;
+                p.vy = p.vy * p.drag + p.gravity;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.rot += p.rotSpeed;
+                p.twinklePhase += 0.28;
+                p.life -= p.decay;
+
+                if (p.life <= 0) {
+                    this.glitterParticles.splice(i, 1);
+                    continue;
+                }
+
+                const twinkle = 0.6 + 0.4 * Math.abs(Math.sin(p.twinklePhase));
+                const alpha = Math.max(0, Math.min(1, p.life * twinkle));
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rot);
+                ctx.fillStyle = p.color;
+
+                // Soft additive halo without expensive Canvas 2D shadowBlur
+                if (p.size >= 3.2 && alpha > 0.25) {
+                    ctx.globalAlpha = alpha * 0.28;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.size * 1.45, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.globalAlpha = alpha;
+                if (p.shape === 'star') {
+                    const s = p.size;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -s);
+                    ctx.lineTo(s * 0.3, -s * 0.3);
+                    ctx.lineTo(s, 0);
+                    ctx.lineTo(s * 0.3, s * 0.3);
+                    ctx.lineTo(0, s);
+                    ctx.lineTo(-s * 0.3, s * 0.3);
+                    ctx.lineTo(-s, 0);
+                    ctx.lineTo(-s * 0.3, -s * 0.3);
+                    ctx.closePath();
+                    ctx.fill();
+                } else if (p.shape === 'diamond') {
+                    const s = p.size;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -s);
+                    ctx.lineTo(s * 0.65, 0);
+                    ctx.lineTo(0, s);
+                    ctx.lineTo(-s * 0.65, 0);
+                    ctx.closePath();
+                    ctx.fill();
+                } else {
+                    ctx.fillRect(-p.size * 0.7, -p.size * 0.35, p.size * 1.4, p.size * 0.7);
+                }
+                ctx.restore();
+            }
+
+            if (!prefersReducedMotion || this.glitterParticles.length > 0) {
+                this.glitterRafId = requestAnimationFrame(tick);
+            }
         };
 
-        this.glitterRafId = requestAnimationFrame(tick);
+        ensureTick();
     }
 
     initTargetSwitcher() {
@@ -356,6 +378,9 @@ class TetCountdown {
         if (this.elements.progressDestValue) {
             this.elements.progressDestValue.textContent = cfg.destValue;
         }
+        if (this.elements.progressTrack) {
+            this.elements.progressTrack.setAttribute('title', `Tiến trình thời gian tiến tới ${cfg.destValue}`);
+        }
 
         if (!options.skipUpdate) {
             this.updateMain();
@@ -373,7 +398,10 @@ class TetCountdown {
         this.mainTimer = setInterval(() => this.updateMain(), 1000);
 
         // 2. Lắng nghe cuộn trang để kích hoạt hiệu ứng thanh bar ghim trên đầu (sticky, mượt với rAF + hysteresis)
-        this.isScrolled = false;
+        this.isScrolled = window.scrollY > 30;
+        if (this.elements.topNavbar && this.isScrolled) {
+            this.elements.topNavbar.classList.add('is-scrolled');
+        }
         let scrollTicking = false;
         window.addEventListener('scroll', () => {
             if (scrollTicking || !this.elements.topNavbar) return;
@@ -388,18 +416,6 @@ class TetCountdown {
                 scrollTicking = false;
             });
         }, { passive: true });
-
-        // 3. Update milliseconds at relaxed 100ms rate (nếu có phần tử)
-        if (this.elements.millis) {
-            this.millisTimer = setInterval(() => {
-                const now = Date.now();
-                const diff = this.targetDate.getTime() - now;
-                if (diff > 0) {
-                    const millis = Math.floor((diff % 1000) / 10);
-                    this.elements.millis.textContent = String(millis).padStart(2, '0');
-                }
-            }, 100);
-        }
     }
 
     describeWeather(code, isDay) {
@@ -621,10 +637,11 @@ class TetCountdown {
         return null;
     }
 
-    async fetchAndSaveWeather(lat, lon, city, fullLocation, source = 'ip', fallbackCached = null, persistCache = true) {
+    async fetchAndSaveWeather(lat, lon, city, fullLocation, source = 'ip', fallbackCached = null, persistCache = true, reqId = null) {
         try {
             const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&current=temperature_2m,weather_code,is_day,uv_index,cloud_cover,precipitation&timezone=auto`;
             const data = await this.fetchJsonWithTimeout(apiUrl, 4500);
+            if (reqId !== null && reqId !== this.weatherReqId) return null;
             const cur = data && data.current;
             if (cur && Number.isFinite(cur.temperature_2m)) {
                 const cleanCity = this.normalizeVietnamesePlace(city);
@@ -652,6 +669,7 @@ class TetCountdown {
             // Fall through to clean offline fallback if no cache exists
         }
 
+        if (reqId !== null && reqId !== this.weatherReqId) return null;
         if (!fallbackCached && this.elements.weatherTemp && this.elements.weatherCity) {
             this.elements.weatherIcon && (this.elements.weatherIcon.textContent = '⛅');
             this.elements.weatherTemp.textContent = 'Thời tiết';
@@ -699,25 +717,35 @@ class TetCountdown {
     }
 
     async refreshWeatherByIp(cached = null) {
-        let lat = cached && Number.isFinite(cached.lat) ? cached.lat : 21.0285;
-        let lon = cached && Number.isFinite(cached.lon) ? cached.lon : 105.8542;
-        let city = (cached && this.normalizeVietnamesePlace(cached.city)) || 'Hà Nội';
-        let fullLocation = (cached && this.normalizeVietnamesePlace(cached.fullLocation)) || city;
+        const reqId = ++this.weatherReqId;
+        const ipPlace = await this.resolveIpFallbackLocation();
+        if (reqId !== this.weatherReqId) return null;
 
-        if (!cached || !Number.isFinite(cached.lat) || !Number.isFinite(cached.lon)) {
-            const ipPlace = await this.resolveIpFallbackLocation();
-            if (ipPlace) {
-                lat = ipPlace.lat;
-                lon = ipPlace.lon;
-                city = ipPlace.city;
-                fullLocation = ipPlace.fullLocation;
-            }
+        let lat = 21.0285;
+        let lon = 105.8542;
+        let city = 'Hà Nội';
+        let fullLocation = 'Hà Nội';
+        let shouldPersist = false;
+
+        if (ipPlace) {
+            lat = ipPlace.lat;
+            lon = ipPlace.lon;
+            city = ipPlace.city;
+            fullLocation = ipPlace.fullLocation;
+            shouldPersist = true;
+        } else if (cached && Number.isFinite(cached.lat) && Number.isFinite(cached.lon)) {
+            lat = cached.lat;
+            lon = cached.lon;
+            city = this.normalizeVietnamesePlace(cached.city) || 'Hà Nội';
+            fullLocation = this.normalizeVietnamesePlace(cached.fullLocation) || city;
+            shouldPersist = true;
         }
 
-        return this.fetchAndSaveWeather(lat, lon, city, fullLocation, 'ip', cached);
+        return this.fetchAndSaveWeather(lat, lon, city, fullLocation, 'ip', cached, shouldPersist, reqId);
     }
 
     fetchWeatherByGps(manualClick = false) {
+        if (this.isGpsLoading) return Promise.resolve(null);
         if (typeof navigator === 'undefined' || !navigator.geolocation) {
             if (manualClick) {
                 this.showWeatherToast('⚠️ Trình duyệt không hỗ trợ định vị GPS.');
@@ -725,67 +753,84 @@ class TetCountdown {
             return Promise.resolve(null);
         }
 
+        this.isGpsLoading = true;
+        const reqId = ++this.weatherReqId;
         const btn = this.elements.weatherGpsBtn;
         if (btn) btn.classList.add('is-loading');
+
+        let hasCachedWeather = false;
+        try {
+            const old = JSON.parse(localStorage.getItem('tet-weather-cache-v4') || 'null');
+            hasCachedWeather = Boolean(old && Number.isFinite(old.temp));
+        } catch {}
 
         return new Promise((resolve) => {
             navigator.geolocation.getCurrentPosition(
                 async (pos) => {
-                    const lat = pos.coords && pos.coords.latitude;
-                    const lon = pos.coords && pos.coords.longitude;
-                    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-                        if (btn) btn.classList.remove('is-loading');
-                        resolve(null);
-                        return;
-                    }
+                    try {
+                        const lat = pos.coords && pos.coords.latitude;
+                        const lon = pos.coords && pos.coords.longitude;
+                        if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                            resolve(null);
+                            return;
+                        }
 
-                    let place = await this.reverseGeocodeWard(lat, lon);
-                    const hasExactPlace = Boolean(place && place.city);
+                        let place = await this.reverseGeocodeWard(lat, lon);
+                        const hasExactPlace = Boolean(place && place.city);
 
-                    if (!hasExactPlace) {
-                        let prevCity = '';
-                        let prevFull = '';
-                        try {
-                            const old = JSON.parse(localStorage.getItem('tet-weather-cache-v4') || 'null');
-                            if (old && old.city && old.city !== 'Vị trí của bạn') {
-                                prevCity = this.normalizeVietnamesePlace(old.city);
-                                prevFull = this.normalizeVietnamesePlace(old.fullLocation || old.city);
+                        if (!hasExactPlace) {
+                            let prevCity = '';
+                            let prevFull = '';
+                            try {
+                                const old = JSON.parse(localStorage.getItem('tet-weather-cache-v4') || 'null');
+                                if (old && old.city && old.city !== 'Vị trí của bạn') {
+                                    prevCity = this.normalizeVietnamesePlace(old.city);
+                                    prevFull = this.normalizeVietnamesePlace(old.fullLocation || old.city);
+                                }
+                            } catch {}
+                            if (!prevCity) {
+                                const ipPlace = await this.resolveIpFallbackLocation();
+                                if (ipPlace) {
+                                    prevCity = ipPlace.city;
+                                    prevFull = ipPlace.fullLocation;
+                                }
                             }
-                        } catch {}
-                        if (!prevCity) {
-                            const ipPlace = await this.resolveIpFallbackLocation();
-                            if (ipPlace) {
-                                prevCity = ipPlace.city;
-                                prevFull = ipPlace.fullLocation;
+                            place = {
+                                city: prevCity || 'Khu vực của bạn',
+                                fullLocation: prevFull || prevCity || `${lat.toFixed(3)}, ${lon.toFixed(3)}`
+                            };
+                        }
+
+                        const saved = await this.fetchAndSaveWeather(
+                            lat,
+                            lon,
+                            place.city,
+                            place.fullLocation,
+                            'gps',
+                            hasCachedWeather,
+                            true,
+                            reqId
+                        );
+
+                        if (manualClick) {
+                            if (saved) {
+                                this.showWeatherToast(
+                                    hasExactPlace
+                                        ? `📍 Đã cập nhật thời tiết tại ${saved.fullLocation}!`
+                                        : `📍 Đã cập nhật nhiệt độ theo GPS (${saved.city}).`
+                                );
+                            } else {
+                                this.showWeatherToast('⚠️ Đã định vị GPS nhưng không tải được dữ liệu thời tiết, vui lòng thử lại.');
                             }
                         }
-                        place = {
-                            city: prevCity || 'Khu vực của bạn',
-                            fullLocation: prevFull || prevCity || `${lat.toFixed(3)}, ${lon.toFixed(3)}`
-                        };
+                        resolve(saved);
+                    } finally {
+                        this.isGpsLoading = false;
+                        if (btn) btn.classList.remove('is-loading');
                     }
-
-                    const saved = await this.fetchAndSaveWeather(
-                        lat,
-                        lon,
-                        place.city,
-                        place.fullLocation,
-                        'gps',
-                        true,
-                        hasExactPlace
-                    );
-
-                    if (btn) btn.classList.remove('is-loading');
-                    if (manualClick && saved) {
-                        this.showWeatherToast(
-                            hasExactPlace
-                                ? `📍 Đã cập nhật thời tiết tại ${saved.fullLocation}!`
-                                : `📍 Đã cập nhật nhiệt độ theo GPS (${saved.city}).`
-                        );
-                    }
-                    resolve(saved);
                 },
                 (err) => {
+                    this.isGpsLoading = false;
                     if (btn) btn.classList.remove('is-loading');
                     if (manualClick) {
                         const msg = err && err.code === 1
@@ -848,6 +893,9 @@ class TetCountdown {
 
         if (gpsAlreadyGranted && (isExpired || cached.source !== 'gps')) {
             await this.fetchWeatherByGps(false);
+        } else if (isExpired && cached && cached.source === 'gps' && Number.isFinite(cached.lat) && Number.isFinite(cached.lon)) {
+            const reqId = ++this.weatherReqId;
+            await this.fetchAndSaveWeather(cached.lat, cached.lon, cached.city, cached.fullLocation, 'gps', cached, true, reqId);
         } else if (isExpired) {
             await this.refreshWeatherByIp(cached);
         }
@@ -863,7 +911,8 @@ class TetCountdown {
             if (await this.isGeolocationGrantedSilently()) {
                 this.fetchWeatherByGps(false);
             } else if (latest && latest.source === 'gps') {
-                this.fetchAndSaveWeather(latest.lat, latest.lon, latest.city, latest.fullLocation, 'gps', latest);
+                const reqId = ++this.weatherReqId;
+                this.fetchAndSaveWeather(latest.lat, latest.lon, latest.city, latest.fullLocation, 'gps', latest, true, reqId);
             } else {
                 this.refreshWeatherByIp(latest);
             }
@@ -871,26 +920,43 @@ class TetCountdown {
     }
 
     updateMain() {
-        const now = new Date();
-        const diff = this.targetDate.getTime() - now.getTime();
+        const nowMs = Date.now();
+        const diff = this.targetDate.getTime() - nowMs;
 
-        // Top Navbar Real-time Clock
-        const hh = String(now.getHours()).padStart(2, '0');
-        const mm = String(now.getMinutes()).padStart(2, '0');
-        const ss = String(now.getSeconds()).padStart(2, '0');
+        // Vietnam UTC+7 Wall-Clock & Calendar Date
+        const vnNow = (window.LunarEngine && typeof window.LunarEngine.getVietnamNow === 'function')
+            ? window.LunarEngine.getVietnamNow()
+            : (() => {
+                const dObj = new Date(nowMs + 7 * 3600000);
+                return {
+                    year: dObj.getUTCFullYear(),
+                    month: dObj.getUTCMonth() + 1,
+                    day: dObj.getUTCDate(),
+                    dayOfWeek: dObj.getUTCDay(),
+                    hours: dObj.getUTCHours(),
+                    minutes: dObj.getUTCMinutes(),
+                    seconds: dObj.getUTCSeconds()
+                };
+            })();
+
+        const hh = String(vnNow.hours).padStart(2, '0');
+        const mm = String(vnNow.minutes).padStart(2, '0');
+        const ss = String(vnNow.seconds).padStart(2, '0');
         const timeStr = `${hh}:${mm}:${ss}`;
 
         if (this.elements.navClockTime) {
             this.elements.navClockTime.textContent = timeStr;
         }
 
-        if (this.prevDateString !== now.toDateString()) {
-            this.prevDateString = now.toDateString();
+        const dateKey = `${vnNow.year}-${vnNow.month}-${vnNow.day}`;
+        if (this.prevDateString !== dateKey) {
+            const shouldRefreshMilestones = Boolean(this.prevDateString);
+            this.prevDateString = dateKey;
             const dayNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-            const dayName = dayNames[now.getDay()];
-            const d = String(now.getDate()).padStart(2, '0');
-            const m = String(now.getMonth() + 1).padStart(2, '0');
-            const y = now.getFullYear();
+            const dayName = dayNames[vnNow.dayOfWeek];
+            const d = String(vnNow.day).padStart(2, '0');
+            const m = String(vnNow.month).padStart(2, '0');
+            const y = vnNow.year;
 
             if (this.elements.solarDate) {
                 this.elements.solarDate.textContent = `${dayName}, ${d}/${m}/${y}`;
@@ -900,22 +966,36 @@ class TetCountdown {
             }
 
             if (window.LunarEngine) {
-                const lunar = window.LunarEngine.convertSolar2Lunar(now.getDate(), now.getMonth() + 1, now.getFullYear(), 7);
+                const lunar = window.LunarEngine.convertSolar2Lunar(vnNow.day, vnNow.month, vnNow.year, 7);
                 const canChiYear = window.LunarEngine.getCanChiYear(lunar.year);
                 const lunarD = String(lunar.day).padStart(2, '0');
                 const lunarM = String(lunar.month).padStart(2, '0');
+                const leapSuffix = lunar.isLeap ? ' Nhuận' : '';
+                const leapShort = lunar.isLeap ? 'N' : '';
                 if (this.elements.lunarDate) {
-                    this.elements.lunarDate.textContent = `Ngày ${lunarD}/${lunarM} (Năm ${canChiYear})`;
+                    this.elements.lunarDate.textContent = `Ngày ${lunarD}/${lunarM}${leapSuffix} (Năm ${canChiYear})`;
                 }
                 if (this.elements.navClockLunar) {
-                    this.elements.navClockLunar.textContent = `(Âm: ${lunarD}/${lunarM})`;
+                    this.elements.navClockLunar.textContent = `(Âm: ${lunarD}/${lunarM}${leapShort})`;
                 }
+            }
+
+            if (shouldRefreshMilestones) {
+                this.renderMilestones();
             }
         }
 
         if (diff <= 0) {
             this.handleTetArrived();
             return;
+        }
+
+        // Ensure normal countdown grid is visible when switching back to a future target
+        if (this.elements.timerGrid) {
+            this.elements.timerGrid.classList.remove('hidden');
+        }
+        if (this.elements.celebrationBanner) {
+            this.elements.celebrationBanner.classList.add('hidden');
         }
 
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -940,25 +1020,26 @@ class TetCountdown {
             this.elements.seconds.textContent = String(seconds).padStart(2, '0');
         }
 
-        // Progress bar (updated only once per second)
+        // Progress bar (updated only once per second; cap label at 99.9% while diff > 0)
         const totalDuration = this.targetDate.getTime() - this.startDate.getTime();
-        const elapsed = now.getTime() - this.startDate.getTime();
+        const elapsed = nowMs - this.startDate.getTime();
         const percentNum = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-        const percent = percentNum.toFixed(1);
+        const barWidthPct = percentNum.toFixed(1);
+        const labelPct = Math.min(99.9, percentNum).toFixed(1);
         this.currentPercent = percentNum;
 
         if (this.elements.progressBar) {
-            this.elements.progressBar.style.width = `${percent}%`;
+            this.elements.progressBar.style.width = `${barWidthPct}%`;
         }
         if (this.elements.progressHead) {
-            this.elements.progressHead.style.left = `${percent}%`;
+            this.elements.progressHead.style.left = `${barWidthPct}%`;
         }
         if (this.elements.headerProgressBar) {
-            this.elements.headerProgressBar.style.width = `${percent}%`;
+            this.elements.headerProgressBar.style.width = `${barWidthPct}%`;
         }
         if (this.elements.progressText) {
             const cfg = this.targets[this.activeTargetKey] || this.targets.tet;
-            this.elements.progressText.textContent = `${cfg.progressPrefix}: ${percent}%`;
+            this.elements.progressText.textContent = `${cfg.progressPrefix}: ${labelPct}%`;
         }
     }
 
@@ -973,44 +1054,59 @@ class TetCountdown {
         if (this.elements.headerProgressBar) {
             this.elements.headerProgressBar.style.width = '100%';
         }
-        if (this.elements.progressText) {
-            const cfg = this.targets[this.activeTargetKey] || this.targets.tet;
-            this.elements.progressText.textContent = `${cfg.progressPrefix}: 100.0%`;
-        }
+
+        if (this.elements.days) this.elements.days.textContent = '00';
+        if (this.elements.hours) this.elements.hours.textContent = '00';
+        if (this.elements.minutes) this.elements.minutes.textContent = '00';
+        if (this.elements.seconds) this.elements.seconds.textContent = '00';
+        this.prevValues = { d: 0, h: 0, m: 0, s: 0 };
 
         if (this.activeTargetKey !== 'tet') {
-            if (this.elements.days) this.elements.days.textContent = '00';
-            if (this.elements.hours) this.elements.hours.textContent = '00';
-            if (this.elements.minutes) this.elements.minutes.textContent = '00';
-            if (this.elements.seconds) this.elements.seconds.textContent = '00';
+            if (this.elements.timerGrid) {
+                this.elements.timerGrid.classList.remove('hidden');
+            }
+            if (this.elements.celebrationBanner) {
+                this.elements.celebrationBanner.classList.add('hidden');
+            }
+            if (this.elements.progressText) {
+                this.elements.progressText.textContent = '🥂 Sự kiện Year End Party Pancake 2027 đã chính thức bắt đầu!';
+            }
             return;
         }
 
-        if (this.elements.countdownBox) {
-            this.elements.countdownBox.classList.add('hidden');
+        if (this.elements.progressText) {
+            const cfg = this.targets.tet;
+            this.elements.progressText.textContent = `${cfg.progressPrefix}: 100.0%`;
         }
+
+        // Keep #countdown-main-box visible so Weather, Lunar Calendar & Target Switcher stay accessible
         if (this.elements.celebrationBanner) {
+            this.elements.celebrationBanner.style.display = '';
             this.elements.celebrationBanner.classList.remove('hidden');
         }
-        if (window.fireworks) {
-            window.fireworks.triggerFrenzy(15);
+        if (!this.hasTriggeredTetCelebration) {
+            this.hasTriggeredTetCelebration = true;
+            if (window.fireworks) {
+                window.fireworks.triggerFrenzy(15);
+            }
         }
-        if (this.mainTimer) clearInterval(this.mainTimer);
-        if (this.millisTimer) clearInterval(this.millisTimer);
     }
 
     renderMilestones() {
         if (!this.elements.milestoneList) return;
         this.elements.milestoneList.innerHTML = '';
 
-        const now = new Date();
+        const vnDayIndex = (ts) => Math.floor((ts + 7 * 3600000) / 86400000);
+        const todayIdx = vnDayIndex(Date.now());
 
         this.milestones.forEach(m => {
-            const isPassed = now > m.date;
-            const diffDays = Math.ceil((m.date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            const targetIdx = vnDayIndex(m.date.getTime());
+            const diffDays = targetIdx - todayIdx;
+            const isPassed = diffDays < 0;
+            const isToday = diffDays === 0;
 
             const card = document.createElement('div');
-            card.className = `milestone-card ${isPassed ? 'passed' : ''}`;
+            card.className = `milestone-card ${isPassed ? 'passed' : ''}${isToday ? ' active-today' : ''}`;
             card.id = `ms-${m.id}`;
 
             const iconEl = document.createElement('div');
@@ -1032,7 +1128,7 @@ class TetCountdown {
             badgeEl.className = 'milestone-badge';
             badgeEl.textContent = isPassed
                 ? '✓ Đã hoàn thành'
-                : (diffDays === 0 ? '✨ Đang diễn ra hôm nay!' : `Còn ${diffDays} ngày`);
+                : (isToday ? '✨ Đang diễn ra hôm nay!' : `Còn ${diffDays} ngày`);
 
             contentEl.append(titleEl, descEl, badgeEl);
             card.append(iconEl, contentEl);

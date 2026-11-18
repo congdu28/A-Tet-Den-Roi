@@ -150,22 +150,22 @@
 
             <div class="quick-controls">
                 <!-- Nút chuyển đổi nhanh Giao diện Sáng / Tối -->
-                <button id="btn-toggle-light-dark" class="btn-ctrl" title="Bấm để đổi Giao diện Sáng (Nắng Xuân) hoặc Tối (Hội Đêm)">
+                <button type="button" id="btn-toggle-light-dark" class="btn-ctrl" title="Đang ở Giao diện Sáng (Nắng Xuân) — Bấm để chuyển sang Tối">
                     <span id="mode-icon">☀️</span> <span id="mode-text">Sáng</span>
                 </button>
 
                 <!-- Bắn pháo hoa nút nhanh -->
-                <button id="btn-fireworks-frenzy" class="btn-ctrl" title="Bắn pháo hoa liên hoàn cực đã mắt">
+                <button type="button" id="btn-fireworks-frenzy" class="btn-ctrl" title="Bắn pháo hoa liên hoàn cực đã mắt">
                     <span>🎆</span> Pháo Hoa
                 </button>
 
                 <!-- Bật/Tắt âm thanh -->
-                <button id="btn-toggle-mute" class="btn-ctrl" title="Bật/Tắt toàn bộ âm thanh">
+                <button type="button" id="btn-toggle-mute" class="btn-ctrl" title="Bật/Tắt toàn bộ âm thanh">
                     <span>🔊</span> Bật Âm
                 </button>
 
                 <!-- Nút mở bảng Cài Đặt tổng hợp -->
-                <button id="btn-open-settings" class="btn-ctrl btn-highlight" title="Tùy chỉnh giao diện sáng/tối, màu sắc, font chữ và hiệu ứng">
+                <button type="button" id="btn-open-settings" class="btn-ctrl btn-highlight" title="Tùy chỉnh giao diện sáng/tối, màu sắc, font chữ và hiệu ứng">
                     <span>⚙️</span> Cài Đặt
                 </button>
             </div>
@@ -315,7 +315,7 @@
                     <input type="file" id="user-music-input" accept="audio/*" style="display: none;">
 
                     <!-- Nút Tải lên MP3 -->
-                    <button id="btn-upload-music" class="player-btn-upload" title="Bấm để chọn file MP3 bài hát Tết có lời từ máy tính của bạn">
+                    <button type="button" id="btn-upload-music" class="player-btn-upload" title="Bấm để chọn file MP3 bài hát Tết có lời từ máy tính của bạn">
                         <span class="upload-icon">📁</span>
                         <span class="upload-text">Tải Nhạc Lên</span>
                     </button>
@@ -331,15 +331,15 @@
             <!-- Tầng 2: Cụm nút điều khiển chuyên nghiệp (Luôn liền khối) + Dropdown chọn bài có giới hạn không bao giờ bị nhảy -->
             <div class="player-bottom-row">
                 <div class="playback-btn-group">
-                    <button id="btn-music-prev" class="music-nav-btn" title="Bài trước">
+                    <button type="button" id="btn-music-prev" class="music-nav-btn" title="Bài trước">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
                         </svg>
                     </button>
-                    <button id="btn-music-play" class="music-play-hero-btn" title="Phát / Tạm dừng nhạc Tết">
+                    <button type="button" id="btn-music-play" class="music-play-hero-btn" title="Phát / Tạm dừng nhạc Tết">
                         <span id="play-hero-icon" class="play-hero-icon">▶</span>
                     </button>
-                    <button id="btn-music-next" class="music-nav-btn" title="Bài kế tiếp">
+                    <button type="button" id="btn-music-next" class="music-nav-btn" title="Bài kế tiếp">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
                         </svg>
@@ -368,25 +368,25 @@
         </div>
 
         <!-- Celebration banner -->
-        <div id="celebration-banner" class="celebration-banner hidden" style="display: none;">
+        <div id="celebration-banner" class="celebration-banner hidden">
             <h2>🎉 CHÚC MỪNG NĂM MỚI 2027 🎉</h2>
-            <p style="font-size: 1.3rem; font-weight: 700;">NĂM ĐINH MÙI ĐẠI THẮNG • VẠN SỰ NHƯ Ý • AN KHANG THỊNH VƯỢNG!</p>
+            <p>NĂM ĐINH MÙI ĐẠI THẮNG • VẠN SỰ NHƯ Ý • AN KHANG THỊNH VƯỢNG!</p>
         </div>
 
         <!-- Khối Hoạt Động Tết Hợp Nhất (Tab + Nội Dung Trong 1 Khối Thống Nhất) -->
         <section class="features-hub-card" aria-label="Không gian hoạt động Tết">
             <!-- Navigation Tabs: 4 Tính Năng Tết Ý Nghĩa -->
             <nav class="nav-tabs-wrapper" aria-label="Menu chức năng Tết">
-                <button class="nav-tab-btn active" data-target="section-lixi">
+                <button type="button" class="nav-tab-btn active" data-target="section-lixi">
                     <span>🧧</span> Cây Lộc Lì Xì
                 </button>
-                <button class="nav-tab-btn" data-target="section-fortune">
+                <button type="button" class="nav-tab-btn" data-target="section-fortune">
                     <span>🎋</span> Xin Xăm Rút Quẻ
                 </button>
-                <button class="nav-tab-btn" data-target="section-card">
+                <button type="button" class="nav-tab-btn" data-target="section-card">
                     <span>💌</span> Tạo Thiệp Chúc Tết
                 </button>
-                <button class="nav-tab-btn" data-target="section-milestones">
+                <button type="button" class="nav-tab-btn" data-target="section-milestones">
                     <span>📅</span> Cột Mốc Ngày Tết
                 </button>
             </nav>
@@ -411,7 +411,7 @@
                             <span>🧧</span> Đã mở: <span id="lixi-opened-count" class="lixi-stat-highlight">0</span> / <span id="lixi-total-count">18</span> bao
                         </div>
                     </div>
-                    <button id="btn-reset-lixi-tree" class="btn-reset-lixi" title="Treo lại 18 bao lì xì mới để hái tiếp">
+                    <button type="button" id="btn-reset-lixi-tree" class="btn-reset-lixi" title="Treo lại 18 bao lì xì mới để hái tiếp">
                         <span>🔄</span> Treo Cây Lộc Mới
                     </button>
                 </div>
@@ -605,7 +605,7 @@
                         </div>
                     </div>
 
-                    <button id="btn-shake-fortune" class="btn-action-primary fortune-shake-btn">
+                    <button type="button" id="btn-shake-fortune" class="btn-action-primary fortune-shake-btn">
                         <span>🎋</span> Lắc Ống Xăm Khai Lộc
                     </button>
                 </div>
@@ -707,7 +707,7 @@
 
                                 <!-- Chọn Mẫu & Nút Ngẫu Nhiên -->
                                 <div class="form-group" style="margin-top: 14px;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                    <div class="preset-wish-header-row">
                                         <label for="card-wish-select" style="margin-bottom: 0;">🎁 Hoặc chọn 16 mẫu chúc soạn sẵn:</label>
                                         <button type="button" id="btn-random-card-wish" class="btn-quick-random" title="Đổi lời chúc ngẫu nhiên">
                                             <span>🎲</span> Đổi Ngẫu Nhiên
@@ -747,6 +747,7 @@
                                 <div class="form-group">
                                     <label for="card-font-select">✒️ Kiểu chữ (Font) riêng cho thiệp (18 font Việt hóa):</label>
                                     <select id="card-font-select" class="form-control">
+                                        <option value="__global__">🔄 Đồng bộ theo kiểu chữ trang web hiện tại</option>
                                         <optgroup label="👑 Cổ Điển & Cung Đình (Sang trọng)">
                                             <option value="Playfair Display" selected>👑 Playfair Display (Cung đình cổ điển - Mặc định)</option>
                                             <option value="Cormorant Garamond">🦢 Cormorant Garamond (Quý tộc thanh tao)</option>
@@ -1011,8 +1012,8 @@
                                         </div>
 
                                         <div class="bg-overlay-control">
-                                            <span class="overlay-label">🔆 Làm tối nền giúp chữ rõ nét: <strong id="overlay-value-text">45%</strong></span>
-                                            <input type="range" id="card-bg-overlay-range" min="0.1" max="0.85" step="0.05" value="0.45" class="slider-overlay">
+                                            <span class="overlay-label">🔆 Làm tối nền ảnh giúp chữ rõ nét: <strong id="overlay-value-text">45%</strong></span>
+                                            <input type="range" id="card-bg-overlay-range" min="0" max="0.85" step="0.05" value="0.45" class="slider-overlay">
                                         </div>
                                     </div>
                                 </div>
@@ -1118,11 +1119,11 @@
     </div>
 
     <!-- MODAL CÀI ĐẶT & TÙY CHỈNH TỔNG HỢP (GIAO DIỆN TAB TRỰC QUAN - SIÊU MƯỢT) -->
-    <div id="settings-modal" class="modal-overlay hidden">
+    <div id="settings-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Cài Đặt & Tùy Chỉnh Tết">
         <div class="modal-content settings-modal-box">
             <!-- Modal Header Cố Định -->
             <div class="settings-modal-header">
-                <button class="modal-close-btn" id="btn-close-settings" title="Đóng cài đặt">&times;</button>
+                <button type="button" class="modal-close-btn" id="btn-close-settings" title="Đóng cài đặt" aria-label="Đóng cài đặt">&times;</button>
                 <div class="settings-modal-title">⚙️ Cài Đặt & Tùy Chỉnh Tết</div>
                 <p class="settings-modal-subtitle">Tùy biến không gian đón xuân Đinh Mùi 2027 theo sở thích của bạn</p>
             </div>
@@ -1158,10 +1159,10 @@
                             <span>🌓</span> Chế Độ Hiển Thị:
                         </div>
                         <div class="light-dark-toggle-grid">
-                            <button class="btn-mode-toggle active" id="btn-mode-light" data-mode="light">
+                            <button type="button" class="btn-mode-toggle active" id="btn-mode-light" data-mode="light">
                                 <span>☀️</span> Nắng Xuân (Sáng)
                             </button>
-                            <button class="btn-mode-toggle" id="btn-mode-dark" data-mode="dark">
+                            <button type="button" class="btn-mode-toggle" id="btn-mode-dark" data-mode="dark">
                                 <span>🌙</span> Hội Đêm (Tối)
                             </button>
                         </div>
@@ -1173,67 +1174,67 @@
                             <span>🎨</span> 16 Bảng Màu Tết Đinh Mùi 2027 Tuyệt Sắc:
                         </div>
                         <div class="theme-palette-grid">
-                            <button class="theme-chip-btn active" data-theme="theme-red-gold">
+                            <button type="button" class="theme-chip-btn active" data-theme="theme-red-gold">
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #d32f2f, #ffd700);"></span>
                                 <span>Đỏ Kim Hoàng Gia</span>
                             </button>
-                            <button class="theme-chip-btn" data-theme="theme-mai-vang">
+                            <button type="button" class="theme-chip-btn" data-theme="theme-mai-vang">
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);"></span>
                                 <span>Mai Vàng Nam Bộ</span>
                             </button>
-                            <button class="theme-chip-btn" data-theme="theme-dao-hong">
+                            <button type="button" class="theme-chip-btn" data-theme="theme-dao-hong">
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #ec4899, #f472b6);"></span>
                                 <span>Đào Hồng Bắc Bộ</span>
                             </button>
-                            <button class="theme-chip-btn" data-theme="theme-dem-giao-thua">
+                            <button type="button" class="theme-chip-btn" data-theme="theme-dem-giao-thua">
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #1e1b4b, #38bdf8);"></span>
                                 <span>Đêm Giao Thừa</span>
                             </button>
-                            <button class="theme-chip-btn" data-theme="theme-loc-biec">
+                            <button type="button" class="theme-chip-btn" data-theme="theme-loc-biec">
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #059669, #34d399);"></span>
                                 <span>Lộc Biếc Khởi Sắc</span>
                             </button>
-                            <button class="theme-chip-btn" data-theme="theme-cam-hoi-an">
+                            <button type="button" class="theme-chip-btn" data-theme="theme-cam-hoi-an">
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #c2410c, #fb923c);"></span>
                                 <span>Cam Ấm Phố Hội</span>
                             </button>
-                            <button class="theme-chip-btn" data-theme="theme-tim-hue">
+                            <button type="button" class="theme-chip-btn" data-theme="theme-tim-hue">
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #6b21a8, #c084fc);"></span>
                                 <span>Tím Mộng Hoàng Cung</span>
                             </button>
-                            <button class="theme-chip-btn" data-theme="theme-trang-sen">
+                            <button type="button" class="theme-chip-btn" data-theme="theme-trang-sen">
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #115e59, #2dd4bf);"></span>
                                 <span>Bạch Liên Thanh Khiết</span>
                             </button>
-                            <button class="theme-chip-btn" data-theme="theme-ho-phach">
+                            <button type="button" class="theme-chip-btn" data-theme="theme-ho-phach">
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #92400e, #fbbf24);"></span>
                                 <span>Hổ Phách Nghênh Xuân</span>
                             </button>
-                            <button class="theme-chip-btn" data-theme="theme-ngoc-bich">
+                            <button type="button" class="theme-chip-btn" data-theme="theme-ngoc-bich">
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #059669, #34d399);"></span>
                                 <span>Ngọc Bích Cát Tường</span>
                             </button>
-                            <button class="theme-chip-btn" data-theme="theme-cyber-tet">
+                            <button type="button" class="theme-chip-btn" data-theme="theme-cyber-tet">
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #ff007f, #00f0ff);"></span>
                                 <span>Neon Giao Thừa</span>
                             </button>
-                            <button class="theme-chip-btn" data-theme="theme-gom-su">
+                            <button type="button" class="theme-chip-btn" data-theme="theme-gom-su">
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #1d4ed8, #93c5fd);"></span>
                                 <span>Lam Ngọc Bát Tràng</span>
                             </button>
-                            <button class="theme-chip-btn" data-theme="theme-hoang-kim">
+                            <button type="button" class="theme-chip-btn" data-theme="theme-hoang-kim">
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #f59e0b, #fef08a);"></span>
                                 <span>Hoàng Kim Cực Phẩm</span>
                             </button>
-                            <button class="theme-chip-btn" data-theme="theme-ruou-vang">
+                            <button type="button" class="theme-chip-btn" data-theme="theme-ruou-vang">
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #881337, #f43f5e);"></span>
                                 <span>Ruby Rượu Vang</span>
                             </button>
-                            <button class="theme-chip-btn" data-theme="theme-binh-minh">
+                            <button type="button" class="theme-chip-btn" data-theme="theme-binh-minh">
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #ea580c, #fbbf24);"></span>
                                 <span>Bình Minh Khởi Sắc</span>
                             </button>
-                            <button class="theme-chip-btn" data-theme="theme-tay-bac">
+                            <button type="button" class="theme-chip-btn" data-theme="theme-tay-bac">
                                 <span class="theme-dot" style="background: linear-gradient(135deg, #4338ca, #ec4899);"></span>
                                 <span>Sắc Hoa Tây Bắc</span>
                             </button>
@@ -1304,7 +1305,7 @@
 
                         <!-- Xem trước ảnh nền đang chọn -->
                         <div id="bg-image-preview-wrap" class="bg-preview-card hidden">
-                            <img id="bg-preview-thumb" class="bg-preview-thumb" src="" alt="Xem trước ảnh nền">
+                            <img id="bg-preview-thumb" class="bg-preview-thumb" alt="Xem trước ảnh nền">
                             <div class="bg-preview-info">
                                 <div id="bg-preview-name" class="bg-preview-name">Ảnh nền tùy chỉnh</div>
                                 <div id="bg-preview-status" class="bg-preview-status">Đang áp dụng</div>
@@ -1646,7 +1647,7 @@
                         <div class="settings-sub-title">
                             <span>🎶</span> Tải Lên & Quản Lý Nhạc Tết Của Bạn:
                         </div>
-                        <button class="btn-ctrl" id="btn-modal-upload-music" style="justify-content: center; width: 100%; padding: 12px 14px; margin-bottom: 12px;">
+                        <button type="button" class="btn-ctrl" id="btn-modal-upload-music" style="justify-content: center; width: 100%; padding: 12px 14px; margin-bottom: 12px;">
                             <span>📁</span> Tải Lên Bài Hát MP3 Có Lời Của Bạn
                         </button>
                         
@@ -1670,7 +1671,7 @@
 
             <!-- Footer Cố Định Ở Dưới Cùng -->
             <div class="settings-modal-footer">
-                <button class="btn-action-primary" id="btn-done-settings" style="width: 100%; padding: 12px 20px;">
+                <button type="button" class="btn-action-primary" id="btn-done-settings" style="width: 100%; padding: 12px 20px;">
                     <span>✓</span> Hoàn Tất Cài Đặt
                 </button>
             </div>
@@ -1678,9 +1679,9 @@
     </div>
 
     <!-- MODAL 1: KẾT QUẢ XIN XĂM RÚT QUẺ HOÀNG GIA (BỐ CỤC SỚ QUẺ 2 CỘT KHÔNG CUỘN) -->
-    <div id="fortune-modal" class="modal-overlay hidden">
+    <div id="fortune-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Kết Quả Xin Xăm Đầu Xuân">
         <div class="modal-content fortune-modal-content">
-            <button class="modal-close-btn fortune-modal-close" id="btn-close-fortune" title="Đóng" aria-label="Đóng">&#x2715;</button>
+            <button type="button" class="modal-close-btn fortune-modal-close" id="btn-close-fortune" title="Đóng" aria-label="Đóng">&#x2715;</button>
             <div class="fortune-result-card">
                 <!-- Header Cố Định -->
                 <div class="fortune-scroll-header">
@@ -1721,10 +1722,10 @@
                             </div>
                         </div>
                         <div class="fortune-actions-row">
-                            <button class="btn-action-primary fortune-reshake-btn" id="btn-reshake">
+                            <button type="button" class="btn-action-primary fortune-reshake-btn" id="btn-reshake">
                                 <span>🔄</span> Rút Quẻ Khác
                             </button>
-                            <button class="btn-ctrl fortune-copy-btn" id="btn-copy-fortune">
+                            <button type="button" class="btn-ctrl fortune-copy-btn" id="btn-copy-fortune">
                                 <span>📋</span> Sao Chép Quẻ
                             </button>
                         </div>
@@ -1774,9 +1775,9 @@
     </div>
 
     <!-- MODAL 2: KẾT QUẢ MỞ BAO LÌ XÌ -->
-    <div id="lixi-modal" class="modal-overlay hidden">
+    <div id="lixi-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Kết Quả Mở Bao Lì Xì">
         <div class="modal-content" style="max-width: 480px;">
-            <button class="modal-close-btn" id="btn-close-lixi">&times;</button>
+            <button type="button" class="modal-close-btn" id="btn-close-lixi" title="Đóng" aria-label="Đóng">&times;</button>
             <div class="lixi-result-card">
                 <div style="font-size: 3.5rem;">🧧</div>
                 <div class="lixi-meaning-badge" id="lixi-res-meaning">PHÁT TÀI PHÁT LỘC</div>
@@ -1792,9 +1793,9 @@
     </div>
 
     <!-- MODAL 3: XEM LỊCH THÁNG ÂM - DƯƠNG ĐẦY ĐỦ CHUẨN XÁC -->
-    <div id="lunar-calendar-modal" class="modal-overlay hidden">
+    <div id="lunar-calendar-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Lịch Vạn Niên Âm Dương">
         <div class="modal-content lunar-calendar-box">
-            <button class="modal-close-btn fortune-modal-close" id="btn-close-calendar" title="Đóng lịch" aria-label="Đóng">&#x2715;</button>
+            <button type="button" class="modal-close-btn fortune-modal-close" id="btn-close-calendar" title="Đóng lịch" aria-label="Đóng">&#x2715;</button>
             
             <div class="lunar-cal-header">
                 <div class="cal-title-row">
@@ -1821,7 +1822,11 @@
                             ▶
                         </button>
                     </div>
-                    <div class="cal-toolbar-right" aria-hidden="true"></div>
+                    <div class="cal-toolbar-right">
+                        <button type="button" id="btn-cal-tet" class="cal-jump-btn" title="Xem ngay tháng Tết Đinh Mùi 2027 (06/02/2027)">
+                            🧧 Tết 2027
+                        </button>
+                    </div>
                 </div>
             </div>
 

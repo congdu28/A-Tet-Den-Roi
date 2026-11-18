@@ -1,11 +1,12 @@
 {
   "name": "Đếm Ngược Tết Đinh Mùi 2027",
   "short_name": "Tết 2027",
-  "description": "Đếm ngược Tết Đinh Mùi 2027, Lịch Vạn Niên Âm-Dương, Hái Lộc Lì Xì, Xin Xăm Đầu Xuân & Tạo Thiệp Chúc Tết 4K.",
+  "description": "Đếm ngày đến Tết Đinh Mùi 2027, Gieo quẻ, Tạo thiệp mừng.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#3a0710",
-  "theme_color": "#b91c1c",
+  "theme_color": "#7f1d1d",
   "icons": [
     {
       "src": "/assets/favicon.svg",
@@ -18,9 +19,16 @@
       "type": "image/png"
     },
     {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "/assets/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }
