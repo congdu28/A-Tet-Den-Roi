@@ -229,12 +229,11 @@ class TetCountdown {
         const measureCanvas = () => {
             const rect = canvas.getBoundingClientRect();
             if (rect.width <= 0 || rect.height <= 0) return;
-            const dpr = Math.min(window.devicePixelRatio || 1, 2);
             this.glitterStageWidth = rect.width;
             this.glitterStageHeight = rect.height;
-            canvas.width = Math.round(rect.width * dpr);
-            canvas.height = Math.round(rect.height * dpr);
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            canvas.width = Math.max(1, Math.round(rect.width));
+            canvas.height = Math.max(1, Math.round(rect.height));
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
         };
 
         measureCanvas();
@@ -298,6 +297,7 @@ class TetCountdown {
             : false;
 
         let lastEmitTime = 0;
+        let lastGlitterFrame = 0;
         const ensureTick = () => {
             if (this.glitterRafId) return;
             if (document.hidden || !isStageVisible) return;
@@ -328,6 +328,18 @@ class TetCountdown {
             if (document.hidden || !isStageVisible || this.glitterStageWidth <= 0) {
                 return;
             }
+
+            if (window.__tetScrolling) {
+                lastGlitterFrame = now;
+                this.glitterRafId = requestAnimationFrame(tick);
+                return;
+            }
+
+            if (lastGlitterFrame && (now - lastGlitterFrame) < 15.2) {
+                this.glitterRafId = requestAnimationFrame(tick);
+                return;
+            }
+            lastGlitterFrame = now;
 
             ctx.clearRect(0, 0, this.glitterStageWidth, this.glitterStageHeight);
 

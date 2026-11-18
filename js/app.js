@@ -36,6 +36,22 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = hasOpenModal ? 'hidden' : '';
     };
 
+    // Global passive scroll-idle coordinator: pauses background decorative canvases & CSS animations during active scroll gestures
+    window.__tetScrolling = false;
+    let globalScrollIdleTimer = null;
+    window.addEventListener('scroll', () => {
+        if (!window.__tetScrolling) {
+            window.__tetScrolling = true;
+            document.body.classList.add('is-scrolling');
+        }
+        if (globalScrollIdleTimer) clearTimeout(globalScrollIdleTimer);
+        globalScrollIdleTimer = setTimeout(() => {
+            window.__tetScrolling = false;
+            document.body.classList.remove('is-scrolling');
+            globalScrollIdleTimer = null;
+        }, 140);
+    }, { passive: true });
+
     // 4. Click anywhere to explode fireworks (ignoring UI buttons, links, labels, controls & open modals)
     document.addEventListener('click', (e) => {
         if (!e.target || typeof e.target.closest !== 'function') return;

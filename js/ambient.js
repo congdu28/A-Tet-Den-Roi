@@ -15,6 +15,8 @@ class AmbientSystem {
         this.height = window.innerHeight;
         this.isRunning = false;
         this.animFrameId = null;
+        this.dpr = 1;
+        this.lastFrameTime = 0;
 
         // Settings toggles (retrieved from localStorage; default ON except Spring Rain)
         this.showStardust = localStorage.getItem('tet-ambient-stardust') !== 'false';
@@ -62,11 +64,12 @@ class AmbientSystem {
     resize() {
         this.width = window.innerWidth;
         this.height = window.innerHeight;
-        this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+        // Render full-screen atmospheric backdrop at 1x CSS pixels (saves up to 75% GPU fillrate on HiDPI screens)
+        this.dpr = 1;
         if (this.canvas && this.ctx) {
-            this.canvas.width = Math.round(this.width * this.dpr);
-            this.canvas.height = Math.round(this.height * this.dpr);
-            this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+            this.canvas.width = Math.max(1, Math.round(this.width));
+            this.canvas.height = Math.max(1, Math.round(this.height));
+            this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         }
     }
 
@@ -246,6 +249,24 @@ class AmbientSystem {
         eCtx.fillStyle = '#FFD700';
         eCtx.fill();
         this.envelopeSprite = eCanvas;
+
+        // 4. Pre-rendered Golden Stardust Sprite (replaces 60-100 arc() calls per frame with fast GPU blits)
+        const sSize = 24;
+        const sCanvas = document.createElement('canvas');
+        sCanvas.width = sSize;
+        sCanvas.height = sSize;
+        const sCtx = sCanvas.getContext('2d');
+        const sHalf = sSize / 2;
+        const sGrad = sCtx.createRadialGradient(sHalf, sHalf, 0, sHalf, sHalf, sHalf);
+        sGrad.addColorStop(0, 'rgba(255, 250, 205, 1)');
+        sGrad.addColorStop(0.28, 'rgba(255, 223, 77, 0.92)');
+        sGrad.addColorStop(0.62, 'rgba(255, 215, 0, 0.28)');
+        sGrad.addColorStop(1, 'rgba(255, 215, 0, 0)');
+        sCtx.fillStyle = sGrad;
+        sCtx.beginPath();
+        sCtx.arc(sHalf, sHalf, sHalf, 0, Math.PI * 2);
+        sCtx.fill();
+        this.stardustSprite = sCanvas;
     }
 
     hasActiveEffects() {
@@ -255,35 +276,51 @@ class AmbientSystem {
     start() {
         if (this.isRunning || !this.hasActiveEffects()) return;
         this.isRunning = true;
-        this.animate();
+        this.lastFrameTime = 0;
+        this.animFrameId = requestAnimationFrame((t) => this.animate(t));
     }
 
     stop() {
         this.isRunning = false;
+        this.lastFrameTime = 0;
         if (this.animFrameId) {
             cancelAnimationFrame(this.animFrameId);
             this.animFrameId = null;
         }
     }
 
-    animate() {
+    animate(now = performance.now()) {
         if (!this.isRunning) return;
         if (!this.hasActiveEffects()) {
             this.ctx.clearRect(0, 0, this.width, this.height);
             this.stop();
             return;
         }
+
+        this.animFrameId = requestAnimationFrame((t) => this.animate(t));
+
+        // Yield 100% of main-thread & GPU bandwidth while the user is actively scrolling
+        if (window.__tetScrolling) {
+            this.lastFrameTime = now;
+            return;
+        }
+
+        // Cap at ~60 FPS and normalize delta-time so 120Hz/144Hz/165Hz displays stay smooth & cool
+        const elapsed = this.lastFrameTime ? (now - this.lastFrameTime) : 16.667;
+        if (this.lastFrameTime && elapsed < 15.2) return;
+        this.lastFrameTime = now;
+        const dt = Math.min(2.0, elapsed / 16.667);
+
         const ctx = this.ctx;
         ctx.clearRect(0, 0, this.width, this.height);
 
-        // 1. Draw Golden Stardust (Bụi sao vàng lấp lánh) - batched without per-particle strings
-        if (this.showStardust) {
-            ctx.fillStyle = '#FFDF4D';
+        // 1. Draw Golden Stardust (Bụi sao vàng lấp lánh) - GPU sprite blit
+        if (this.showStardust && this.stardustSprite) {
             for (let i = 0; i < this.stardust.length; i++) {
                 const s = this.stardust[i];
-                s.x += s.vx;
-                s.y += s.vy;
-                s.pulsePhase += s.pulseSpeed;
+                s.x += s.vx * dt;
+                s.y += s.vy * dt;
+                s.pulsePhase += s.pulseSpeed * dt;
 
                 if (s.y < -10) {
                     s.y = this.height + 10;
@@ -295,17 +332,9 @@ class AmbientSystem {
                 const alpha = s.baseAlpha + Math.sin(s.pulsePhase) * 0.25;
                 if (alpha <= 0) continue;
 
+                const drawRadius = s.size * 2.4;
                 ctx.globalAlpha = Math.min(1, alpha);
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-                ctx.fill();
-
-                if (s.size > 1.8) {
-                    ctx.globalAlpha = alpha * 0.32;
-                    ctx.beginPath();
-                    ctx.arc(s.x, s.y, s.size * 2.2, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+                ctx.drawImage(this.stardustSprite, s.x - drawRadius, s.y - drawRadius, drawRadius * 2, drawRadius * 2);
             }
             ctx.globalAlpha = 1;
         }
@@ -317,8 +346,8 @@ class AmbientSystem {
             ctx.beginPath();
             for (let i = 0; i < this.springRain.length; i++) {
                 const r = this.springRain[i];
-                r.y += r.vy;
-                r.x += r.vx;
+                r.y += r.vy * dt;
+                r.x += r.vx * dt;
 
                 if (r.y > this.height) {
                     r.y = -r.length;
@@ -335,9 +364,9 @@ class AmbientSystem {
         if (this.showLanterns) {
             for (let i = 0; i < this.lanterns.length; i++) {
                 const l = this.lanterns[i];
-                l.y += l.vy;
-                l.swayPhase += l.swaySpeed;
-                l.flickerPhase += 0.05;
+                l.y += l.vy * dt;
+                l.swayPhase += l.swaySpeed * dt;
+                l.flickerPhase += 0.05 * dt;
 
                 const currentX = l.x + Math.sin(l.swayPhase) * l.swayAmplitude;
 
@@ -355,37 +384,35 @@ class AmbientSystem {
         if (this.showConfetti) {
             for (let i = 0; i < this.confetti.length; i++) {
                 const c = this.confetti[i];
-                c.y += c.vy;
-                c.swayPhase += c.swaySpeed;
-                c.x += c.vx + Math.sin(c.swayPhase) * 0.8;
-                c.rotationX += c.rotationSpeedX;
-                c.rotationY += c.rotationSpeedY;
+                c.y += c.vy * dt;
+                c.swayPhase += c.swaySpeed * dt;
+                c.x += (c.vx + Math.sin(c.swayPhase) * 0.8) * dt;
+                c.rotationX += c.rotationSpeedX * dt;
+                c.rotationY += c.rotationSpeedY * dt;
 
                 if (c.y > this.height + 20) {
                     c.y = -20;
                     c.x = Math.random() * this.width;
                 }
 
-                const dpr = this.dpr || 1;
-                const scaleX = Math.cos(c.rotationY) * dpr;
-                const scaleY = Math.sin(c.rotationX) * dpr;
+                const scaleX = Math.cos(c.rotationY);
+                const scaleY = Math.sin(c.rotationX);
 
-                ctx.setTransform(scaleX, 0, 0, scaleY, c.x * dpr, c.y * dpr);
+                ctx.setTransform(scaleX, 0, 0, scaleY, c.x, c.y);
                 ctx.fillStyle = c.color;
                 ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
             }
-            const dpr = this.dpr || 1;
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
         }
 
         // 5. Draw Lucky Coins & Envelopes (Tài lộc rơi)
         if (this.showLuckyCoins) {
             for (let i = 0; i < this.luckyCoins.length; i++) {
                 const coin = this.luckyCoins[i];
-                coin.y += coin.vy;
-                coin.wobblePhase += coin.wobbleSpeed;
-                coin.x += coin.vx + Math.sin(coin.wobblePhase) * 0.6;
-                coin.rot += coin.rotSpeed;
+                coin.y += coin.vy * dt;
+                coin.wobblePhase += coin.wobbleSpeed * dt;
+                coin.x += (coin.vx + Math.sin(coin.wobblePhase) * 0.6) * dt;
+                coin.rot += coin.rotSpeed * dt;
 
                 if (coin.y > this.height + 30) {
                     coin.y = -30;
@@ -398,17 +425,14 @@ class AmbientSystem {
                     this.drawMiniEnvelope(coin.x, coin.y, coin.size, coin.rot);
                 }
             }
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
         }
-
-        this.animFrameId = requestAnimationFrame(() => this.animate());
     }
 
     drawSkyLantern(x, y, scale, flicker) {
         const ctx = this.ctx;
-        const dpr = this.dpr || 1;
-        const s = scale * dpr;
         const candleFlicker = Math.sin(flicker) * 0.15 + 0.85;
-        ctx.setTransform(s, 0, 0, s, x * dpr, y * dpr);
+        ctx.setTransform(scale, 0, 0, scale, x, y);
         ctx.drawImage(this.lanternSprite, -52, -52);
 
         // Inner warm flickering flame
@@ -418,29 +442,25 @@ class AmbientSystem {
         ctx.globalAlpha = 0.88 * candleFlicker;
         ctx.fill();
         ctx.globalAlpha = 1;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
 
     drawLuckyCoin(x, y, size, rot) {
         const ctx = this.ctx;
-        const dpr = this.dpr || 1;
         const cos = Math.cos(rot);
         const sin = Math.sin(rot);
-        const s = (size / 32) * dpr;
-        ctx.setTransform(cos * s, sin * s, -sin * s, cos * s, x * dpr, y * dpr);
+        const s = size / 32;
+        ctx.setTransform(cos * s, sin * s, -sin * s, cos * s, x, y);
         ctx.drawImage(this.coinSprite, -20, -20);
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     drawMiniEnvelope(x, y, size, rot) {
         const ctx = this.ctx;
-        const dpr = this.dpr || 1;
         const cos = Math.cos(rot);
         const sin = Math.sin(rot);
-        const s = (size / 24) * dpr;
-        ctx.setTransform(cos * s, sin * s, -sin * s, cos * s, x * dpr, y * dpr);
+        const s = size / 24;
+        ctx.setTransform(cos * s, sin * s, -sin * s, cos * s, x, y);
         ctx.drawImage(this.envelopeSprite, -20, -27);
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     // Toggle controls

@@ -32,6 +32,7 @@ class FireworksSystem {
         this.frenzyTimers = [];
         this.frenzyIntervals = [];
         this.dpr = 1;
+        this.lastFrameTime = 0;
         this.resizeTimer = null;
 
         this.darkPalettes = [
@@ -154,10 +155,11 @@ class FireworksSystem {
         this.width = window.innerWidth;
         this.height = window.innerHeight;
         if (this.canvas && this.ctx) {
-            this.dpr = Math.min(window.devicePixelRatio || 1, 2);
-            this.canvas.width = Math.round(this.width * this.dpr);
-            this.canvas.height = Math.round(this.height * this.dpr);
-            this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+            // Render full-screen additive fireworks at 1x CSS pixels to avoid 4x alpha-blend fillrate overhead on HiDPI displays
+            this.dpr = 1;
+            this.canvas.width = Math.max(1, Math.round(this.width));
+            this.canvas.height = Math.max(1, Math.round(this.height));
+            this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         }
     }
 
@@ -198,13 +200,15 @@ class FireworksSystem {
         this.idleFrames = 0;
         if (this.isRunning && !this.loopActive) {
             this.loopActive = true;
-            this.animate();
+            this.lastFrameTime = 0;
+            this.animFrameId = requestAnimationFrame((t) => this.animate(t));
         }
     }
 
     stop() {
         this.isRunning = false;
         this.loopActive = false;
+        this.lastFrameTime = 0;
         this.cancelFrenzy();
         if (this.autoLaunchTimer) {
             clearTimeout(this.autoLaunchTimer);
@@ -220,20 +224,24 @@ class FireworksSystem {
         if (!this.autoFireEnabled) return;
         const delay = Math.max(minInitialDelay, this.autoDelayBase + Math.random() * this.autoDelayRandom);
         this.autoLaunchTimer = setTimeout(() => {
-            if (this.isRunning && this.autoFireEnabled) {
-                this.launchRandomShell();
-                if (this.density === 'high') {
-                    if (Math.random() > 0.25) {
-                        setTimeout(() => this.isRunning && this.launchRandomShell(), 140);
-                    }
-                    if (Math.random() > 0.55) {
-                        setTimeout(() => this.isRunning && this.launchRandomShell(), 310);
-                    }
-                } else if (this.density === 'medium' && Math.random() > 0.5) {
-                    setTimeout(() => this.isRunning && this.launchRandomShell(), 190);
-                }
-                this.scheduleNextAutoFire();
+            if (!this.isRunning || !this.autoFireEnabled) return;
+            // Defer background auto-shells while the user is actively scrolling
+            if (window.__tetScrolling) {
+                this.scheduleNextAutoFire(260);
+                return;
             }
+            this.launchRandomShell();
+            if (this.density === 'high') {
+                if (Math.random() > 0.25) {
+                    setTimeout(() => this.isRunning && !window.__tetScrolling && this.launchRandomShell(), 140);
+                }
+                if (Math.random() > 0.55) {
+                    setTimeout(() => this.isRunning && !window.__tetScrolling && this.launchRandomShell(), 310);
+                }
+            } else if (this.density === 'medium' && Math.random() > 0.5) {
+                setTimeout(() => this.isRunning && !window.__tetScrolling && this.launchRandomShell(), 190);
+            }
+            this.scheduleNextAutoFire();
         }, delay);
     }
 
@@ -506,8 +514,22 @@ class FireworksSystem {
         }
     }
 
-    animate() {
+    animate(now = performance.now()) {
         if (!this.isRunning || !this.loopActive) return;
+
+        // Pause background fireworks compositing during active scroll (unless user manually triggered Frenzy)
+        if (window.__tetScrolling && !this.isFrenzyRunning) {
+            this.lastFrameTime = now;
+            this.animFrameId = requestAnimationFrame((t) => this.animate(t));
+            return;
+        }
+
+        // Pace to ~60 FPS so 120Hz/144Hz/165Hz displays don't execute 2.5x full-screen destination-out blends
+        if (this.lastFrameTime && (now - this.lastFrameTime) < 15.2) {
+            this.animFrameId = requestAnimationFrame((t) => this.animate(t));
+            return;
+        }
+        this.lastFrameTime = now;
 
         const hasWork =
             this.fireworks.length > 0 ||
@@ -558,13 +580,15 @@ class FireworksSystem {
             }
         }
 
-        // 2. Draw Rocket Sparks (Comet Trail)
+        // 2. Draw Rocket Sparks (Comet Trail) - O(1) swap-pop removal
         for (let i = this.rocketSparks.length - 1; i >= 0; i--) {
             const sp = this.rocketSparks[i];
             sp.update();
             sp.draw(this.ctx);
             if (sp.isDead()) {
-                this.rocketSparks.splice(i, 1);
+                const last = this.rocketSparks.length - 1;
+                if (i !== last) this.rocketSparks[i] = this.rocketSparks[last];
+                this.rocketSparks.pop();
             }
         }
 
@@ -586,7 +610,7 @@ class FireworksSystem {
             }
         }
 
-        // 4. Update & Draw Particles (Batch render)
+        // 4. Update & Draw Particles (Batch render + O(1) swap-pop removal)
         const activeMaxParticles = this.isFrenzyRunning
             ? Math.max(this.maxParticles, (this.manualConfig && this.manualConfig.maxParticles) || 4500)
             : this.maxParticles;
@@ -609,12 +633,14 @@ class FireworksSystem {
             }
 
             if (p.isDead()) {
-                this.particles.splice(i, 1);
+                const last = this.particles.length - 1;
+                if (i !== last) this.particles[i] = this.particles[last];
+                this.particles.pop();
             }
         }
 
         this.ctx.globalAlpha = 1;
-        this.animFrameId = requestAnimationFrame(() => this.animate());
+        this.animFrameId = requestAnimationFrame((t) => this.animate(t));
     }
 }
 
@@ -719,9 +745,8 @@ class RocketSpark {
         if (this.alpha <= 0) return;
         ctx.globalAlpha = this.alpha;
         ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
+        const d = this.size * 1.8;
+        ctx.fillRect(this.x - d * 0.5, this.y - d * 0.5, d, d);
     }
 
     isDead() {
@@ -847,12 +872,11 @@ class RichParticle {
         ctx.lineWidth = isLight ? this.size * 1.15 : this.size;
         ctx.stroke();
 
-        // Sparkle tip head
+        // Sparkle tip head (fast GPU rect blit instead of per-particle arc rasterization)
         if (this.type === 'willow' || this.type === 'strobe' || this.type === 'heart') {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size * 0.65, 0, Math.PI * 2);
+            const tip = this.size * 1.25;
             ctx.fillStyle = isLight ? '#FEF08A' : '#FFFFFF';
-            ctx.fill();
+            ctx.fillRect(this.x - tip * 0.5, this.y - tip * 0.5, tip, tip);
         }
     }
 

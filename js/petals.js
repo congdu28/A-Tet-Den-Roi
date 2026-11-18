@@ -18,6 +18,7 @@ class PetalsSystem {
         this.wind = 0.3;
         this.targetWind = 0.3;
         this.animFrameId = null;
+        this.lastFrameTime = 0;
 
         // Pre-render sprite textures
         this.sprites = this.createPetalSprites();
@@ -106,12 +107,12 @@ class PetalsSystem {
 
     resize() {
         if (!this.canvas || !this.ctx) return;
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         this.width = window.innerWidth;
         this.height = window.innerHeight;
-        this.canvas.width = Math.round(this.width * dpr);
-        this.canvas.height = Math.round(this.height * dpr);
-        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        // 1x CSS resolution cuts HiDPI full-screen alpha fillrate by up to 75%
+        this.canvas.width = Math.max(1, Math.round(this.width));
+        this.canvas.height = Math.max(1, Math.round(this.height));
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
 
     syncPetalPool() {
@@ -157,33 +158,49 @@ class PetalsSystem {
     start() {
         if (this.isRunning || this.mode === 'none') return;
         this.isRunning = true;
+        this.lastFrameTime = 0;
         this.syncPetalPool();
-        this.animate();
+        this.animFrameId = requestAnimationFrame((t) => this.animate(t));
     }
 
     stop() {
         this.isRunning = false;
+        this.lastFrameTime = 0;
         if (this.animFrameId) {
             cancelAnimationFrame(this.animFrameId);
             this.animFrameId = null;
         }
     }
 
-    animate() {
+    animate(now = performance.now()) {
         if (!this.isRunning) return;
 
-        // Smooth wind interpolation
-        this.wind += (this.targetWind - this.wind) * 0.05;
+        this.animFrameId = requestAnimationFrame((t) => this.animate(t));
 
+        // Pause canvas redraws during active scroll to keep scrolling silky smooth
+        if (window.__tetScrolling) {
+            this.lastFrameTime = now;
+            return;
+        }
+
+        const elapsed = this.lastFrameTime ? (now - this.lastFrameTime) : 16.667;
+        if (this.lastFrameTime && elapsed < 15.2) return;
+        this.lastFrameTime = now;
+        const dt = Math.min(2.0, elapsed / 16.667);
+
+        // Smooth wind interpolation
+        this.wind += (this.targetWind - this.wind) * (0.05 * dt);
+
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         this.ctx.clearRect(0, 0, this.width, this.height);
 
         for (let i = 0; i < this.petals.length; i++) {
             const petal = this.petals[i];
-            petal.update(this.width, this.height, this.wind);
+            petal.update(this.width, this.height, this.wind, dt);
             petal.draw(this.ctx);
         }
 
-        this.animFrameId = requestAnimationFrame(() => this.animate());
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
 }
 
@@ -217,13 +234,13 @@ class OptimizedPetal {
         this.size = spriteObj.size;
     }
 
-    update(width, height, wind) {
-        this.swing += this.swingSpeed;
-        this.flip += this.flipSpeed;
-        this.rotation += this.rotationSpeed;
+    update(width, height, wind, dt = 1) {
+        this.swing += this.swingSpeed * dt;
+        this.flip += this.flipSpeed * dt;
+        this.rotation += this.rotationSpeed * dt;
 
-        this.x += Math.sin(this.swing) * 1.2 + wind + this.speedX;
-        this.y += this.speedY;
+        this.x += (Math.sin(this.swing) * 1.2 + wind + this.speedX) * dt;
+        this.y += this.speedY * dt;
 
         if (this.y > height + 40 || this.x < -40 || this.x > width + 40) {
             this.reset(width, height, this.type, false);
@@ -231,15 +248,11 @@ class OptimizedPetal {
     }
 
     draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rotation);
+        const cos = Math.cos(this.rotation);
+        const sin = Math.sin(this.rotation);
         const scaleX = Math.cos(this.flip);
-        ctx.scale(scaleX, 1);
-
-        // Blazing-fast GPU drawImage
+        ctx.setTransform(cos * scaleX, sin * scaleX, -sin, cos, this.x, this.y);
         ctx.drawImage(this.spriteCanvas, -this.size, -this.size);
-        ctx.restore();
     }
 }
 
