@@ -1785,7 +1785,7 @@
 
     <!-- MODAL 2: KẾT QUẢ MỞ BAO LÌ XÌ -->
     <div id="lixi-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Kết Quả Mở Bao Lì Xì">
-        <div class="modal-content" style="max-width: 480px;">
+        <div class="modal-content lixi-modal-box" style="max-width: 480px;">
             <button type="button" class="modal-close-btn" id="btn-close-lixi" title="Đóng" aria-label="Đóng">&times;</button>
             <div class="lixi-result-card">
                 <div style="font-size: 3.5rem;">🧧</div>
@@ -1804,14 +1804,15 @@
     <!-- MODAL 3: XEM LỊCH THÁNG ÂM - DƯƠNG ĐẦY ĐỦ CHUẨN XÁC -->
     <div id="lunar-calendar-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Lịch Vạn Niên Âm Dương">
         <div class="modal-content lunar-calendar-box">
-            <button type="button" class="modal-close-btn fortune-modal-close" id="btn-close-calendar" title="Đóng lịch" aria-label="Đóng">&#x2715;</button>
-            
-            <div class="lunar-cal-header">
+            <div class="lunar-cal-modal-header">
+                <button type="button" class="modal-close-btn fortune-modal-close" id="btn-close-calendar" title="Đóng lịch" aria-label="Đóng">&#x2715;</button>
                 <div class="cal-title-row">
                     <div class="cal-main-title">🗓️ Lịch Vạn Niên Âm - Dương</div>
                     <div class="cal-sub-title">Tra cứu ngày Hoàng Đạo, Âm - Dương, Tiết Khí và đầy đủ Ngày Lễ - Kỷ Niệm Việt Nam chuẩn xác</div>
                 </div>
+            </div>
 
+            <div class="lunar-cal-scroll-body">
                 <!-- Điều hướng tháng & năm -->
                 <div class="cal-nav-toolbar">
                     <div class="cal-toolbar-left">
@@ -1841,30 +1842,30 @@
                         </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Khung Lịch 7 Cột -->
-            <div class="cal-calendar-table">
-                <div class="cal-weekday-header">
-                    <div>Thứ 2</div>
-                    <div>Thứ 3</div>
-                    <div>Thứ 4</div>
-                    <div>Thứ 5</div>
-                    <div>Thứ 6</div>
-                    <div class="weekend-head">Thứ 7</div>
-                    <div class="sunday-head">Chủ Nhật</div>
+                <!-- Khung Lịch 7 Cột -->
+                <div class="cal-calendar-table">
+                    <div class="cal-weekday-header">
+                        <div>Thứ 2</div>
+                        <div>Thứ 3</div>
+                        <div>Thứ 4</div>
+                        <div>Thứ 5</div>
+                        <div>Thứ 6</div>
+                        <div class="weekend-head">Thứ 7</div>
+                        <div class="sunday-head">Chủ Nhật</div>
+                    </div>
+                    <div class="cal-days-grid" id="cal-days-grid">
+                        <!-- Được sinh tự động bởi TetLunarCalendar -->
+                    </div>
                 </div>
-                <div class="cal-days-grid" id="cal-days-grid">
-                    <!-- Được sinh tự động bởi TetLunarCalendar -->
+
+                <!-- Danh sách nhanh các Ngày Lễ & Sự Kiện trong tháng đang xem -->
+                <div class="cal-month-events-bar" id="cal-month-events-bar"></div>
+
+                <!-- Khung Chi Tiết Ngày Đã Chọn -->
+                <div class="cal-selected-day-details" id="cal-selected-day-details">
+                    <!-- Được render tự động qua lunar.js -->
                 </div>
-            </div>
-
-            <!-- Danh sách nhanh các Ngày Lễ & Sự Kiện trong tháng đang xem -->
-            <div class="cal-month-events-bar" id="cal-month-events-bar"></div>
-
-            <!-- Khung Chi Tiết Ngày Đã Chọn -->
-            <div class="cal-selected-day-details" id="cal-selected-day-details">
-                <!-- Được render tự động qua lunar.js -->
             </div>
         </div>
     </div>
