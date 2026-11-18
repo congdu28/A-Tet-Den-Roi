@@ -233,8 +233,13 @@
             return { name: '28 Tết - Nấu Bánh Chưng Xanh', icon: '🎋', type: 'tet-milestone' };
         }
         if (lunarM === 12 && (lunarD === 29 || lunarD === 30)) {
-            const nextSolar = jdToDate(lunar.jd + 1);
-            const nextLunar = convertSolar2Lunar(nextSolar[0], nextSolar[1], nextSolar[2], 7);
+            const nextDate = new Date(Date.UTC(solarY, solarM - 1, solarD + 1));
+            const nextLunar = convertSolar2Lunar(
+                nextDate.getUTCDate(),
+                nextDate.getUTCMonth() + 1,
+                nextDate.getUTCFullYear(),
+                7
+            );
             if (!nextLunar.isLeap && nextLunar.month === 1 && nextLunar.day === 1) {
                 return { name: `${lunarD} Tháng Chạp - Tất Niên & Đêm Giao Thừa`, icon: '🎆', type: 'tet-highlight' };
             }
