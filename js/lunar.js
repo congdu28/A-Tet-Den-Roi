@@ -350,45 +350,610 @@
         return TIET_KHI[(termIndex % 24 + 24) % 24];
     }
 
-    // Special Tet Milestones mapping (Lunar MM-DD or Solar YYYY-MM-DD)
-    function getTetEventTag(solarD, solarM, solarY, lunar) {
-        if (solarY === 2027 && solarM === 1 && solarD === 23) {
-            return { name: 'Year End Party Pancake 2027', icon: '🥂', type: 'tet-milestone' };
+    // Fixed Solar Holidays & Commemorative Days in Vietnam (key: 'MM-DD')
+    const SOLAR_HOLIDAYS_VI = {
+        '01-01': {
+            name: 'Tết Dương lịch',
+            shortName: 'Tết Dương lịch',
+            icon: '🎆',
+            type: 'tet-king',
+            isDayOff: true,
+            note: 'Nghỉ lễ chính thức 01 ngày hưởng nguyên lương'
+        },
+        '01-09': {
+            name: 'Ngày Truyền thống Học sinh - Sinh viên Việt Nam',
+            shortName: 'HS - Sinh viên VN',
+            icon: '🎓',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Kỷ niệm phong trào Học sinh - Sinh viên Việt Nam (09/01/1950)'
+        },
+        '02-03': {
+            name: 'Ngày thành lập Đảng Cộng sản Việt Nam',
+            shortName: 'Thành lập Đảng',
+            icon: '🚩',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Kỷ niệm thành lập Đảng Cộng sản Việt Nam (03/02/1930)'
+        },
+        '02-14': {
+            name: 'Lễ Tình nhân (Valentine)',
+            shortName: 'Valentine 14/2',
+            icon: '💝',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Ngày lễ tôn vinh tình yêu đôi lứa'
+        },
+        '02-27': {
+            name: 'Ngày Thầy thuốc Việt Nam',
+            shortName: 'Thầy thuốc VN',
+            icon: '🩺',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Tôn vinh đội ngũ y bác sĩ và ngành Y tế Việt Nam (27/02/1955)'
+        },
+        '03-03': {
+            name: 'Ngày Truyền thống Bộ đội Biên phòng',
+            shortName: 'Bộ đội Biên phòng',
+            icon: '🛡️',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Ngày Biên phòng toàn dân & Truyền thống Bộ đội Biên phòng (03/03/1959)'
+        },
+        '03-08': {
+            name: 'Ngày Quốc tế Phụ nữ (8/3)',
+            shortName: 'Quốc tế Phụ nữ',
+            icon: '🌷',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Tôn vinh quyền bình đẳng và vẻ đẹp của phụ nữ trên toàn thế giới'
+        },
+        '03-20': {
+            name: 'Ngày Quốc tế Hạnh phúc',
+            shortName: 'Quốc tế Hạnh phúc',
+            icon: '😊',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Ngày Quốc tế Hạnh phúc do Liên Hợp Quốc khởi xướng (20/3)'
+        },
+        '03-26': {
+            name: 'Ngày thành lập Đoàn TNCS Hồ Chí Minh',
+            shortName: 'Thành lập Đoàn',
+            icon: '🎽',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Kỷ niệm thành lập Đoàn Thanh niên Cộng sản Hồ Chí Minh (26/03/1931)'
+        },
+        '03-27': {
+            name: 'Ngày Thể thao Việt Nam',
+            shortName: 'Thể thao VN',
+            icon: '🏃',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Ngày truyền thống ngành Thể dục Thể thao Việt Nam (27/03/1946)'
+        },
+        '04-01': {
+            name: 'Ngày Cá tháng Tư (April Fools\' Day)',
+            shortName: 'Cá tháng Tư',
+            icon: '🃏',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Ngày hội vui vẻ quốc tế đầu tháng Tư'
+        },
+        '04-21': {
+            name: 'Ngày Sách và Văn hóa đọc Việt Nam',
+            shortName: 'Ngày Sách VN',
+            icon: '📖',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Lan tỏa tri thức và phong trào đọc sách toàn dân (21/4)'
+        },
+        '04-22': {
+            name: 'Ngày Trái Đất (Earth Day)',
+            shortName: 'Ngày Trái Đất',
+            icon: '🌍',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Chung tay bảo vệ thiên nhiên và môi trường sống toàn cầu'
+        },
+        '04-30': {
+            name: 'Ngày Giải phóng miền Nam, Thống nhất đất nước',
+            shortName: 'Giải phóng 30/4',
+            icon: '🇻🇳',
+            type: 'tet-king',
+            isDayOff: true,
+            note: 'Nghỉ lễ chính thức 01 ngày hưởng nguyên lương (30/04/1975)'
+        },
+        '05-01': {
+            name: 'Ngày Quốc tế Lao động',
+            shortName: 'Quốc tế Lao động',
+            icon: '🛠️',
+            type: 'tet-king',
+            isDayOff: true,
+            note: 'Nghỉ lễ chính thức 01 ngày hưởng nguyên lương (1/5)'
+        },
+        '05-07': {
+            name: 'Ngày Chiến thắng Điện Biên Phủ',
+            shortName: 'Chiến thắng Điện Biên',
+            icon: '⭐',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Kỷ niệm Chiến thắng lịch sử Điện Biên Phủ lừng lẫy năm châu (07/05/1954)'
+        },
+        '05-15': {
+            name: 'Ngày thành lập Đội Thiếu niên Tiền phong Hồ Chí Minh',
+            shortName: 'Thành lập Đội TNTP',
+            icon: '🧣',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Kỷ niệm thành lập Đội TNTP Hồ Chí Minh (15/05/1941)'
+        },
+        '05-19': {
+            name: 'Ngày sinh Chủ tịch Hồ Chí Minh',
+            shortName: 'Sinh nhật Bác Hồ',
+            icon: '🪷',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Kỷ niệm ngày sinh Chủ tịch Hồ Chí Minh kính yêu (19/05/1890)'
+        },
+        '06-01': {
+            name: 'Ngày Quốc tế Thiếu nhi',
+            shortName: 'Quốc tế Thiếu nhi',
+            icon: '🎈',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Ngày Tết Thiếu nhi — Chăm sóc, bảo vệ và yêu thương trẻ em'
+        },
+        '06-05': {
+            name: 'Ngày Bác Hồ ra đi tìm đường cứu nước & Ngày Môi trường Thế giới',
+            shortName: 'Bác tìm đường cứu nước',
+            icon: '🚢',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Kỷ niệm sự kiện tại Bến cảng Nhà Rồng (05/06/1911) & Ngày Môi trường Thế giới'
+        },
+        '06-21': {
+            name: 'Ngày Báo chí Cách mạng Việt Nam',
+            shortName: 'Báo chí CMVN',
+            icon: '📰',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Kỷ niệm ngày xuất bản báo Thanh Niên (21/06/1925) — Tôn vinh người làm báo'
+        },
+        '06-28': {
+            name: 'Ngày Gia đình Việt Nam',
+            shortName: 'Gia đình Việt Nam',
+            icon: '👨‍👩‍👧‍👦',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Gìn giữ và tôn vinh giá trị văn hóa gia đình Việt Nam ấm no, hạnh phúc'
+        },
+        '07-27': {
+            name: 'Ngày Thương binh - Liệt sĩ',
+            shortName: 'Thương binh - Liệt sĩ',
+            icon: '🕯️',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Đạo lý "Uống nước nhớ nguồn" — Tri ân các Anh hùng Liệt sĩ & Thương bệnh binh'
+        },
+        '07-28': {
+            name: 'Ngày thành lập Công đoàn Việt Nam',
+            shortName: 'Công đoàn VN',
+            icon: '🤝',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Kỷ niệm thành lập tổ chức Công đoàn Việt Nam (28/07/1929)'
+        },
+        '08-19': {
+            name: 'Ngày Cách mạng Tháng Tám thành công & Ngày truyền thống CAND',
+            shortName: 'Cách mạng Tháng Tám',
+            icon: '⭐',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Kỷ niệm Tổng khởi nghĩa Cách mạng Tháng Tám (19/08/1945) & Ngày truyền thống Công an nhân dân'
+        },
+        '09-02': {
+            name: 'Ngày Quốc khánh nước CHXHCN Việt Nam',
+            shortName: 'Quốc khánh 2/9',
+            icon: '🇻🇳',
+            type: 'tet-king',
+            isDayOff: true,
+            note: 'Nghỉ lễ chính thức 02 ngày hưởng nguyên lương (02/9 và 01 ngày liền kề trước hoặc sau)'
+        },
+        '10-01': {
+            name: 'Ngày Quốc tế Người cao tuổi',
+            shortName: 'Người cao tuổi',
+            icon: '🧓',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Kính lão đắc thọ — Quan tâm, phụng dưỡng người cao tuổi Việt Nam'
+        },
+        '10-10': {
+            name: 'Ngày Giải phóng Thủ đô & Ngày Chuyển đổi số Quốc gia',
+            shortName: 'Giải phóng Thủ đô',
+            icon: '🏛️',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Kỷ niệm Giải phóng Thủ đô Hà Nội (10/10/1954) & Ngày Chuyển đổi số Quốc gia'
+        },
+        '10-13': {
+            name: 'Ngày Doanh nhân Việt Nam',
+            shortName: 'Doanh nhân VN',
+            icon: '💼',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Tôn vinh đội ngũ doanh nhân đóng góp xây dựng kinh tế đất nước (13/10)'
+        },
+        '10-14': {
+            name: 'Ngày thành lập Hội Nông dân Việt Nam',
+            shortName: 'Hội Nông dân VN',
+            icon: '🌾',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Kỷ niệm thành lập Hội Nông dân Việt Nam (14/10/1930)'
+        },
+        '10-20': {
+            name: 'Ngày Phụ nữ Việt Nam (20/10)',
+            shortName: 'Phụ nữ Việt Nam',
+            icon: '💐',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Kỷ niệm thành lập Hội Liên hiệp Phụ nữ Việt Nam (20/10/1930) — Tôn vinh phụ nữ Việt'
+        },
+        '10-31': {
+            name: 'Lễ hội Hóa trang (Halloween)',
+            shortName: 'Halloween',
+            icon: '🎃',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Lễ hội hóa trang quốc tế tối 31/10'
+        },
+        '11-09': {
+            name: 'Ngày Pháp luật nước CHXHCN Việt Nam',
+            shortName: 'Ngày Pháp luật VN',
+            icon: '⚖️',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Thượng tôn Hiến pháp và pháp luật Việt Nam (09/11)'
+        },
+        '11-18': {
+            name: 'Ngày Truyền thống Mặt trận Tổ quốc Việt Nam',
+            shortName: 'Đại đoàn kết dân tộc',
+            icon: '🤝',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Ngày hội Đại đoàn kết toàn dân tộc ở khu dân cư (18/11/1930)'
+        },
+        '11-19': {
+            name: 'Ngày Quốc tế Nam giới (19/11)',
+            shortName: 'Quốc tế Nam giới',
+            icon: '👔',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Tôn vinh vai trò và đóng góp tích cực của nam giới trong gia đình & xã hội'
+        },
+        '11-20': {
+            name: 'Ngày Nhà giáo Việt Nam (20/11)',
+            shortName: 'Nhà giáo Việt Nam',
+            icon: '👩‍🏫',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Truyền thống "Tôn sư trọng đạo" — Tri ân các thế hệ nhà giáo Việt Nam'
+        },
+        '11-23': {
+            name: 'Ngày Di sản Văn hóa Việt Nam & Thành lập Hội Chữ thập đỏ VN',
+            shortName: 'Di sản Văn hóa VN',
+            icon: '🏺',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Bảo tồn di sản văn hóa dân tộc & Kỷ niệm Hội Chữ thập đỏ Việt Nam (23/11)'
+        },
+        '12-22': {
+            name: 'Ngày thành lập Quân đội Nhân dân Việt Nam',
+            shortName: 'Quân đội Nhân dân VN',
+            icon: '🎖️',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Kỷ niệm thành lập QĐND Việt Nam (22/12/1944) & Ngày hội Quốc phòng toàn dân'
+        },
+        '12-24': {
+            name: 'Đêm Giáng sinh (Christmas Eve)',
+            shortName: 'Đêm Giáng sinh',
+            icon: '🎄',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Đêm vọng Lễ Giáng sinh sum vầy, an lành'
+        },
+        '12-25': {
+            name: 'Lễ Giáng sinh (Noel)',
+            shortName: 'Lễ Giáng sinh',
+            icon: '🎅',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Lễ Giáng sinh an lành, ấm áp bên gia đình và người thân'
+        },
+        '12-31': {
+            name: 'Đêm Giao thừa Dương lịch (New Year\'s Eve)',
+            shortName: 'Tất niên Dương lịch',
+            icon: '🥂',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Khép lại năm cũ, đếm ngược chào đón năm mới Dương lịch'
         }
-        if (!lunar || lunar.isLeap) return null;
-        const lunarD = lunar.day;
-        const lunarM = lunar.month;
-        if (lunarM === 12 && lunarD === 23) {
-            return { name: '23 Tháng Chạp - Cúng Tiễn Ông Táo', icon: '🐟', type: 'tet-milestone' };
+    };
+
+    // Traditional Vietnamese Lunar Holidays & Festivals (key: 'MM-DD', non-leap months only)
+    const LUNAR_HOLIDAYS_VI = {
+        '01-01': {
+            name: 'Mùng 1 Tết Nguyên Đán (Tết Cha)',
+            shortName: 'Mùng 1 Tết',
+            icon: '🧧',
+            type: 'tet-king',
+            isDayOff: true,
+            note: 'Nghỉ lễ Tết Nguyên đán chính thức hưởng nguyên lương'
+        },
+        '01-02': {
+            name: 'Mùng 2 Tết Nguyên Đán (Tết Mẹ)',
+            shortName: 'Mùng 2 Tết',
+            icon: '🌸',
+            type: 'tet-king',
+            isDayOff: true,
+            note: 'Nghỉ lễ Tết Nguyên đán chính thức hưởng nguyên lương'
+        },
+        '01-03': {
+            name: 'Mùng 3 Tết Nguyên Đán (Tết Thầy)',
+            shortName: 'Mùng 3 Tết',
+            icon: '📚',
+            type: 'tet-king',
+            isDayOff: true,
+            note: 'Nghỉ lễ Tết Nguyên đán chính thức hưởng nguyên lương'
+        },
+        '01-04': {
+            name: 'Mùng 4 Tết Nguyên Đán (Lễ Hóa Vàng)',
+            shortName: 'Mùng 4 Tết',
+            icon: '🌼',
+            type: 'tet-highlight',
+            isDayOff: true,
+            note: 'Lễ Hóa vàng tiễn gia tiên & Trong kỳ nghỉ Tết Nguyên đán chính thức (5 ngày)'
+        },
+        '01-05': {
+            name: 'Mùng 5 Tết — Chiến thắng Ngọc Hồi - Đống Đa',
+            shortName: 'Mùng 5 Tết Đống Đa',
+            icon: '🐉',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Kỷ niệm đại thắng Ngọc Hồi - Đống Đa mùa Xuân Kỷ Dậu 1789 & Khai xuân đầu năm'
+        },
+        '01-10': {
+            name: 'Ngày vía Thần Tài (Mùng 10 tháng Giêng)',
+            shortName: 'Vía Thần Tài',
+            icon: '🪙',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Cầu tài lộc, mua bán hanh thông, sung túc suốt cả năm'
+        },
+        '01-15': {
+            name: 'Rằm Tháng Giêng — Tết Nguyên Tiêu',
+            shortName: 'Tết Nguyên Tiêu',
+            icon: '🏮',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Lễ Thượng Nguyên — Đêm trăng tròn viên mãn đầu tiên của năm mới'
+        },
+        '03-03': {
+            name: 'Tết Hàn Thực (Bánh trôi - Bánh chay)',
+            shortName: 'Tết Hàn Thực',
+            icon: '🍡',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Phong tục dâng bánh trôi, bánh chay thanh tịnh hướng về cội nguồn (3/3 ÂL)'
+        },
+        '03-10': {
+            name: 'Giỗ Tổ Hùng Vương (Mùng 10 tháng 3 Âm lịch)',
+            shortName: 'Giỗ Tổ Hùng Vương',
+            icon: '🏛️',
+            type: 'tet-king',
+            isDayOff: true,
+            note: 'Quốc giỗ dân tộc Việt Nam — Nghỉ lễ chính thức 01 ngày hưởng nguyên lương'
+        },
+        '04-15': {
+            name: 'Đại lễ Phật Đản (Rằm tháng Tư)',
+            shortName: 'Lễ Phật Đản',
+            icon: '🪷',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Kỷ niệm ngày Đức Phật Thích Ca Mâu Ni đản sinh (15/4 ÂL)'
+        },
+        '05-05': {
+            name: 'Tết Đoan Ngọ (Mùng 5 tháng 5 Âm lịch)',
+            shortName: 'Tết Đoan Ngọ',
+            icon: '🍙',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Tết Đoan Ngọ cổ truyền ("diệt sâu bọ", thưởng thức rượu nếp, bánh ú tro, trái cây)'
+        },
+        '07-07': {
+            name: 'Lễ Thất Tịch (Ngưu Lang - Chức Nữ)',
+            shortName: 'Lễ Thất Tịch',
+            icon: '🌌',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Ngày lễ tình duyên truyền thống phương Đông (Mùng 7 tháng 7 ÂL)'
+        },
+        '07-15': {
+            name: 'Lễ Vu Lan Báo Hiếu — Rằm tháng Bảy',
+            shortName: 'Lễ Vu Lan',
+            icon: '🪷',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Mùa Vu Lan hiếu hạnh tri ân cha mẹ & Lễ Xá tội vong nhân (15/7 ÂL)'
+        },
+        '08-15': {
+            name: 'Tết Trung Thu (Tết Đoàn Viên)',
+            shortName: 'Tết Trung Thu',
+            icon: '🥮',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Rằm tháng Tám rước đèn, trông trăng, phá cỗ sum họp gia đình'
+        },
+        '09-09': {
+            name: 'Tết Trùng Cửu (Mùng 9 tháng 9 Âm lịch)',
+            shortName: 'Tết Trùng Cửu',
+            icon: '🌼',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Tết Trùng Dương cầu sức khỏe, trường thọ cho ông bà cha mẹ'
+        },
+        '10-10': {
+            name: 'Tết Trùng Thập (Tết Cơm Mới)',
+            shortName: 'Tết Cơm Mới',
+            icon: '🌾',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Tết Cơm Mới mừng mùa màng thu hoạch & Ngày truyền thống Y học cổ truyền'
+        },
+        '10-15': {
+            name: 'Tết Hạ Nguyên (Rằm tháng Mười)',
+            shortName: 'Tết Hạ Nguyên',
+            icon: '🌕',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Lễ Tạ ơn trời đất và tổ tiên ban phước mùa màng bình an (15/10 ÂL)'
+        },
+        '12-23': {
+            name: 'Lễ cúng Ông Công Ông Táo (23 tháng Chạp)',
+            shortName: 'Ông Công Ông Táo',
+            icon: '🐟',
+            type: 'tet-highlight',
+            isDayOff: false,
+            note: 'Tiễn Táo Quân cưỡi cá chép chầu trời báo cáo việc gia đạo cuối năm'
+        },
+        '12-28': {
+            name: '28 Tết — Gói & Nấu Bánh Chưng Xanh',
+            shortName: '28 Tết Bánh Chưng',
+            icon: '🎋',
+            type: 'tet-milestone',
+            isDayOff: false,
+            note: 'Sắm sửa đào mai, quây quần bên bếp lửa nấu bánh chưng bánh tét đón Tết'
         }
-        if (lunarM === 12 && lunarD === 28) {
-            return { name: '28 Tết - Nấu Bánh Chưng Xanh', icon: '🎋', type: 'tet-milestone' };
-        }
-        if (lunarM === 12 && (lunarD === 29 || lunarD === 30)) {
-            const nextDate = new Date(Date.UTC(solarY, solarM - 1, solarD + 1));
-            const nextLunar = convertSolar2Lunar(
-                nextDate.getUTCDate(),
-                nextDate.getUTCMonth() + 1,
-                nextDate.getUTCFullYear(),
-                7
-            );
-            if (!nextLunar.isLeap && nextLunar.month === 1 && nextLunar.day === 1) {
-                return { name: `${lunarD} Tháng Chạp - Tất Niên & Đêm Giao Thừa`, icon: '🎆', type: 'tet-highlight' };
+    };
+
+    const EVENT_TYPE_RANK = {
+        'tet-king': 3,
+        'tet-highlight': 2,
+        'tet-milestone': 1
+    };
+
+    /**
+     * Returns ALL Lunar & Solar holidays/events falling on a given Solar date, sorted by importance.
+     */
+    function getCalendarEventsForDay(solarD, solarM, solarY, lunarInput = null) {
+        const lunar = lunarInput || convertSolar2Lunar(solarD, solarM, solarY, 7);
+        const events = [];
+
+        // 1. Lunar Holidays (only on non-leap Lunar months)
+        if (lunar && !lunar.isLeap) {
+            const lunarKey = `${String(lunar.month).padStart(2, '0')}-${String(lunar.day).padStart(2, '0')}`;
+            if (LUNAR_HOLIDAYS_VI[lunarKey]) {
+                events.push({
+                    ...LUNAR_HOLIDAYS_VI[lunarKey],
+                    calendarSystem: 'lunar'
+                });
+            }
+
+            // Giao Thừa dynamically lands on 29 or 30 Tháng Chạp depending on astronomical lunar month length
+            if (lunar.month === 12 && (lunar.day === 29 || lunar.day === 30)) {
+                const [nd, nm, ny] = jdToDate(lunar.jd + 1);
+                const nextLunar = convertSolar2Lunar(nd, nm, ny, 7);
+                if (!nextLunar.isLeap && nextLunar.month === 1 && nextLunar.day === 1) {
+                    events.push({
+                        name: `${lunar.day} Tháng Chạp — Lễ Tất Niên & Đêm Giao Thừa`,
+                        shortName: 'Tất Niên & Giao Thừa',
+                        icon: '🎆',
+                        type: 'tet-king',
+                        isDayOff: true,
+                        calendarSystem: 'lunar',
+                        note: 'Đêm Giao Thừa thiêng liêng đón năm mới & Nghỉ lễ Tết Nguyên đán chính thức'
+                    });
+                }
             }
         }
-        if (lunarM === 1 && lunarD === 1) {
-            return { name: 'MÙNG 1 TẾT NGUYÊN ĐÁN (Tết Cha)', icon: '🧧', type: 'tet-king' };
+
+        // 2. Fixed Solar Holidays & Commemorative Days
+        const solarKey = `${String(solarM).padStart(2, '0')}-${String(solarD).padStart(2, '0')}`;
+        if (SOLAR_HOLIDAYS_VI[solarKey]) {
+            events.push({
+                ...SOLAR_HOLIDAYS_VI[solarKey],
+                calendarSystem: 'solar'
+            });
         }
-        if (lunarM === 1 && lunarD === 2) {
-            return { name: 'MÙNG 2 TẾT (Tết Mẹ)', icon: '🌸', type: 'tet-king' };
+
+        // 3. Ngày Văn hóa Việt Nam (24/11) — New statutory paid public holiday effective nationwide from 2026!
+        if (solarM === 11 && solarD === 24) {
+            const isEffectivePublicHoliday = solarY >= 2026;
+            events.push({
+                name: 'Ngày Văn hóa Việt Nam (24/11)',
+                shortName: 'Ngày Văn hóa VN',
+                icon: '🏛️',
+                type: isEffectivePublicHoliday ? 'tet-king' : 'tet-milestone',
+                isDayOff: isEffectivePublicHoliday,
+                calendarSystem: 'solar',
+                note: isEffectivePublicHoliday
+                    ? 'Nghỉ lễ chính thức 01 ngày hưởng nguyên lương (áp dụng toàn quốc từ năm 2026 theo Nghị quyết của Quốc hội)'
+                    : 'Ngày Văn hóa Việt Nam (từ năm 2026 chính thức là ngày nghỉ lễ hưởng nguyên lương toàn quốc)'
+            });
         }
-        if (lunarM === 1 && lunarD === 3) {
-            return { name: 'MÙNG 3 TẾT (Tết Thầy)', icon: '📚', type: 'tet-king' };
+
+        // 4. Floating Solar Holidays (Mother's Day = 2nd Sunday of May; Father's Day = 3rd Sunday of June)
+        const dow = new Date(Date.UTC(solarY, solarM - 1, solarD)).getUTCDay(); // 0 = Sunday
+        if (dow === 0 && solarM === 5 && solarD >= 8 && solarD <= 14) {
+            events.push({
+                name: 'Ngày của Mẹ (Mother\'s Day)',
+                shortName: 'Ngày của Mẹ',
+                icon: '🤱',
+                type: 'tet-milestone',
+                isDayOff: false,
+                calendarSystem: 'solar',
+                note: 'Chủ nhật thứ 2 của tháng 5 — Tri ân công ơn sinh thành dưỡng dục của Mẹ'
+            });
         }
-        if (lunarM === 1 && lunarD === 15) {
-            return { name: 'Rằm Tháng Giêng (Tết Nguyên Tiêu)', icon: '🏮', type: 'tet-milestone' };
+        if (dow === 0 && solarM === 6 && solarD >= 15 && solarD <= 21) {
+            events.push({
+                name: 'Ngày của Cha (Father\'s Day)',
+                shortName: 'Ngày của Cha',
+                icon: '👨‍👧',
+                type: 'tet-milestone',
+                isDayOff: false,
+                calendarSystem: 'solar',
+                note: 'Chủ nhật thứ 3 của tháng 6 — Tôn vinh tình yêu thương và sự hy sinh của Cha'
+            });
         }
-        return null;
+
+        // 5. Special 2027 Event
+        if (solarY === 2027 && solarM === 1 && solarD === 23) {
+            events.push({
+                name: 'Year End Party Pancake 2027',
+                shortName: 'YEP Pancake 2027',
+                icon: '🥂',
+                type: 'tet-highlight',
+                isDayOff: false,
+                calendarSystem: 'solar',
+                note: 'Đại tiệc tổng kết cuối năm Year End Party Pancake 2027'
+            });
+        }
+
+        events.sort((a, b) => {
+            if (Boolean(b.isDayOff) !== Boolean(a.isDayOff)) return b.isDayOff ? 1 : -1;
+            return (EVENT_TYPE_RANK[b.type] || 0) - (EVENT_TYPE_RANK[a.type] || 0);
+        });
+
+        return events;
+    }
+
+    // Backward-compatible primary event getter
+    function getTetEventTag(solarD, solarM, solarY, lunar) {
+        const events = getCalendarEventsForDay(solarD, solarM, solarY, lunar);
+        return events.length > 0 ? events[0] : null;
     }
 
     /**
@@ -423,6 +988,7 @@
             this.nextBtn = document.getElementById('btn-cal-next-month');
             this.todayBtn = document.getElementById('btn-cal-today');
             this.tetJumpBtn = document.getElementById('btn-cal-tet');
+            this.monthEventsBar = document.getElementById('cal-month-events-bar');
             this.detailBox = document.getElementById('cal-selected-day-details');
         }
 
@@ -621,6 +1187,7 @@
             const todayD = vnToday.day;
             const todayM = vnToday.month;
             const todayY = vnToday.year;
+            const monthEvents = [];
 
             // Total 42 cells (6 rows x 7 days)
             for (let i = 0; i < 42; i++) {
@@ -659,7 +1226,21 @@
                 const hoangDaoCell = getHoangDaoDay(lunar.month, canChiCell.chi);
                 const isToday = (cellDay === todayD && cellMonth === todayM && cellYear === todayY);
                 const isSelected = (cellDay === this.selectedDate.day && cellMonth === this.selectedDate.month && cellYear === this.selectedDate.year);
-                const tetTag = getTetEventTag(cellDay, cellMonth, cellYear, lunar);
+                const dayEvents = getCalendarEventsForDay(cellDay, cellMonth, cellYear, lunar);
+                const primaryEvent = dayEvents.length > 0 ? dayEvents[0] : null;
+
+                if (!isOtherMonth && dayEvents.length > 0) {
+                    dayEvents.forEach((ev) => {
+                        monthEvents.push({
+                            day: cellDay,
+                            month: cellMonth,
+                            year: cellYear,
+                            lunarDay: lunar.day,
+                            lunarMonth: lunar.month,
+                            ...ev
+                        });
+                    });
+                }
 
                 const dayCol = i % 7; // 0 = Mon, ..., 5 = Sat, 6 = Sun
                 const isWeekend = (dayCol === 5 || dayCol === 6);
@@ -670,10 +1251,14 @@
                 if (isToday) cellClasses.push('today');
                 if (isSelected) cellClasses.push('selected');
                 if (hoangDaoCell.isHoangDao) cellClasses.push('is-hoang-dao');
-                if (tetTag) cellClasses.push(tetTag.type);
+                if (primaryEvent) cellClasses.push(primaryEvent.type);
+                if (primaryEvent && primaryEvent.isDayOff) cellClasses.push('is-day-off');
                 if (isWeekend) cellClasses.push('weekend');
 
                 cell.className = cellClasses.join(' ');
+                if (dayEvents.length > 0) {
+                    cell.title = dayEvents.map(ev => `${ev.icon} ${ev.name}${ev.isDayOff ? ' (Nghỉ lễ chính thức)' : ''}`).join(' • ');
+                }
 
                 // Display text for lunar day
                 let lunarText = String(lunar.day);
@@ -681,24 +1266,33 @@
                     lunarText = `${lunar.day}/${lunar.month}${lunar.isLeap ? 'N' : ''}`;
                     cell.classList.add('lunar-mung-1');
                 } else if (lunar.day === 15) {
-                    lunarText = '15 (Rằm)';
+                    lunarText = primaryEvent ? '15' : '15 (Rằm)';
                     cell.classList.add('lunar-ram');
                 }
 
                 let badgeHtml = '';
-                if (tetTag) {
-                    badgeHtml += `<span class="cal-tet-badge" title="${tetTag.name}">${tetTag.icon}</span>`;
+                if (dayEvents.length > 0) {
+                    const iconIcons = dayEvents.slice(0, 2).map(ev => ev.icon).join('');
+                    const tooltipText = dayEvents.map(ev => `${ev.name}${ev.isDayOff ? ' (Nghỉ lễ)' : ''}`).join(' | ');
+                    badgeHtml += `<span class="cal-tet-badge" title="${tooltipText}">${iconIcons}</span>`;
                 }
                 if (hoangDaoCell.isHoangDao) {
                     badgeHtml += `<span class="cal-hoang-dao-star" title="Ngày ${hoangDaoCell.starName} (Cát Lành Đại Cát)">⭐</span>`;
                 }
+
+                const miniEventHtml = primaryEvent
+                    ? `<span class="cal-cell-event-mini ${primaryEvent.isDayOff ? 'is-holiday-off' : ''}">${primaryEvent.shortName || primaryEvent.name}</span>`
+                    : '<span></span>';
 
                 cell.innerHTML = `
                     <div class="cal-day-header">
                         <span class="cal-day-solar">${cellDay}</span>
                         <div class="cal-badges-wrap">${badgeHtml}</div>
                     </div>
-                    <div class="cal-day-lunar ${lunar.day === 1 ? 'is-first-day' : ''}">${lunarText}</div>
+                    <div class="cal-day-footer">
+                        ${miniEventHtml}
+                        <div class="cal-day-lunar ${lunar.day === 1 ? 'is-first-day' : ''}">${lunarText}</div>
+                    </div>
                 `;
 
                 cell.addEventListener('click', () => {
@@ -707,6 +1301,7 @@
                         const prevSelected = this.gridContainer.querySelector('.cal-day-cell.selected');
                         if (prevSelected) prevSelected.classList.remove('selected');
                         cell.classList.add('selected');
+                        this.syncActiveMonthEventChip();
                         this.renderSelectedDayDetails();
                     } else {
                         this.viewMonth = cellMonth;
@@ -719,7 +1314,68 @@
                 this.gridContainer.appendChild(cell);
             }
 
+            this.renderMonthEventsBar(monthEvents);
             this.renderSelectedDayDetails();
+        }
+
+        syncActiveMonthEventChip() {
+            if (!this.monthEventsBar) return;
+            const chips = this.monthEventsBar.querySelectorAll('.cal-month-event-chip');
+            chips.forEach((chip) => {
+                const d = parseInt(chip.getAttribute('data-day'), 10);
+                chip.classList.toggle(
+                    'active',
+                    d === this.selectedDate.day && this.viewMonth === this.selectedDate.month && this.viewYear === this.selectedDate.year
+                );
+            });
+        }
+
+        renderMonthEventsBar(monthEvents) {
+            if (!this.monthEventsBar) return;
+            if (!monthEvents || monthEvents.length === 0) {
+                this.monthEventsBar.innerHTML = '';
+                this.monthEventsBar.classList.add('hidden');
+                return;
+            }
+            this.monthEventsBar.classList.remove('hidden');
+            this.monthEventsBar.innerHTML = '';
+
+            const label = document.createElement('span');
+            label.className = 'cal-month-events-label';
+            label.textContent = `🎉 Ngày lễ & kỷ niệm Tháng ${String(this.viewMonth).padStart(2, '0')}:`;
+            this.monthEventsBar.appendChild(label);
+
+            const listWrap = document.createElement('div');
+            listWrap.className = 'cal-month-events-list';
+
+            monthEvents.forEach((ev) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `cal-month-event-chip ${ev.isDayOff ? 'is-day-off' : ''}`;
+                if (ev.day === this.selectedDate.day && ev.month === this.selectedDate.month && ev.year === this.selectedDate.year) {
+                    btn.classList.add('active');
+                }
+                btn.setAttribute('data-day', String(ev.day));
+                btn.title = `${String(ev.day).padStart(2, '0')}/${String(ev.month).padStart(2, '0')} — ${ev.name}${ev.note ? ' (' + ev.note + ')' : ''}`;
+
+                const dateStr = `${String(ev.day).padStart(2, '0')}/${String(ev.month).padStart(2, '0')}`;
+                const offBadge = ev.isDayOff ? '<span class="chip-off-badge">Nghỉ lễ</span>' : '';
+                btn.innerHTML = `<span class="chip-date">${dateStr}</span><span>${ev.icon} ${ev.shortName || ev.name}</span>${offBadge}`;
+
+                btn.addEventListener('click', () => {
+                    this.selectedDate = { day: ev.day, month: ev.month, year: ev.year };
+                    const cells = this.gridContainer.querySelectorAll('.cal-day-cell:not(.other-month)');
+                    this.gridContainer.querySelectorAll('.cal-day-cell.selected').forEach(c => c.classList.remove('selected'));
+                    const targetCell = cells[ev.day - 1];
+                    if (targetCell) targetCell.classList.add('selected');
+                    this.syncActiveMonthEventChip();
+                    this.renderSelectedDayDetails();
+                });
+
+                listWrap.appendChild(btn);
+            });
+
+            this.monthEventsBar.appendChild(listWrap);
         }
 
         renderSelectedDayDetails() {
@@ -731,7 +1387,7 @@
             const tietKhi = getSolarTermName(lunar.jd, 7);
             const hoangDaoInfo = getHoangDaoDay(lunar.month, canChiDay.chi);
             const hoangDaoList = HOANG_DAO_TABLE[canChiDay.chi] || [];
-            const tetTag = getTetEventTag(day, month, year, lunar);
+            const dayEvents = getCalendarEventsForDay(day, month, year, lunar);
 
             // Dynamic multi-year Tết cycle: stays on current Tết through 15/01 ÂL, then switches to next year's Tết
             const tetCycle = getTetCycleForLunar(lunar, 7);
@@ -762,12 +1418,26 @@
             const solarDayOfWeek = DAY_NAMES_VI[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
 
             let eventNoticeHtml = '';
-            if (tetTag) {
-                eventNoticeHtml = `
-                    <div class="cal-detail-event-highlight">
-                        <span>${tetTag.icon}</span> <strong>${tetTag.name}</strong>
-                    </div>
-                `;
+            if (dayEvents.length > 0) {
+                const itemsHtml = dayEvents.map((ev) => {
+                    const sysBadge = ev.isDayOff
+                        ? '<span class="cal-ev-tag is-off">🏖️ Nghỉ lễ chính thức</span>'
+                        : (ev.calendarSystem === 'lunar'
+                            ? '<span class="cal-ev-tag is-lunar">🌙 Lễ Âm lịch</span>'
+                            : '<span class="cal-ev-tag is-solar">☀️ Kỷ niệm Dương lịch</span>');
+                    const noteHtml = ev.note ? `<div class="cal-ev-note">${ev.note}</div>` : '';
+                    return `
+                        <div class="cal-detail-event-highlight ${ev.isDayOff ? 'is-day-off' : ''}">
+                            <div class="cal-ev-main-line">
+                                <span class="cal-ev-icon">${ev.icon}</span>
+                                <strong class="cal-ev-title">${ev.name}</strong>
+                                ${sysBadge}
+                            </div>
+                            ${noteHtml}
+                        </div>
+                    `;
+                }).join('');
+                eventNoticeHtml = `<div class="cal-detail-events-stack">${itemsHtml}</div>`;
             }
 
             this.detailBox.innerHTML = `
@@ -828,6 +1498,8 @@
         getTetInfoForYear,
         getTetCycleForLunar,
         getCurrentTetCycle,
+        getCalendarEventsForDay,
+        getTetEventTag,
         HOANG_DAO_TABLE
     };
     window.TetLunarCalendar = TetLunarCalendar;
