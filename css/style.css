@@ -892,19 +892,6 @@ button, input, select, textarea {
     opacity: var(--marquee-opacity);
 }
 
-/* Pause decorative CSS animations while the user is actively scrolling to preserve 100% compositor smoothness */
-body.is-scrolling .bg-marquee-track,
-body.is-scrolling .hanging-lantern,
-body.is-scrolling .hanging-lantern-corner,
-body.is-scrolling .mascot-goat,
-body.is-scrolling .progress-fill::before,
-body.is-scrolling .progress-fill::after,
-body.is-scrolling .progress-spark-head,
-body.is-scrolling .header-progress-fill::before,
-body.is-scrolling .hanging-lixi {
-    animation-play-state: paused !important;
-}
-
 .bg-marquee-layer.hidden {
     display: none;
 }
@@ -1728,6 +1715,7 @@ body.light-mode .song-dropdown-select option {
     z-index: 12;
     pointer-events: none;
     transform-origin: top center;
+    will-change: transform;
     animation: lantern-swing 4s ease-in-out infinite alternate;
 }
 
@@ -5681,6 +5669,7 @@ body.light-mode .switch-slider {
     z-index: 12;
     pointer-events: none;
     transform-origin: top center;
+    will-change: transform;
     animation: lanternSway 3.8s ease-in-out infinite alternate;
     transition: opacity 0.4s ease;
 }

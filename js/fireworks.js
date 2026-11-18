@@ -225,21 +225,16 @@ class FireworksSystem {
         const delay = Math.max(minInitialDelay, this.autoDelayBase + Math.random() * this.autoDelayRandom);
         this.autoLaunchTimer = setTimeout(() => {
             if (!this.isRunning || !this.autoFireEnabled) return;
-            // Defer background auto-shells while the user is actively scrolling
-            if (window.__tetScrolling) {
-                this.scheduleNextAutoFire(260);
-                return;
-            }
             this.launchRandomShell();
             if (this.density === 'high') {
                 if (Math.random() > 0.25) {
-                    setTimeout(() => this.isRunning && !window.__tetScrolling && this.launchRandomShell(), 140);
+                    setTimeout(() => this.isRunning && this.launchRandomShell(), 140);
                 }
                 if (Math.random() > 0.55) {
-                    setTimeout(() => this.isRunning && !window.__tetScrolling && this.launchRandomShell(), 310);
+                    setTimeout(() => this.isRunning && this.launchRandomShell(), 310);
                 }
             } else if (this.density === 'medium' && Math.random() > 0.5) {
-                setTimeout(() => this.isRunning && !window.__tetScrolling && this.launchRandomShell(), 190);
+                setTimeout(() => this.isRunning && this.launchRandomShell(), 190);
             }
             this.scheduleNextAutoFire();
         }, delay);
@@ -517,19 +512,21 @@ class FireworksSystem {
     animate(now = performance.now()) {
         if (!this.isRunning || !this.loopActive) return;
 
-        // Pause background fireworks compositing during active scroll (unless user manually triggered Frenzy)
-        if (window.__tetScrolling && !this.isFrenzyRunning) {
-            this.lastFrameTime = now;
+        // Interleave frames during active scroll (Slot 1, or full 60fps during manual Frenzy) with delta-time compensation
+        const canDraw = this.isFrenzyRunning
+            ? (!this.lastFrameTime || (now - this.lastFrameTime) >= 15.2)
+            : (typeof window.shouldDrawCanvasFrame === 'function'
+                ? window.shouldDrawCanvasFrame(now, this.lastFrameTime, 1)
+                : (!this.lastFrameTime || (now - this.lastFrameTime) >= 15.2));
+
+        if (!canDraw) {
             this.animFrameId = requestAnimationFrame((t) => this.animate(t));
             return;
         }
 
-        // Pace to ~60 FPS so 120Hz/144Hz/165Hz displays don't execute 2.5x full-screen destination-out blends
-        if (this.lastFrameTime && (now - this.lastFrameTime) < 15.2) {
-            this.animFrameId = requestAnimationFrame((t) => this.animate(t));
-            return;
-        }
+        const elapsed = this.lastFrameTime ? (now - this.lastFrameTime) : 16.667;
         this.lastFrameTime = now;
+        const dt = Math.min(2.4, elapsed / 16.667);
 
         const hasWork =
             this.fireworks.length > 0 ||
@@ -552,9 +549,11 @@ class FireworksSystem {
 
         const isLight = this.isLightMode();
 
-        // Clear canvas with graceful trail fade (higher alpha prevents 8-bit rounding residual smudges)
+        // Clear canvas with delta-time compensated trail fade so trail length stays identical at any FPS
+        const baseFade = isLight ? 0.32 : 0.22;
+        const fadeAlpha = dt === 1 ? baseFade : Math.min(0.65, 1 - Math.pow(1 - baseFade, dt));
         this.ctx.globalCompositeOperation = 'destination-out';
-        this.ctx.fillStyle = isLight ? 'rgba(0, 0, 0, 0.32)' : 'rgba(0, 0, 0, 0.22)';
+        this.ctx.fillStyle = `rgba(0, 0, 0, ${fadeAlpha.toFixed(3)})`;
         this.ctx.fillRect(0, 0, this.width, this.height);
 
         // Dark mode glows richly with additive blending; Light mode uses crisp alpha compositing so colors stay vibrant over light cards
@@ -563,7 +562,7 @@ class FireworksSystem {
         // 0. Draw Explosion Flashes
         for (let i = this.flashes.length - 1; i >= 0; i--) {
             const fl = this.flashes[i];
-            fl.update();
+            fl.update(dt);
             fl.draw(this.ctx);
             if (fl.isDead()) {
                 this.flashes.splice(i, 1);
@@ -573,7 +572,7 @@ class FireworksSystem {
         // 1. Draw Shockwave Halos
         for (let i = this.shockwaves.length - 1; i >= 0; i--) {
             const sw = this.shockwaves[i];
-            sw.update();
+            sw.update(dt);
             sw.draw(this.ctx);
             if (sw.isDead()) {
                 this.shockwaves.splice(i, 1);
@@ -583,7 +582,7 @@ class FireworksSystem {
         // 2. Draw Rocket Sparks (Comet Trail) - O(1) swap-pop removal
         for (let i = this.rocketSparks.length - 1; i >= 0; i--) {
             const sp = this.rocketSparks[i];
-            sp.update();
+            sp.update(dt);
             sp.draw(this.ctx);
             if (sp.isDead()) {
                 const last = this.rocketSparks.length - 1;
@@ -595,7 +594,7 @@ class FireworksSystem {
         // 3. Update & Draw Rockets
         for (let i = this.fireworks.length - 1; i >= 0; i--) {
             const rocket = this.fireworks[i];
-            rocket.update();
+            rocket.update(dt);
             rocket.draw(this.ctx, isLight);
 
             // Spawn richer sparks behind rocket
@@ -616,7 +615,7 @@ class FireworksSystem {
             : this.maxParticles;
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
-            p.update();
+            p.update(dt);
             p.draw(this.ctx, isLight);
 
             // Handle micro-cracklers popping mid-air
@@ -654,9 +653,9 @@ class ExplosionFlash {
         this.decay = 0.075;
     }
 
-    update() {
-        this.radius *= 1.06;
-        this.alpha -= this.decay;
+    update(dt = 1) {
+        this.radius *= Math.pow(1.06, dt);
+        this.alpha -= this.decay * dt;
     }
 
     draw(ctx) {
@@ -694,12 +693,12 @@ class AdvancedRocket {
         this.speed = (14.5 + Math.random() * 3.5) * speedBoost;
     }
 
-    update() {
+    update(dt = 1) {
         this.prevX = this.x;
         this.prevY = this.y;
-        this.speed *= 0.982;
-        this.x += Math.cos(this.angle) * this.speed;
-        this.y += Math.sin(this.angle) * this.speed;
+        this.speed *= Math.pow(0.982, dt);
+        this.x += Math.cos(this.angle) * this.speed * dt;
+        this.y += Math.sin(this.angle) * this.speed * dt;
     }
 
     draw(ctx, isLight = false) {
@@ -735,10 +734,10 @@ class RocketSpark {
         this.size = Math.random() * 2.2 + 1.3;
     }
 
-    update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.alpha -= this.decay;
+    update(dt = 1) {
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.alpha -= this.decay * dt;
     }
 
     draw(ctx) {
@@ -765,9 +764,9 @@ class ShockwaveHalo {
         this.decay = 0.04;
     }
 
-    update() {
-        this.radius += (this.maxRadius - this.radius) * 0.22;
-        this.alpha -= this.decay;
+    update(dt = 1) {
+        this.radius += (this.maxRadius - this.radius) * (1 - Math.pow(0.78, dt));
+        this.alpha -= this.decay * dt;
     }
 
     draw(ctx) {
@@ -839,19 +838,19 @@ class RichParticle {
         this.lifeTime = 0;
     }
 
-    update() {
+    update(dt = 1) {
         this.prevX = this.x;
         this.prevY = this.y;
 
-        this.vx *= this.friction;
-        this.vy *= this.friction;
-        this.vy += this.gravity;
+        const f = dt === 1 ? this.friction : Math.pow(this.friction, dt);
+        this.vx *= f;
+        this.vy = this.vy * f + this.gravity * dt;
 
-        this.x += this.vx;
-        this.y += this.vy;
-        this.alpha -= this.decay;
-        this.lifeTime++;
-        this.tick += 0.38;
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.alpha -= this.decay * dt;
+        this.lifeTime += dt;
+        this.tick += 0.38 * dt;
 
         this.readyToCrackle = this.isCrackler && !this.hasCrackled && this.lifeTime >= this.crackleAt;
     }

@@ -177,16 +177,15 @@ class PetalsSystem {
 
         this.animFrameId = requestAnimationFrame((t) => this.animate(t));
 
-        // Pause canvas redraws during active scroll to keep scrolling silky smooth
-        if (window.__tetScrolling) {
-            this.lastFrameTime = now;
-            return;
-        }
+        // Interleave frames during active scroll (Slot 1) + cap at ~60 FPS with delta-time compensation so petals never freeze
+        const canDraw = typeof window.shouldDrawCanvasFrame === 'function'
+            ? window.shouldDrawCanvasFrame(now, this.lastFrameTime, 1)
+            : (!this.lastFrameTime || (now - this.lastFrameTime) >= 15.2);
+        if (!canDraw) return;
 
         const elapsed = this.lastFrameTime ? (now - this.lastFrameTime) : 16.667;
-        if (this.lastFrameTime && elapsed < 15.2) return;
         this.lastFrameTime = now;
-        const dt = Math.min(2.0, elapsed / 16.667);
+        const dt = Math.min(2.6, elapsed / 16.667);
 
         // Smooth wind interpolation
         this.wind += (this.targetWind - this.wind) * (0.05 * dt);

@@ -299,17 +299,15 @@ class AmbientSystem {
 
         this.animFrameId = requestAnimationFrame((t) => this.animate(t));
 
-        // Yield 100% of main-thread & GPU bandwidth while the user is actively scrolling
-        if (window.__tetScrolling) {
-            this.lastFrameTime = now;
-            return;
-        }
+        // Interleave frames during active scroll (Slot 0) + cap at ~60 FPS with delta-time compensation so effects keep flowing smoothly
+        const canDraw = typeof window.shouldDrawCanvasFrame === 'function'
+            ? window.shouldDrawCanvasFrame(now, this.lastFrameTime, 0)
+            : (!this.lastFrameTime || (now - this.lastFrameTime) >= 15.2);
+        if (!canDraw) return;
 
-        // Cap at ~60 FPS and normalize delta-time so 120Hz/144Hz/165Hz displays stay smooth & cool
         const elapsed = this.lastFrameTime ? (now - this.lastFrameTime) : 16.667;
-        if (this.lastFrameTime && elapsed < 15.2) return;
         this.lastFrameTime = now;
-        const dt = Math.min(2.0, elapsed / 16.667);
+        const dt = Math.min(2.6, elapsed / 16.667);
 
         const ctx = this.ctx;
         ctx.clearRect(0, 0, this.width, this.height);

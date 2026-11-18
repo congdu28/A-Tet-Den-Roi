@@ -329,18 +329,20 @@ class TetCountdown {
                 return;
             }
 
-            if (window.__tetScrolling) {
-                lastGlitterFrame = now;
+            const canDraw = typeof window.shouldDrawCanvasFrame === 'function'
+                ? window.shouldDrawCanvasFrame(now, lastGlitterFrame, 0)
+                : (!lastGlitterFrame || (now - lastGlitterFrame) >= 15.2);
+
+            if (!canDraw) {
                 this.glitterRafId = requestAnimationFrame(tick);
                 return;
             }
 
-            if (lastGlitterFrame && (now - lastGlitterFrame) < 15.2) {
-                this.glitterRafId = requestAnimationFrame(tick);
-                return;
-            }
+            const elapsed = lastGlitterFrame ? (now - lastGlitterFrame) : 16.667;
             lastGlitterFrame = now;
+            const dt = Math.min(2.4, elapsed / 16.667);
 
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.clearRect(0, 0, this.glitterStageWidth, this.glitterStageHeight);
 
             if (!prefersReducedMotion && now - lastEmitTime > 48) {
@@ -350,25 +352,28 @@ class TetCountdown {
 
             for (let i = this.glitterParticles.length - 1; i >= 0; i--) {
                 const p = this.glitterParticles[i];
-                p.vx *= p.drag;
-                p.vy = p.vy * p.drag + p.gravity;
-                p.x += p.vx;
-                p.y += p.vy;
-                p.rot += p.rotSpeed;
-                p.twinklePhase += 0.28;
-                p.life -= p.decay;
+                const drag = dt === 1 ? p.drag : Math.pow(p.drag, dt);
+                p.vx *= drag;
+                p.vy = p.vy * drag + p.gravity * dt;
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.rot += p.rotSpeed * dt;
+                p.twinklePhase += 0.28 * dt;
+                p.life -= p.decay * dt;
 
                 if (p.life <= 0) {
-                    this.glitterParticles.splice(i, 1);
+                    const last = this.glitterParticles.length - 1;
+                    if (i !== last) this.glitterParticles[i] = this.glitterParticles[last];
+                    this.glitterParticles.pop();
                     continue;
                 }
 
                 const twinkle = 0.6 + 0.4 * Math.abs(Math.sin(p.twinklePhase));
                 const alpha = Math.max(0, Math.min(1, p.life * twinkle));
+                const cos = Math.cos(p.rot);
+                const sin = Math.sin(p.rot);
 
-                ctx.save();
-                ctx.translate(p.x, p.y);
-                ctx.rotate(p.rot);
+                ctx.setTransform(cos, sin, -sin, cos, p.x, p.y);
                 ctx.fillStyle = p.color;
 
                 // Soft additive halo without expensive Canvas 2D shadowBlur
@@ -405,8 +410,10 @@ class TetCountdown {
                 } else {
                     ctx.fillRect(-p.size * 0.7, -p.size * 0.35, p.size * 1.4, p.size * 0.7);
                 }
-                ctx.restore();
             }
+
+            ctx.globalAlpha = 1;
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
 
             if (!prefersReducedMotion || this.glitterParticles.length > 0) {
                 this.glitterRafId = requestAnimationFrame(tick);

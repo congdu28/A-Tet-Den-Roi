@@ -36,18 +36,30 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = hasOpenModal ? 'hidden' : '';
     };
 
-    // Global passive scroll-idle coordinator: pauses background decorative canvases & CSS animations during active scroll gestures
+    // Global passive scroll-interleaving coordinator: keeps all background effects running continuously
+    // during scroll by interleaving canvas updates across alternating VSync frames with delta-time compensation
     window.__tetScrolling = false;
     let globalScrollIdleTimer = null;
-    window.addEventListener('scroll', () => {
+    let lastScrollSlotNow = 0;
+    let scrollSlotParity = 0;
+
+    window.shouldDrawCanvasFrame = (now, lastFrameTime, slot = 0) => {
         if (!window.__tetScrolling) {
-            window.__tetScrolling = true;
-            document.body.classList.add('is-scrolling');
+            return !lastFrameTime || (now - lastFrameTime) >= 15.2;
         }
+        if (now - lastScrollSlotNow > 12) {
+            lastScrollSlotNow = now;
+            scrollSlotParity ^= 1;
+        }
+        if ((scrollSlotParity & 1) !== (slot & 1)) return false;
+        return !lastFrameTime || (now - lastFrameTime) >= 22;
+    };
+
+    window.addEventListener('scroll', () => {
+        window.__tetScrolling = true;
         if (globalScrollIdleTimer) clearTimeout(globalScrollIdleTimer);
         globalScrollIdleTimer = setTimeout(() => {
             window.__tetScrolling = false;
-            document.body.classList.remove('is-scrolling');
             globalScrollIdleTimer = null;
         }, 140);
     }, { passive: true });
