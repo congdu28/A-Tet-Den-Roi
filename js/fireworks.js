@@ -18,8 +18,8 @@ class FireworksSystem {
         this.rocketSparks = [];
 
         // Density level from localStorage: auto ('low'|'medium'|'high') and manual button/click ('low'|'medium'|'high'|'ultra')
-        this.density = localStorage.getItem('tet-firework-density') || 'high';
-        this.manualDensity = localStorage.getItem('tet-firework-manual-density') || 'high';
+        this.density = localStorage.getItem('tet-firework-density') || 'medium';
+        this.manualDensity = localStorage.getItem('tet-firework-manual-density') || 'ultra';
         this.updateDensityLimits();
 
         this.autoLaunchTimer = null;

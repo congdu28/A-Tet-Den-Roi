@@ -16,11 +16,11 @@ class AmbientSystem {
         this.isRunning = false;
         this.animFrameId = null;
 
-        // Settings toggles (retrieved from localStorage)
+        // Settings toggles (retrieved from localStorage; default ON except Spring Rain)
         this.showStardust = localStorage.getItem('tet-ambient-stardust') !== 'false';
         this.showLanterns = localStorage.getItem('tet-ambient-lanterns') !== 'false';
-        this.showConfetti = localStorage.getItem('tet-ambient-confetti') === 'true';
-        this.showLuckyCoins = localStorage.getItem('tet-ambient-luckycoins') === 'true';
+        this.showConfetti = localStorage.getItem('tet-ambient-confetti') !== 'false';
+        this.showLuckyCoins = localStorage.getItem('tet-ambient-luckycoins') !== 'false';
         this.showSpringRain = localStorage.getItem('tet-ambient-springrain') === 'true';
 
         // Density settings (retrieved from localStorage)

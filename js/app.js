@@ -295,11 +295,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleSpringRain = document.getElementById('toggle-ambient-springrain');
     const petalFilterSelect = document.getElementById('petal-flower-filter');
 
-    // Restore saved toggles
+    // Restore saved toggles (defaults: Stardust, Lanterns, Confetti, Lucky Coins, Hanging Lanterns = ON; Spring Rain = OFF)
     if (toggleStardust) toggleStardust.checked = localStorage.getItem('tet-ambient-stardust') !== 'false';
     if (toggleLanterns) toggleLanterns.checked = localStorage.getItem('tet-ambient-lanterns') !== 'false';
-    if (toggleConfetti) toggleConfetti.checked = localStorage.getItem('tet-ambient-confetti') === 'true';
-    if (toggleLuckyCoins) toggleLuckyCoins.checked = localStorage.getItem('tet-ambient-luckycoins') === 'true';
+    if (toggleConfetti) toggleConfetti.checked = localStorage.getItem('tet-ambient-confetti') !== 'false';
+    if (toggleLuckyCoins) toggleLuckyCoins.checked = localStorage.getItem('tet-ambient-luckycoins') !== 'false';
     if (toggleHangingLanterns) toggleHangingLanterns.checked = localStorage.getItem('tet-ambient-hanging-lanterns') !== 'false';
     if (toggleSpringRain) toggleSpringRain.checked = localStorage.getItem('tet-ambient-springrain') === 'true';
 
@@ -400,13 +400,13 @@ document.addEventListener('DOMContentLoaded', () => {
         '3': { key: 'high', label: 'Đại Tiệc Rực Rỡ 🎆' }
     };
     if (sliderFireworkDensity) {
-        const savedFwDensity = localStorage.getItem('tet-firework-density') || 'high';
+        const savedFwDensity = localStorage.getItem('tet-firework-density') || 'medium';
         const initialVal = savedFwDensity === 'low' ? '1' : savedFwDensity === 'medium' ? '2' : '3';
         sliderFireworkDensity.value = initialVal;
         if (badgeFireworkDensity) badgeFireworkDensity.textContent = fireworkDensityMap[initialVal].label;
 
         sliderFireworkDensity.addEventListener('input', (e) => {
-            const item = fireworkDensityMap[e.target.value] || fireworkDensityMap['3'];
+            const item = fireworkDensityMap[e.target.value] || fireworkDensityMap['2'];
             if (badgeFireworkDensity) badgeFireworkDensity.textContent = item.label;
             if (window.fireworks) window.fireworks.setDensity(item.key);
         });
@@ -420,14 +420,14 @@ document.addEventListener('DOMContentLoaded', () => {
         '4': { key: 'ultra', label: 'Siêu Bùng Nổ 💥' }
     };
     if (sliderFireworkManualDensity) {
-        const savedManualDensity = localStorage.getItem('tet-firework-manual-density') || 'high';
+        const savedManualDensity = localStorage.getItem('tet-firework-manual-density') || 'ultra';
         const manualValMap = { low: '1', medium: '2', high: '3', ultra: '4' };
-        const initialManualVal = manualValMap[savedManualDensity] || '3';
+        const initialManualVal = manualValMap[savedManualDensity] || '4';
         sliderFireworkManualDensity.value = initialManualVal;
         if (badgeFireworkManualDensity) badgeFireworkManualDensity.textContent = fireworkManualDensityMap[initialManualVal].label;
 
         sliderFireworkManualDensity.addEventListener('input', (e) => {
-            const item = fireworkManualDensityMap[e.target.value] || fireworkManualDensityMap['3'];
+            const item = fireworkManualDensityMap[e.target.value] || fireworkManualDensityMap['4'];
             if (badgeFireworkManualDensity) badgeFireworkManualDensity.textContent = item.label;
             if (window.fireworks) window.fireworks.setManualDensity(item.key);
         });
