@@ -7826,20 +7826,20 @@ body.light-mode .hd-pill {
    ========================================================== */
 @media (max-width: 768px) {
     .page-wrapper {
-        padding: 8px 12px 60px 12px;
+        padding: 8px 10px 56px 10px;
         max-width: 100%;
         overflow-x: hidden;
     }
 
-    /* 1. Thanh điều hướng đầu trang (Sticky Top Bar) */
+    /* 1. Thanh điều hướng đầu trang (Sticky Top Bar gọn gàng chuẩn hóa) */
     .top-nav-bar {
         position: sticky;
         top: 6px;
         z-index: 1000;
-        padding: 8px 10px;
-        border-radius: 18px;
-        gap: 8px;
-        margin-bottom: 16px;
+        padding: 7px 10px 9px 10px;
+        border-radius: 16px;
+        gap: 6px;
+        margin-bottom: 12px;
     }
 
     .brand-badge-wrap {
@@ -7847,151 +7847,182 @@ body.light-mode .hd-pill {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 5px 8px;
         flex-wrap: wrap;
     }
 
     .brand-badge {
-        font-size: 1.05rem;
+        font-size: 0.96rem;
     }
 
     .nav-datetime-badge {
-        font-size: 0.78rem;
+        font-size: 0.75rem;
         padding: 3px 10px;
     }
 
-    /* Lưới 4 nút đều tăm tắp, không bao giờ bị rớt 1 nút lẻ loi */
+    /* Lưới 4 nút gọn đều trên 1 hàng duy nhất */
     .quick-controls {
         width: 100%;
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 6px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 5px;
     }
 
     .quick-controls .btn-ctrl {
-        padding: 7px 4px;
-        font-size: 0.76rem;
+        padding: 6px 3px;
+        font-size: 0.73rem;
         display: flex;
         flex-direction: row;
         align-items: center;
         justify-content: center;
-        gap: 4px;
+        gap: 3px;
         white-space: nowrap;
         min-width: 0;
-        border-radius: 12px;
+        border-radius: 10px;
     }
 
     /* 2. Hero Header & Mascot Dê Vàng */
     .hero-header {
-        margin: 6px 0 20px 0;
+        margin: 2px 0 14px 0;
     }
 
     .mascot-goat-wrapper {
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
     }
 
     .mascot-speech-bubble {
         white-space: normal;
-        max-width: 90vw;
-        font-size: 0.82rem;
-        padding: 6px 14px;
-        margin: 0 auto 10px auto;
+        max-width: 92vw;
+        font-size: 0.8rem;
+        padding: 5px 14px;
+        margin: 0 auto 8px auto;
         text-align: center;
-        line-height: 1.4;
+        line-height: 1.38;
     }
 
     .mascot-goat {
-        font-size: 3.2rem;
+        width: 62px;
+        height: 62px;
+        font-size: 2.55rem;
     }
 
     .sub-title-spring {
-        font-size: 1.25rem;
+        font-size: 1.15rem;
         margin-bottom: 4px;
     }
 
     .main-title {
-        font-size: clamp(1.9rem, 7.5vw, 2.8rem);
+        font-size: clamp(1.85rem, 7.6vw, 2.5rem);
         line-height: 1.2;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
 
     .target-date-badge {
-        font-size: 0.8rem;
-        padding: 6px 12px;
-        gap: 4px;
+        flex-direction: column;
+        gap: 2px;
+        padding: 7px 14px;
         text-align: center;
         line-height: 1.35;
-        border-radius: 20px;
+        border-radius: 16px;
+        max-width: 100%;
     }
 
-    /* 3. Khối Đếm Ngược Chính (Countdown Box) */
+    #target-date-label {
+        font-size: 0.72rem;
+        letter-spacing: 0.4px;
+        opacity: 0.9;
+    }
+
+    #target-date-value {
+        font-size: 0.82rem;
+    }
+
+    /* 3. Khối Đếm Ngược Chính (Countdown Box - Đồng bộ cấu trúc Desktop) */
     .countdown-container {
-        padding: 16px 12px;
-        border-radius: 22px;
-        margin-bottom: 20px;
+        padding: 14px 12px;
+        border-radius: 20px;
+        margin-bottom: 18px;
     }
 
     .current-datetime-strip {
         display: flex;
         flex-direction: column;
         gap: 8px;
-        padding: 10px;
-        border-radius: 16px;
-        margin-bottom: 16px;
+        padding: 9px;
+        border-radius: 15px;
+        margin-bottom: 14px;
     }
 
     .current-datetime-left {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 6px;
+        grid-template-columns: 1fr;
+        gap: 7px;
         width: 100%;
     }
 
     .datetime-pill.time-pill,
     .datetime-pill.weather-pill {
         grid-column: 1 / -1;
-        justify-content: center;
-        padding: 7px 10px;
-        font-size: 0.85rem;
+        height: auto;
+        min-height: 40px;
+        padding: 6px 10px;
+        font-size: 0.84rem;
+        justify-content: flex-start;
+    }
+
+    .weather-pill .weather-link-main {
+        justify-content: flex-start;
+        gap: 6px;
+    }
+
+    .weather-pill .weather-cta-chip {
+        margin-left: auto;
     }
 
     .datetime-pill.solar-pill,
     .datetime-pill.lunar-pill {
         justify-content: center;
-        padding: 6px 8px;
-        font-size: 0.78rem;
-        min-height: 38px;
+        height: auto;
+        min-height: 36px;
+        padding: 6px 12px;
+        font-size: 0.82rem;
         text-align: center;
+        white-space: normal;
+        overflow: visible;
     }
 
-    .datetime-pill .pill-val {
-        font-size: 0.8rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .datetime-pill.solar-pill .pill-val,
+    .datetime-pill.lunar-pill .pill-val {
+        font-size: 0.83rem;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        line-height: 1.3;
     }
 
     .btn-lunar-calendar {
         width: 100%;
+        height: 40px;
         justify-content: center;
-        padding: 8px 12px;
+        padding: 0 12px;
         font-size: 0.84rem;
         border-radius: 12px;
     }
 
+    /* Giữ nguyên 4 cột đồng đều trên 1 hàng như bản Desktop */
     .timer-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
-        margin-bottom: 14px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 7px;
+        margin-bottom: 12px;
     }
 
     .timer-card {
-        padding: 12px 6px;
-        min-height: 96px;
-        border-radius: 16px;
+        padding: 12px 4px 10px 4px;
+        min-height: 0;
+        border-radius: 14px;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -7999,19 +8030,19 @@ body.light-mode .hd-pill {
     }
 
     .timer-number {
-        font-size: clamp(2.3rem, 8vw, 3.4rem);
-        line-height: 1;
+        font-size: clamp(1.55rem, 6.4vw, 2.25rem);
+        line-height: 1.05;
         margin-bottom: 4px;
     }
 
     .timer-label {
-        font-size: 0.74rem;
-        letter-spacing: 1px;
+        font-size: 0.65rem;
+        letter-spacing: 0.8px;
     }
 
     .timer-footer {
-        padding: 0;
-        margin-bottom: 14px;
+        padding: 10px 0 0 0;
+        margin-bottom: 12px;
         text-align: center;
     }
 
@@ -8024,8 +8055,9 @@ body.light-mode .hd-pill {
     }
 
     .year-progress-wrapper {
-        padding: 12px;
+        padding: 10px 12px 12px 12px;
         border-radius: 16px;
+        margin-top: 10px;
     }
 
     .progress-header {
@@ -8047,8 +8079,8 @@ body.light-mode .hd-pill {
     .music-player-panel {
         padding: 14px 12px;
         border-radius: 20px;
-        margin-bottom: 20px;
-        gap: 12px;
+        margin-bottom: 18px;
+        gap: 10px;
     }
 
     .player-top-row {
@@ -8105,6 +8137,7 @@ body.light-mode .hd-pill {
         justify-content: center;
         padding: 7px 12px;
         font-size: 0.8rem;
+        white-space: nowrap;
     }
 
     .volume-slider-group {
@@ -8113,7 +8146,7 @@ body.light-mode .hd-pill {
     }
 
     .volume-slider {
-        width: 60px;
+        width: 64px;
     }
 
     .player-bottom-row {
@@ -8143,7 +8176,7 @@ body.light-mode .hd-pill {
 
     /* 5. Thanh Câu Đối Di Động */
     .mobile-couplet-bar {
-        margin: 0 auto 20px auto;
+        margin: 0 auto 18px auto;
         padding: 10px 14px;
         border-radius: 14px;
     }
@@ -8161,45 +8194,42 @@ body.light-mode .hd-pill {
         display: none;
     }
 
-    /* 6. Tabs Menu Chức Năng (Tích Hợp Trong Khối Thống Nhất) */
+    /* 6. Tabs Menu Chức Năng (Lưới 2x2 hiện đủ 4 tính năng không bị che khuất) */
     .features-hub-card {
         border-radius: 20px;
-        margin-bottom: 24px;
+        margin-bottom: 22px;
     }
 
     .nav-tabs-wrapper {
-        display: flex;
-        overflow-x: auto;
-        flex-wrap: nowrap;
-        justify-content: flex-start;
-        gap: 8px;
-        padding: 10px 12px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        overflow-x: visible;
+        gap: 7px;
+        padding: 10px;
         margin-bottom: 0;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-    }
-
-    .nav-tabs-wrapper::-webkit-scrollbar {
-        display: none;
     }
 
     .nav-tab-btn {
-        flex: 0 0 auto;
-        padding: 8px 14px;
-        font-size: 0.84rem;
+        width: 100%;
+        justify-content: center;
+        padding: 9px 8px;
+        font-size: 0.8rem;
+        gap: 5px;
         white-space: nowrap;
-        border-radius: 999px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        border-radius: 14px;
     }
 
     /* 7. Các Thẻ Chức Năng Chính */
     .section-card,
     .features-hub-body .section-card {
-        padding: 18px 12px;
+        padding: 16px 12px 20px 12px;
         border-radius: 20px;
     }
 
     .section-title {
-        font-size: 1.35rem;
+        font-size: 1.32rem;
         text-align: center;
     }
 
@@ -8209,12 +8239,12 @@ body.light-mode .hd-pill {
         margin-bottom: 16px;
     }
 
-    /* Section 1: Lì Xì */
+    /* Section 1: Lì Xì (3 cột gọn gàng đồng bộ tỷ lệ Desktop) */
     .lixi-toolbar {
         flex-direction: column;
         align-items: stretch;
         gap: 10px;
-        margin-bottom: 18px;
+        margin-bottom: 16px;
     }
 
     .lixi-stat-box {
@@ -8238,35 +8268,36 @@ body.light-mode .hd-pill {
     }
 
     .lixi-tree-container {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 26px 10px;
-        padding: 26px 4px 10px 4px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 22px 8px;
+        padding: 20px 2px 8px 2px;
     }
 
     .hanging-lixi {
-        height: 172px;
-        padding: 14px 6px 10px 6px;
+        height: 148px;
+        padding: 12px 4px 8px 4px;
         border-radius: 12px;
     }
 
     .lixi-character {
-        font-size: 2rem;
+        font-size: 1.75rem;
     }
 
     .lixi-motif {
-        font-size: 1.6rem;
+        font-size: 1.35rem;
     }
 
     .lixi-footer-text {
-        font-size: 0.68rem;
-        padding: 2px 7px;
+        font-size: 0.62rem;
+        padding: 2px 6px;
+        letter-spacing: 0.4px;
     }
 
     /* Section 2: Xin Xăm */
     .fortune-filter-nav {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
-        margin-bottom: 18px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+        margin-bottom: 16px;
     }
 
     .fortune-filter-btn {
@@ -8281,7 +8312,7 @@ body.light-mode .hd-pill {
         text-align: center;
         gap: 8px;
         padding: 12px 14px;
-        margin-bottom: 20px;
+        margin-bottom: 18px;
     }
 
     .intent-text-group {
@@ -8309,6 +8340,33 @@ body.light-mode .hd-pill {
     .card-maker-grid {
         grid-template-columns: 1fr;
         gap: 18px;
+    }
+
+    .card-preview-sticky-box {
+        position: static;
+    }
+
+    .studio-tabs-nav {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .studio-tab-btn {
+        padding: 8px 6px;
+        font-size: 0.8rem;
+    }
+
+    .font-sliders-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .card-custom-header-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card-action-sub-row {
+        flex-wrap: wrap;
     }
 
     .card-motif-chips,
@@ -8369,47 +8427,73 @@ body.light-mode .hd-pill {
 /* Tinh chỉnh cho điện thoại màn hình nhỏ (<= 420px) */
 @media (max-width: 420px) {
     .page-wrapper {
-        padding: 6px 8px 60px 8px;
+        padding: 6px 8px 52px 8px;
     }
 
     .top-nav-bar {
-        padding: 8px 8px;
+        padding: 7px 8px 9px 8px;
     }
 
     .brand-badge {
-        font-size: 0.95rem;
+        font-size: 0.92rem;
     }
 
     .nav-datetime-badge {
-        font-size: 0.72rem;
-        padding: 2px 6px;
+        font-size: 0.71rem;
+        padding: 2px 8px;
     }
 
     .quick-controls .btn-ctrl {
         padding: 6px 2px;
-        font-size: 0.72rem;
+        font-size: 0.69rem;
         gap: 2px;
     }
 
     .quick-controls .btn-ctrl span:first-child {
-        font-size: 0.85rem;
+        font-size: 0.82rem;
+    }
+
+    .timer-grid {
+        gap: 5px;
+    }
+
+    .timer-card {
+        padding: 10px 3px 8px 3px;
+        border-radius: 12px;
     }
 
     .timer-number {
-        font-size: 2.1rem;
+        font-size: clamp(1.4rem, 6vw, 1.85rem);
+    }
+
+    .timer-label {
+        font-size: 0.6rem;
+        letter-spacing: 0.5px;
+    }
+
+    .nav-tab-btn {
+        font-size: 0.74rem;
+        padding: 8px 5px;
+        gap: 4px;
     }
 
     .lixi-tree-container {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px 8px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px 6px;
     }
 
     .hanging-lixi {
-        height: 160px;
+        height: 136px;
     }
 
     .fortune-filter-nav {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .fortune-filter-btn {
+        font-size: 0.74rem;
+        padding: 7px 5px;
     }
 }
 
@@ -8891,20 +8975,28 @@ html {
 
 @media (max-width: 380px) {
     .quick-controls {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 6px;
+        gap: 4px;
+    }
+    .quick-controls .btn-ctrl {
+        font-size: 0.65rem;
+        padding: 6px 2px;
     }
     .nav-clock-time {
-        font-size: 0.82rem;
+        font-size: 0.8rem;
     }
     .nav-clock-date,
     .nav-clock-lunar {
-        font-size: 0.72rem;
+        font-size: 0.7rem;
     }
-    .current-datetime-left {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
+    .weather-temp-val {
+        font-size: 0.96rem;
+    }
+    .weather-city {
+        font-size: 0.78rem;
+    }
+    .weather-cta-chip {
+        font-size: 0.68rem;
+        padding: 3px 7px;
     }
 }
 
