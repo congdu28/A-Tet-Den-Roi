@@ -57,10 +57,10 @@
 }
 
 :root {
-    /* Default Typography: Playfair Display */
-    --font-heading: 'Playfair Display', serif;
-    --font-body: 'Lora', serif;
-    --font-artistic: 'Dancing Script', cursive, sans-serif;
+    /* Default Typography: 7. SVN-Angellina */
+    --font-heading: 'SVN-Angellina', 'Charm', 'Dancing Script', cursive, sans-serif;
+    --font-body: 'Plus Jakarta Sans', sans-serif;
+    --font-artistic: 'SVN-Angellina', 'Charm', 'Dancing Script', cursive, sans-serif;
 
     /* Theme 1: Đỏ Kim Hoàng Gia (Mặc định) */
     --theme-bg-gradient: radial-gradient(circle at 50% 25%, #9e1222 0%, #61040f 50%, #290106 100%);

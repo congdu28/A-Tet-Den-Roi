@@ -1,5 +1,5 @@
 // Resilient Service Worker for Tet 2027 PWA (network-first with offline app-shell fallback)
-const CACHE_NAME = 'tet-2027-shell-v9';
+const CACHE_NAME = 'tet-2027-shell-v10';
 const SHELL_ASSETS = [
     '/',
     '/index.html',

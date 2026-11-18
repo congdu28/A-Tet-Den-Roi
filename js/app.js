@@ -717,11 +717,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 8. Synchronized 12 Artistic Vietnamese Fonts Switcher
+    // 8. Synchronized 12 Artistic Vietnamese Fonts Switcher (Default: 7. SVN-Angellina)
+    const DEFAULT_FONT_CLASS = 'font-svn-angellina';
     const fontSelect = document.getElementById('font-picker-select');
     let savedFont = localStorage.getItem('tet-font');
+    if (localStorage.getItem('tet-default-font-v2') !== 'angellina') {
+        if (!localStorage.getItem('tet-font-user-chosen') && (!savedFont || savedFont === 'font-uvn-thuphap' || savedFont === 'font-vietnam')) {
+            savedFont = DEFAULT_FONT_CLASS;
+        }
+        localStorage.setItem('tet-default-font-v2', 'angellina');
+    }
     if (!savedFont || savedFont === 'font-vietnam') {
-        savedFont = 'font-uvn-thuphap';
+        savedFont = DEFAULT_FONT_CLASS;
     }
 
     const allFonts = [
@@ -731,7 +738,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     const applyFont = (rawFontClass) => {
-        const fontClass = allFonts.includes(rawFontClass) ? rawFontClass : 'font-uvn-thuphap';
+        const fontClass = allFonts.includes(rawFontClass) ? rawFontClass : DEFAULT_FONT_CLASS;
         allFonts.forEach(f => document.body.classList.remove(f));
         document.body.classList.add(fontClass);
         if (fontSelect) fontSelect.value = fontClass;
@@ -755,6 +762,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (fontSelect) {
         fontSelect.addEventListener('change', (e) => {
+            localStorage.setItem('tet-font-user-chosen', '1');
             applyFont(e.target.value);
             if (window.tetAudio) {
                 window.tetAudio.init();
