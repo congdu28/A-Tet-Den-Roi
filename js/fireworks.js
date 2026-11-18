@@ -17,9 +17,11 @@ class FireworksSystem {
         this.flashes = [];
         this.rocketSparks = [];
 
-        // Density level from localStorage: auto ('low'|'medium'|'high') and manual button/click ('low'|'medium'|'high'|'ultra')
+        // Density level from localStorage: auto ('low'|'medium'|'high'), manual ('low'|'medium'|'high'|'ultra'), and frenzy wave count (2..20)
         this.density = localStorage.getItem('tet-firework-density') || 'medium';
         this.manualDensity = localStorage.getItem('tet-firework-manual-density') || 'ultra';
+        const savedWaves = parseInt(localStorage.getItem('tet-firework-frenzy-waves') || '8', 10);
+        this.frenzyWaves = Number.isFinite(savedWaves) ? Math.max(2, Math.min(20, savedWaves)) : 8;
         this.updateDensityLimits();
 
         this.autoLaunchTimer = null;
@@ -147,6 +149,18 @@ class FireworksSystem {
         this.updateDensityLimits();
     }
 
+    setFrenzyWaves(waves) {
+        const parsed = parseInt(waves, 10);
+        if (!Number.isFinite(parsed)) return;
+        this.frenzyWaves = Math.max(2, Math.min(20, parsed));
+        localStorage.setItem('tet-firework-frenzy-waves', String(this.frenzyWaves));
+    }
+
+    getEstimatedFrenzySeconds(waves = this.frenzyWaves) {
+        const w = Math.max(2, Math.min(20, parseInt(waves, 10) || 8));
+        return Math.round(w * 2.25 + 2);
+    }
+
     getClickBurstMultiplier() {
         return this.manualConfig ? this.manualConfig.clickScale : 1.5;
     }
@@ -176,6 +190,7 @@ class FireworksSystem {
         const frenzyBtn = document.getElementById('btn-fireworks-frenzy');
         if (frenzyBtn) {
             frenzyBtn.classList.remove('frenzy-active');
+            frenzyBtn.innerHTML = '<span>🎆</span> Pháo Hoa';
             frenzyBtn.setAttribute('title', 'Bắn pháo hoa liên hoàn cực đã mắt');
         }
     }
@@ -403,9 +418,9 @@ class FireworksSystem {
 
     /**
      * Choreographed Multi-Wave Mega Frenzy (Đại Tiệc Pháo Hoa Giao Thừa Cực Hoành Tráng)
-     * Launches 40+ multi-type shells in timed artistic waves across the screen!
+     * Launches customizable 2..20 grand waves across the sky with distinct formations & a massive finale!
      */
-    triggerMegaFrenzy() {
+    triggerMegaFrenzy(customWaves = null) {
         if (this.isFrenzyRunning) {
             this.cancelFrenzy();
             return;
@@ -417,14 +432,16 @@ class FireworksSystem {
         this.frenzyTimers = [];
         this.frenzyIntervals = [];
 
+        const totalWaves = Math.max(2, Math.min(20, parseInt(customWaves, 10) || this.frenzyWaves || 8));
+        const waveStepMs = 2250;
+
         const frenzyBtn = document.getElementById('btn-fireworks-frenzy');
         if (frenzyBtn) {
             frenzyBtn.classList.add('frenzy-active');
-            frenzyBtn.setAttribute('title', 'Đang bắn đại tiệc pháo hoa — bấm lại để dừng');
+            frenzyBtn.innerHTML = `<span>🎆</span> Đợt 1/${totalWaves}`;
+            frenzyBtn.setAttribute('title', `Đang bắn đại tiệc pháo hoa (${totalWaves} đợt) — bấm lại để dừng`);
         }
 
-        const W = this.width;
-        const H = this.height;
         const cfg = (this.manualConfig && this.manualConfig.frenzy) || {
             fanCount: 7, crossPairs: 3, volleyCount: 22, volleyDelay: 82, finaleCount: 7, burstScale: 1.38, durationMs: 4800
         };
@@ -437,68 +454,148 @@ class FireworksSystem {
             this.frenzyTimers.push(id);
         };
 
-        // Wave 1 (t = 0): Symmetrical fan barrage scaled by manual density
-        const fanHalf = (cfg.fanCount - 1) / 2;
-        for (let idx = 0; idx < cfg.fanCount; idx++) {
-            const norm = fanHalf > 0 ? (idx - fanHalf) / fanHalf : 0; // -1..1
-            const angle = norm * 0.44;
-            const startX = W * 0.5 + (idx - fanHalf) * 42;
-            const destX = W * 0.5 + Math.sin(angle) * (W * 0.45);
-            const destY = H * 0.24 + Math.abs(idx - fanHalf) * 26;
-            const pal = this.pickPalette(idx);
-            const type = idx === Math.floor(fanHalf) ? 'flower' : idx % 2 === 0 ? 'chrysanthemum' : 'double_burst';
+        for (let w = 0; w < totalWaves; w++) {
+            const waveStartMs = w * waveStepMs;
+            const isFinalWave = w === totalWaves - 1;
+            const paletteSeed = w * 2;
+
             safeTimeout(() => {
-                this.launchRocket(startX, H + 10, destX, destY, pal, type, 1.18, true);
-            }, idx * 55);
+                if (frenzyBtn && this.isFrenzyRunning) {
+                    frenzyBtn.innerHTML = `<span>🎆</span> Đợt ${w + 1}/${totalWaves}`;
+                }
+
+                const W = this.width;
+                const H = this.height;
+
+                if (isFinalWave) {
+                    // Final Wave: Ascending Prelude Fan + Giant Double-Tier Grand Finale Salvo!
+                    const preCount = Math.max(4, cfg.fanCount - 2);
+                    const preHalf = (preCount - 1) / 2;
+                    for (let idx = 0; idx < preCount; idx++) {
+                        const norm = preHalf > 0 ? (idx - preHalf) / preHalf : 0;
+                        const sx = W * 0.5 + norm * 90;
+                        const dx = W * (0.5 + norm * 0.36);
+                        const dy = H * 0.28 + Math.abs(norm) * 28;
+                        safeTimeout(() => {
+                            this.launchRocket(sx, H + 10, dx, dy, this.pickPalette(paletteSeed + idx), types[idx % types.length], 1.2, true);
+                        }, idx * 55);
+                    }
+
+                    safeTimeout(() => {
+                        const fCount = cfg.finaleCount + 2;
+                        for (let i = 0; i < fCount; i++) {
+                            const ratio = fCount > 1 ? 0.10 + (i / (fCount - 1)) * 0.80 : 0.5;
+                            const yRatio = i % 2 === 0 ? 0.32 : 0.18;
+                            const ptType = types[(i + paletteSeed + 2) % types.length];
+                            this.launchRocket(
+                                W * ratio,
+                                H + 10,
+                                W * ratio,
+                                H * yRatio,
+                                this.pickPalette(paletteSeed + i),
+                                ptType,
+                                cfg.burstScale * 1.08,
+                                true
+                            );
+                        }
+                    }, 560);
+                    return;
+                }
+
+                const pattern = w % 5;
+
+                if (pattern === 0) {
+                    // Pattern A: Đại Khai Màn Rẻ Quạt Hoàng Kim (Wide Symmetrical Fan Barrage)
+                    const fanHalf = (cfg.fanCount - 1) / 2;
+                    for (let idx = 0; idx < cfg.fanCount; idx++) {
+                        const norm = fanHalf > 0 ? (idx - fanHalf) / fanHalf : 0;
+                        const angle = norm * 0.44;
+                        const startX = W * 0.5 + (idx - fanHalf) * 42;
+                        const destX = W * 0.5 + Math.sin(angle) * (W * 0.44);
+                        const destY = H * 0.23 + Math.abs(idx - fanHalf) * 24;
+                        const pal = this.pickPalette(paletteSeed + idx);
+                        const type = idx === Math.floor(fanHalf) ? 'flower' : idx % 2 === 0 ? 'chrysanthemum' : 'double_burst';
+                        safeTimeout(() => {
+                            this.launchRocket(startX, H + 10, destX, destY, pal, type, 1.18, true);
+                        }, idx * 52);
+                    }
+                } else if (pattern === 1) {
+                    // Pattern B: Song Long Giao Chéo & Liễu Rủ (Twin Corner Criss-Crossing Salvos)
+                    const pairs = cfg.crossPairs + 1;
+                    for (let pair = 0; pair < pairs; pair++) {
+                        safeTimeout(() => {
+                            const offsetX = 55 + pair * 68;
+                            const targetLX = W * Math.min(0.84, 0.34 + pair * 0.12);
+                            const targetRX = W * Math.max(0.16, 0.66 - pair * 0.12);
+                            const targetY = H * (pair % 2 === 0 ? 0.27 : 0.19);
+                            this.launchRocket(offsetX, H + 10, Math.min(W - 70, targetLX), targetY, this.pickPalette(paletteSeed + pair), pair % 2 === 0 ? 'willow' : 'ring', 1.18, true);
+                            this.launchRocket(W - offsetX, H + 10, Math.max(70, targetRX), targetY, this.pickPalette(paletteSeed + pair + 3), pair % 2 === 0 ? 'starburst' : 'flower', 1.18, true);
+                        }, pair * 115);
+                    }
+                } else if (pattern === 2) {
+                    // Pattern C: Mưa Sao Băng Liên Thanh Toàn Bầu Trời (Rolling Rapid-Fire Horizon Sweep)
+                    const shots = Math.max(7, Math.round(cfg.volleyCount * 0.45));
+                    const sweepRight = (w % 2 === 0);
+                    let fired = 0;
+                    const volleyTimer = setInterval(() => {
+                        if (!this.isRunning || !this.isFrenzyRunning || document.hidden) {
+                            clearInterval(volleyTimer);
+                            return;
+                        }
+                        const progress = shots > 1 ? fired / (shots - 1) : 0.5;
+                        const baseRatio = sweepRight ? (0.12 + progress * 0.76) : (0.88 - progress * 0.76);
+                        const x = Math.max(70, Math.min(W - 70, W * baseRatio + (Math.random() * 60 - 30)));
+                        const y = H * (0.17 + (fired % 3) * 0.08) + Math.random() * 24;
+                        const t = types[(fired + paletteSeed) % types.length];
+                        this.launchRocket(x + (Math.random() * 70 - 35), H + 10, x, y, this.pickPalette(paletteSeed + fired), t, 1.22, true);
+                        fired++;
+                        if (fired >= shots) {
+                            clearInterval(volleyTimer);
+                        }
+                    }, Math.max(75, Math.min(115, cfg.volleyDelay + 22)));
+                    this.frenzyIntervals.push(volleyTimer);
+                } else if (pattern === 3) {
+                    // Pattern D: Hoa Đào & Trái Tim Ngũ Sắc 2 Nhịp (Two-Beat Heart & Blossom Crown)
+                    const countA = Math.max(3, Math.ceil(cfg.fanCount * 0.6));
+                    for (let i = 0; i < countA; i++) {
+                        const r = countA > 1 ? 0.20 + (i / (countA - 1)) * 0.60 : 0.5;
+                        const y = H * (i % 2 === 0 ? 0.20 : 0.27);
+                        this.launchRocket(W * 0.5 + (r - 0.5) * 140, H + 10, W * r, y, this.pickPalette(paletteSeed + i), i % 2 === 0 ? 'heart' : 'flower', 1.2, true);
+                    }
+                    safeTimeout(() => {
+                        const countB = Math.max(4, Math.ceil(cfg.fanCount * 0.65));
+                        for (let j = 0; j < countB; j++) {
+                            const r = countB > 1 ? 0.14 + (j / (countB - 1)) * 0.72 : 0.5;
+                            const y = H * (j % 2 === 0 ? 0.31 : 0.22);
+                            this.launchRocket(W * r, H + 10, W * r, y, this.pickPalette(paletteSeed + j + 2), j % 2 === 0 ? 'willow' : 'double_burst', 1.22, true);
+                        }
+                    }, 560);
+                } else {
+                    // Pattern E: Đại Pháo Thăng Thiên Đối Xứng 2 Tầng (Two-Tier Symmetrical Pillars)
+                    const pairs = Math.max(2, Math.ceil(cfg.fanCount / 2));
+                    for (let p = 0; p < pairs; p++) {
+                        safeTimeout(() => {
+                            const spread = (p + 0.5) / pairs * 0.40;
+                            const leftX = W * (0.5 - spread);
+                            const rightX = W * (0.5 + spread);
+                            const highY = H * (p % 2 === 0 ? 0.19 : 0.31);
+                            const shellA = types[(paletteSeed + p) % types.length];
+                            const shellB = types[(paletteSeed + p + 4) % types.length];
+                            this.launchRocket(leftX, H + 10, leftX, highY, this.pickPalette(paletteSeed + p), shellA, 1.24, true);
+                            if (Math.abs(rightX - leftX) > 35) {
+                                this.launchRocket(rightX, H + 10, rightX, highY, this.pickPalette(paletteSeed + p + 1), shellB, 1.24, true);
+                            }
+                        }, p * 85);
+                    }
+                }
+            }, waveStartMs);
         }
 
-        // Wave 2 (t = 400ms): Criss-crossing comets from both corners
-        safeTimeout(() => {
-            for (let pair = 0; pair < cfg.crossPairs; pair++) {
-                const offsetX = 60 + pair * 75;
-                const targetLX = W * (0.36 + pair * 0.13);
-                const targetRX = W * (0.64 - pair * 0.13);
-                const targetY = H * (pair % 2 === 0 ? 0.26 : 0.20);
-                this.launchRocket(offsetX, H + 10, Math.min(W - 80, targetLX), targetY, this.pickPalette(pair), pair % 2 === 0 ? 'willow' : 'ring', 1.16, true);
-                this.launchRocket(W - offsetX, H + 10, Math.max(80, targetRX), targetY, this.pickPalette(pair + 3), pair % 2 === 0 ? 'starburst' : 'flower', 1.16, true);
-            }
-        }, 400);
-
-        // Wave 3 (t = 780ms): Rapid-fire volley across full height & width
-        let fired = 0;
-        const volleyTimer = setInterval(() => {
-            if (!this.isRunning || !this.isFrenzyRunning || document.hidden) {
-                clearInterval(volleyTimer);
-                return;
-            }
-            const x = Math.random() * (W - 160) + 80;
-            const y = Math.random() * (H * 0.5) + 55;
-            const t = types[fired % types.length];
-            const p = this.pickPalette(fired);
-            this.launchRocket(x + (Math.random() * 90 - 45), H + 10, x, y, p, t, 1.22, true);
-            fired++;
-            if (fired >= cfg.volleyCount) {
-                clearInterval(volleyTimer);
-            }
-        }, cfg.volleyDelay);
-        this.frenzyIntervals.push(volleyTimer);
-
-        // Wave 4 (Grand Finale Salvo): Symmetrical giant bursts
-        const finaleStartMs = Math.max(1500, 780 + cfg.volleyCount * cfg.volleyDelay - 300);
-        safeTimeout(() => {
-            const fCount = cfg.finaleCount;
-            for (let i = 0; i < fCount; i++) {
-                const ratio = fCount > 1 ? 0.12 + (i / (fCount - 1)) * 0.76 : 0.5;
-                const yRatio = i % 2 === 0 ? 0.34 : 0.20;
-                const ptType = types[(i + 2) % types.length];
-                this.launchRocket(W * ratio, H + 10, W * ratio, H * yRatio, this.pickPalette(i), ptType, cfg.burstScale, true);
-            }
-        }, finaleStartMs);
-
-        // Reset Frenzy state smoothly after finale settles
+        // Reset Frenzy state smoothly after final wave blooms & settles
+        const totalDurationMs = (totalWaves - 1) * waveStepMs + 2650;
         const endId = setTimeout(() => {
             this.cancelFrenzy();
-        }, Math.max(cfg.durationMs, finaleStartMs + 1800));
+        }, totalDurationMs);
         this.frenzyTimers.push(endId);
     }
 

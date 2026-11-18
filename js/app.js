@@ -412,6 +412,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const badgeFireworkDensity = document.getElementById('badge-firework-density');
     const sliderFireworkManualDensity = document.getElementById('slider-firework-manual-density');
     const badgeFireworkManualDensity = document.getElementById('badge-firework-manual-density');
+    const sliderFireworkFrenzyWaves = document.getElementById('slider-firework-frenzy-waves');
+    const badgeFireworkFrenzyWaves = document.getElementById('badge-firework-frenzy-waves');
     const sliderPetalDensity = document.getElementById('slider-petal-density');
     const badgePetalDensity = document.getElementById('badge-petal-density');
     const sliderLanternCount = document.getElementById('slider-lantern-count');
@@ -458,6 +460,26 @@ document.addEventListener('DOMContentLoaded', () => {
             const item = fireworkManualDensityMap[e.target.value] || fireworkManualDensityMap['4'];
             if (badgeFireworkManualDensity) badgeFireworkManualDensity.textContent = item.label;
             if (window.fireworks) window.fireworks.setManualDensity(item.key);
+        });
+    }
+
+    // 1c. Manual Fireworks Frenzy Wave Count Slider (Số đợt pháo bắn liên hoàn khi bấm nút Pháo Hoa)
+    if (sliderFireworkFrenzyWaves) {
+        const rawWaves = parseInt(localStorage.getItem('tet-firework-frenzy-waves') || '8', 10);
+        const initialWaves = Number.isFinite(rawWaves) ? Math.max(2, Math.min(20, rawWaves)) : 8;
+        const formatFrenzyWavesLabel = (w) => {
+            const estSec = (window.fireworks && typeof window.fireworks.getEstimatedFrenzySeconds === 'function')
+                ? window.fireworks.getEstimatedFrenzySeconds(w)
+                : Math.round(w * 2.25 + 2);
+            return `${w} đợt (~${estSec}s) 🎇`;
+        };
+        sliderFireworkFrenzyWaves.value = String(initialWaves);
+        if (badgeFireworkFrenzyWaves) badgeFireworkFrenzyWaves.textContent = formatFrenzyWavesLabel(initialWaves);
+
+        sliderFireworkFrenzyWaves.addEventListener('input', (e) => {
+            const w = Math.max(2, Math.min(20, parseInt(e.target.value, 10) || 8));
+            if (window.fireworks) window.fireworks.setFrenzyWaves(w);
+            if (badgeFireworkFrenzyWaves) badgeFireworkFrenzyWaves.textContent = formatFrenzyWavesLabel(w);
         });
     }
 
