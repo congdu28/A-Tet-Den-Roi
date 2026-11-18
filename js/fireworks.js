@@ -31,6 +31,7 @@ class FireworksSystem {
         this.autoFireEnabled = true;
         this.animFrameId = null;
         this.isFrenzyRunning = false;
+        this.isFinaleWaveActive = false;
         this.frenzyTimers = [];
         this.frenzyIntervals = [];
         this.dpr = 1;
@@ -158,7 +159,7 @@ class FireworksSystem {
 
     getEstimatedFrenzySeconds(waves = this.frenzyWaves) {
         const w = Math.max(2, Math.min(20, parseInt(waves, 10) || 8));
-        return Math.round(w * 2.25 + 2);
+        return Math.round(w * 2.25 + 4);
     }
 
     getClickBurstMultiplier() {
@@ -187,6 +188,7 @@ class FireworksSystem {
             this.frenzyIntervals = [];
         }
         this.isFrenzyRunning = false;
+        this.isFinaleWaveActive = false;
         const frenzyBtn = document.getElementById('btn-fireworks-frenzy');
         if (frenzyBtn) {
             frenzyBtn.classList.remove('frenzy-active');
@@ -268,13 +270,17 @@ class FireworksSystem {
         this.launchRocket(startX, startY, destX, destY, palette, type);
     }
 
-    launchRocket(startX, startY, destX, destY, palette = null, shellType = 'chrysanthemum', speedBoost = 1, isManualBurst = false) {
-        const rocketCap = (this.isFrenzyRunning && this.manualDensity === 'ultra') ? 68 : 42;
+    launchRocket(startX, startY, destX, destY, palette = null, shellType = 'chrysanthemum', speedBoost = 1, isManualBurst = false, burstScale = null, radiusScale = 1) {
+        const rocketCap = this.isFinaleWaveActive
+            ? 110
+            : (this.isFrenzyRunning && this.manualDensity === 'ultra') ? 72 : 42;
         if (this.fireworks.length > rocketCap) return;
 
         const pal = palette || this.pickPalette();
         const rocket = new AdvancedRocket(startX, startY, destX, destY, pal, shellType, speedBoost);
         rocket.isManualBurst = Boolean(isManualBurst);
+        rocket.burstScale = typeof burstScale === 'number' ? burstScale : (speedBoost > 1.25 ? 1.35 : 1.08);
+        rocket.radiusScale = radiusScale || 1;
         this.fireworks.push(rocket);
         this.wakeLoop();
 
@@ -283,23 +289,34 @@ class FireworksSystem {
         }
     }
 
-    explodeAt(x, y, forcedPalette = null, shellType = 'chrysanthemum', countMultiplier = 1, isManual = false) {
+    explodeAt(x, y, forcedPalette = null, shellType = 'chrysanthemum', countMultiplier = 1, isManual = false, radiusScale = 1) {
         this.wakeLoop();
         const palette = forcedPalette || this.pickPalette();
         const useManualLimits = isManual || this.isFrenzyRunning;
-        const effectiveMax = useManualLimits
+        const baseMax = useManualLimits
             ? Math.max(this.maxParticles, (this.manualConfig && this.manualConfig.maxParticles) || 4500)
             : this.maxParticles;
+        const effectiveMax = this.isFinaleWaveActive ? Math.max(baseMax, 9500) : baseMax;
         const availableSlots = effectiveMax - this.particles.length;
         if (availableSlots < 12) return;
 
         const isLight = this.isLightMode();
+        const rScale = Math.max(0.8, radiusScale || 1);
+        const isSuperCrown = shellType === 'super_crown';
 
-        // Luminous flash + expanding shockwave ring
-        this.flashes.push(new ExplosionFlash(x, y, palette[0], isLight));
-        this.shockwaves.push(new ShockwaveHalo(x, y, palette[0]));
-        if (countMultiplier >= 1.2) {
-            this.shockwaves.push(new ShockwaveHalo(x, y, palette[1] || '#FFFFFF', 1.45));
+        // Luminous flash + expanding concentric shockwave rings
+        const flash = new ExplosionFlash(x, y, palette[0], isLight);
+        if (isSuperCrown || rScale > 1.25) {
+            flash.radius *= Math.min(2.2, rScale * 1.25);
+            flash.alpha = Math.min(0.95, flash.alpha * 1.25);
+        }
+        this.flashes.push(flash);
+        this.shockwaves.push(new ShockwaveHalo(x, y, palette[0], rScale));
+        if (countMultiplier >= 1.2 || isSuperCrown) {
+            this.shockwaves.push(new ShockwaveHalo(x, y, palette[1] || '#FFFFFF', 1.48 * rScale));
+        }
+        if (isSuperCrown) {
+            this.shockwaves.push(new ShockwaveHalo(x, y, '#FFD700', 2.15 * rScale));
         }
 
         let baseCount = 92;
@@ -313,13 +330,43 @@ class FireworksSystem {
 
         const count = Math.min(availableSlots, Math.floor(baseCount * countMultiplier));
 
-        if (shellType === 'heart') {
+        if (isSuperCrown) {
+            // Exclusive Grand Finale 3-Tier Imperial Super Crown:
+            // Tier 1 (Outer): Cascading Golden Brocade Willow Crown
+            // Tier 2 (Middle): Contrasting Jewel Ring + Mid-air Crackling Star-Pops
+            // Tier 3 (Inner): Sparkling White & Gold Strobe Core
+            const willowPalette = isLight
+                ? ['#B45309', '#D97706', '#F59E0B', '#EA580C', '#DC2626']
+                : ['#FFE082', '#FFD54F', '#FFCA28', '#FFB300', '#FFFFFF'];
+            const jewelPalette = this.pickPalette(Math.floor(Math.random() * 6));
+            const outerCount = Math.floor(count * 0.46);
+            const midCount = Math.floor(count * 0.34);
+            const innerCount = Math.max(8, count - outerCount - midCount);
+
+            for (let i = 0; i < outerCount; i++) {
+                const angle = (Math.PI * 2 * i) / outerCount + (Math.random() * 0.1 - 0.05);
+                const speed = (5.0 + Math.random() * 2.4) * rScale;
+                this.particles.push(new RichParticle(x, y, willowPalette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'willow'));
+            }
+            for (let i = 0; i < midCount; i++) {
+                const angle = (Math.PI * 2 * i) / midCount + (Math.random() * 0.08 - 0.04);
+                const speed = (3.4 + Math.random() * 1.1) * rScale;
+                const isCrackler = i % 2 === 0;
+                this.particles.push(new RichParticle(x, y, jewelPalette, Math.cos(angle) * speed, Math.sin(angle) * speed, isCrackler ? 'crackler' : 'ring'));
+            }
+            const coreColors = isLight ? ['#DC2626', '#F59E0B', '#FEF08A'] : ['#FFFFFF', '#FFF9C4', '#FFD700'];
+            for (let i = 0; i < innerCount; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = (1.1 + Math.random() * 1.6) * rScale;
+                this.particles.push(new RichParticle(x, y, coreColors, Math.cos(angle) * speed, Math.sin(angle) * speed, 'strobe'));
+            }
+        } else if (shellType === 'heart') {
             // Double-ring Heart parametric burst
             for (let i = 0; i < count; i++) {
                 const t = (Math.PI * 2 * i) / count;
                 const hx = 16 * Math.pow(Math.sin(t), 3);
                 const hy = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-                const layer = i % 3 === 0 ? 0.16 : 0.25 + Math.random() * 0.045;
+                const layer = (i % 3 === 0 ? 0.16 : 0.25 + Math.random() * 0.045) * rScale;
                 this.particles.push(new RichParticle(x, y, palette, hx * layer, hy * layer, 'heart'));
             }
         } else if (shellType === 'flower') {
@@ -327,7 +374,7 @@ class FireworksSystem {
             for (let i = 0; i < count; i++) {
                 const angle = (Math.PI * 2 * i) / count;
                 const petalFactor = 0.72 + 0.55 * Math.cos(5 * angle);
-                const speed = (2.8 + Math.random() * 0.85) * petalFactor * Math.min(1.25, countMultiplier);
+                const speed = (2.8 + Math.random() * 0.85) * petalFactor * Math.min(1.25, countMultiplier) * rScale;
                 const isCenter = i % 5 === 0;
                 const pColors = isCenter ? ['#FFD700', '#F59E0B', '#FFFFFF'] : palette;
                 const vScale = isCenter ? 0.42 : 1;
@@ -344,7 +391,7 @@ class FireworksSystem {
             for (let i = 0; i < count; i++) {
                 const angle = (Math.PI * 2 * i) / count;
                 const spike = 0.58 + 0.65 * Math.pow(Math.abs(Math.cos((points * angle) / 2)), 2);
-                const speed = (2.6 + Math.random() * 1.1) * spike;
+                const speed = (2.6 + Math.random() * 1.1) * spike * rScale;
                 this.particles.push(new RichParticle(x, y, palette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'strobe'));
             }
         } else if (shellType === 'double_burst') {
@@ -354,13 +401,13 @@ class FireworksSystem {
             const altPalette = this.pickPalette(Math.floor(Math.random() * 6) + 1);
             for (let i = 0; i < outerCount; i++) {
                 const angle = (Math.PI * 2 * i) / outerCount + (Math.random() * 0.12 - 0.06);
-                const speed = 4.5 + Math.random() * 1.4;
+                const speed = (4.5 + Math.random() * 1.4) * rScale;
                 const isCrackler = Math.random() > 0.72;
                 this.particles.push(new RichParticle(x, y, palette, Math.cos(angle) * speed, Math.sin(angle) * speed, isCrackler ? 'crackler' : 'standard'));
             }
             for (let i = 0; i < innerCount; i++) {
                 const angle = (Math.PI * 2 * i) / innerCount;
-                const speed = 2.0 + Math.random() * 0.6;
+                const speed = (2.0 + Math.random() * 0.6) * rScale;
                 this.particles.push(new RichParticle(x, y, altPalette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'strobe'));
             }
         } else if (shellType === 'ring') {
@@ -370,18 +417,18 @@ class FireworksSystem {
             const innerCount = count - outerCount - midCount;
             for (let i = 0; i < outerCount; i++) {
                 const angle = (Math.PI * 2 * i) / outerCount;
-                const speed = 4.6 + Math.random() * 0.35;
+                const speed = (4.6 + Math.random() * 0.35) * rScale;
                 this.particles.push(new RichParticle(x, y, palette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'ring'));
             }
             const midPalette = [palette[palette.length - 1], isLight ? '#F59E0B' : '#FFFFFF'];
             for (let i = 0; i < midCount; i++) {
                 const angle = (Math.PI * 2 * i) / midCount;
-                const speed = 2.8 + Math.random() * 0.25;
+                const speed = (2.8 + Math.random() * 0.25) * rScale;
                 this.particles.push(new RichParticle(x, y, midPalette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'strobe'));
             }
             for (let i = 0; i < innerCount; i++) {
                 const angle = (Math.PI * 2 * i) / innerCount;
-                const speed = 1.4 + Math.random() * 0.2;
+                const speed = (1.4 + Math.random() * 0.2) * rScale;
                 this.particles.push(new RichParticle(x, y, palette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'ring'));
             }
         } else if (shellType === 'willow') {
@@ -391,28 +438,28 @@ class FireworksSystem {
                 : ['#FFE082', '#FFD54F', '#FFCA28', '#FFB300', '#FFFFFF'];
             for (let i = 0; i < count; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 5.8 + 1.1;
+                const speed = (Math.random() * 5.8 + 1.1) * rScale;
                 this.particles.push(new RichParticle(x, y, willowPalette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'willow'));
             }
         } else if (shellType === 'strobe') {
             // Glitter strobe flashers
             for (let i = 0; i < count; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 5.2 + 1.4;
+                const speed = (Math.random() * 5.2 + 1.4) * rScale;
                 this.particles.push(new RichParticle(x, y, palette, Math.cos(angle) * speed, Math.sin(angle) * speed, 'strobe'));
             }
         } else {
             // Rich Chrysanthemum with shimmering tail and cracklers
             for (let i = 0; i < count; i++) {
                 const angle = (Math.PI * 2 * i) / count + (Math.random() * 0.16 - 0.08);
-                const speed = Math.random() * 5.5 + 1.5;
+                const speed = (Math.random() * 5.5 + 1.5) * rScale;
                 const isCrackler = Math.random() > 0.72;
                 this.particles.push(new RichParticle(x, y, palette, Math.cos(angle) * speed, Math.sin(angle) * speed, isCrackler ? 'crackler' : 'standard'));
             }
         }
 
         if (window.tetAudio) {
-            window.tetAudio.playFireworkExplode();
+            window.tetAudio.playFireworkExplode(isSuperCrown || rScale >= 1.45);
         }
     }
 
@@ -468,37 +515,88 @@ class FireworksSystem {
                 const H = this.height;
 
                 if (isFinalWave) {
-                    // Final Wave: Ascending Prelude Fan + Giant Double-Tier Grand Finale Salvo!
-                    const preCount = Math.max(4, cfg.fanCount - 2);
+                    // =========================================================================
+                    // ĐỢT CUỐI ĐẶC BIỆT (4-ACT IMPERIAL SUPER-NOVA GRAND FINALE)
+                    // =========================================================================
+                    this.isFinaleWaveActive = true;
+                    if (frenzyBtn && this.isFrenzyRunning) {
+                        frenzyBtn.innerHTML = `<span>💥</span> Kết Màn ${w + 1}/${totalWaves}!`;
+                    }
+
+                    // Act 1 (t + 0ms): Rapid Sweeping Horizon Fan from Center Outward
+                    const preCount = cfg.fanCount + 3;
                     const preHalf = (preCount - 1) / 2;
                     for (let idx = 0; idx < preCount; idx++) {
                         const norm = preHalf > 0 ? (idx - preHalf) / preHalf : 0;
-                        const sx = W * 0.5 + norm * 90;
-                        const dx = W * (0.5 + norm * 0.36);
-                        const dy = H * 0.28 + Math.abs(norm) * 28;
+                        const sx = W * 0.5 + norm * 110;
+                        const dx = W * (0.5 + norm * 0.42);
+                        const dy = H * 0.27 + Math.abs(norm) * 32;
                         safeTimeout(() => {
-                            this.launchRocket(sx, H + 10, dx, dy, this.pickPalette(paletteSeed + idx), types[idx % types.length], 1.2, true);
-                        }, idx * 55);
+                            this.launchRocket(
+                                sx, H + 10, dx, dy,
+                                this.pickPalette(paletteSeed + idx),
+                                types[idx % types.length],
+                                1.25, true, cfg.burstScale * 1.05, 1.25
+                            );
+                        }, Math.abs(idx - preHalf) * 45);
                     }
 
+                    // Act 2 (t + 580ms): Oversized Giant Hearts, 5-Petal Tết Blossoms & Triple Rings
                     safeTimeout(() => {
-                        const fCount = cfg.finaleCount + 2;
-                        for (let i = 0; i < fCount; i++) {
-                            const ratio = fCount > 1 ? 0.10 + (i / (fCount - 1)) * 0.80 : 0.5;
-                            const yRatio = i % 2 === 0 ? 0.32 : 0.18;
-                            const ptType = types[(i + paletteSeed + 2) % types.length];
+                        const midSpecials = ['heart', 'flower', 'ring', 'flower', 'heart'];
+                        const mCount = midSpecials.length;
+                        for (let m = 0; m < mCount; m++) {
+                            const ratio = 0.16 + (m / (mCount - 1)) * 0.68;
+                            const yRatio = m % 2 === 0 ? 0.22 : 0.30;
                             this.launchRocket(
-                                W * ratio,
+                                W * (0.5 + (ratio - 0.5) * 0.55),
                                 H + 10,
                                 W * ratio,
                                 H * yRatio,
-                                this.pickPalette(paletteSeed + i),
-                                ptType,
-                                cfg.burstScale * 1.08,
-                                true
+                                this.pickPalette(paletteSeed + m + 1),
+                                midSpecials[m],
+                                1.26, true, cfg.burstScale * 1.2, 1.48
                             );
                         }
-                    }, 560);
+                    }, 580);
+
+                    // Act 3 (t + 1220ms): Horizon-Wide 3-Tier Imperial Super Crown Barrage
+                    safeTimeout(() => {
+                        const fCount = cfg.finaleCount + 2;
+                        for (let i = 0; i < fCount; i++) {
+                            const ratio = fCount > 1 ? 0.08 + (i / (fCount - 1)) * 0.84 : 0.5;
+                            const yRatio = i % 2 === 0 ? 0.30 : 0.19;
+                            const shell = i % 2 === 0 ? 'super_crown' : 'double_burst';
+                            safeTimeout(() => {
+                                this.launchRocket(
+                                    W * ratio,
+                                    H + 10,
+                                    W * ratio,
+                                    H * yRatio,
+                                    this.pickPalette(paletteSeed + i),
+                                    shell,
+                                    1.28, true, cfg.burstScale * 1.32, 1.55
+                                );
+                            }, i * 32);
+                        }
+                    }, 1220);
+
+                    // Act 4 (t + 1920ms): CLIMAX APEX — 5 Colossal Zenith Super Crowns & Golden Willow Curtain!
+                    safeTimeout(() => {
+                        const apexRatios = [0.16, 0.33, 0.50, 0.67, 0.84];
+                        const apexHeights = [0.24, 0.18, 0.14, 0.18, 0.24];
+                        for (let k = 0; k < apexRatios.length; k++) {
+                            this.launchRocket(
+                                W * 0.5 + (apexRatios[k] - 0.5) * W * 0.45,
+                                H + 10,
+                                W * apexRatios[k],
+                                H * apexHeights[k],
+                                this.pickPalette(k),
+                                'super_crown',
+                                1.32, true, cfg.burstScale * 1.55, 1.85
+                            );
+                        }
+                    }, 1920);
                     return;
                 }
 
@@ -591,8 +689,8 @@ class FireworksSystem {
             }, waveStartMs);
         }
 
-        // Reset Frenzy state smoothly after final wave blooms & settles
-        const totalDurationMs = (totalWaves - 1) * waveStepMs + 2650;
+        // Reset Frenzy state smoothly after the 4-Act Grand Finale blooms & golden rain settles
+        const totalDurationMs = (totalWaves - 1) * waveStepMs + 4750;
         const endId = setTimeout(() => {
             this.cancelFrenzy();
         }, totalDurationMs);
@@ -700,16 +798,27 @@ class FireworksSystem {
             }
 
             if (rocket.hasReached()) {
-                const burstScale = rocket.speedBoost > 1.25 ? 1.35 : 1.08;
-                this.explodeAt(rocket.x, rocket.y, rocket.palette, rocket.shellType, burstScale, rocket.isManualBurst);
+                const burstScale = typeof rocket.burstScale === 'number'
+                    ? rocket.burstScale
+                    : (rocket.speedBoost > 1.25 ? 1.35 : 1.08);
+                this.explodeAt(
+                    rocket.x,
+                    rocket.y,
+                    rocket.palette,
+                    rocket.shellType,
+                    burstScale,
+                    rocket.isManualBurst,
+                    rocket.radiusScale || 1
+                );
                 this.fireworks.splice(i, 1);
             }
         }
 
         // 4. Update & Draw Particles (Batch render + O(1) swap-pop removal)
-        const activeMaxParticles = this.isFrenzyRunning
+        const baseActiveMax = this.isFrenzyRunning
             ? Math.max(this.maxParticles, (this.manualConfig && this.manualConfig.maxParticles) || 4500)
             : this.maxParticles;
+        const activeMaxParticles = this.isFinaleWaveActive ? Math.max(baseActiveMax, 9500) : baseActiveMax;
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
             p.update(dt);

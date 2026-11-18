@@ -470,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const formatFrenzyWavesLabel = (w) => {
             const estSec = (window.fireworks && typeof window.fireworks.getEstimatedFrenzySeconds === 'function')
                 ? window.fireworks.getEstimatedFrenzySeconds(w)
-                : Math.round(w * 2.25 + 2);
+                : Math.round(w * 2.25 + 4);
             return `${w} đợt (~${estSec}s) 🎇`;
         };
         sliderFireworkFrenzyWaves.value = String(initialWaves);

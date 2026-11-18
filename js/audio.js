@@ -395,58 +395,76 @@ class TetAudioEngine {
     // ==========================================
     // SOUND EFFECTS (Web Audio API)
     // ==========================================
-    playFireworkExplode() {
+    getSharedNoiseBuffer() {
+        if (!this.ctx) return null;
+        if (!this._noiseBuffer || this._noiseBuffer.sampleRate !== this.ctx.sampleRate) {
+            const bufferSize = Math.floor(this.ctx.sampleRate * 0.65);
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const output = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+            this._noiseBuffer = buffer;
+        }
+        return this._noiseBuffer;
+    }
+
+    playFireworkExplode(isHeavy = false) {
         if (this.isMuted) return;
         this.init();
         if (!this.ctx) return;
+        const nowMs = performance.now();
+        if (!isHeavy && this._lastExplodeMs && (nowMs - this._lastExplodeMs) < 38) return;
+        this._lastExplodeMs = nowMs;
+
         const now = this.ctx.currentTime;
+        const dur = isHeavy ? 0.58 : 0.36;
 
         const boomOsc = this.ctx.createOscillator();
         const boomGain = this.ctx.createGain();
         boomOsc.type = 'triangle';
-        boomOsc.frequency.setValueAtTime(140, now);
-        boomOsc.frequency.exponentialRampToValueAtTime(30, now + 0.35);
+        boomOsc.frequency.setValueAtTime(isHeavy ? 115 : 140, now);
+        boomOsc.frequency.exponentialRampToValueAtTime(isHeavy ? 24 : 30, now + dur);
 
-        boomGain.gain.setValueAtTime(0.7, now);
-        boomGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+        boomGain.gain.setValueAtTime(isHeavy ? 0.92 : 0.68, now);
+        boomGain.gain.exponentialRampToValueAtTime(0.001, now + dur + 0.03);
 
         boomOsc.connect(boomGain);
         boomGain.connect(this.sfxGain);
 
         boomOsc.start(now);
-        boomOsc.stop(now + 0.4);
+        boomOsc.stop(now + dur + 0.05);
 
-        const bufferSize = Math.floor(this.ctx.sampleRate * 0.3);
-        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-        const output = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-            output[i] = Math.random() * 2 - 1;
-        }
+        const buffer = this.getSharedNoiseBuffer();
+        if (!buffer) return;
 
         const whiteNoise = this.ctx.createBufferSource();
         whiteNoise.buffer = buffer;
 
         const filter = this.ctx.createBiquadFilter();
         filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(1800, now);
-        filter.frequency.exponentialRampToValueAtTime(180, now + 0.3);
+        filter.frequency.setValueAtTime(isHeavy ? 2400 : 1800, now);
+        filter.frequency.exponentialRampToValueAtTime(isHeavy ? 140 : 180, now + dur);
 
         const noiseGain = this.ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.45, now);
-        noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        noiseGain.gain.setValueAtTime(isHeavy ? 0.62 : 0.42, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
 
         whiteNoise.connect(filter);
         filter.connect(noiseGain);
         noiseGain.connect(this.sfxGain);
 
-        whiteNoise.start(now);
-        whiteNoise.stop(now + 0.32);
+        whiteNoise.start(now, 0, dur + 0.02);
+        whiteNoise.stop(now + dur + 0.03);
     }
 
     playFireworkLaunch() {
         if (this.isMuted) return;
         this.init();
         if (!this.ctx) return;
+        const nowMs = performance.now();
+        if (this._lastLaunchMs && (nowMs - this._lastLaunchMs) < 42) return;
+        this._lastLaunchMs = nowMs;
         const now = this.ctx.currentTime;
 
         const osc = this.ctx.createOscillator();
