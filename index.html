@@ -193,12 +193,12 @@
 
         <!-- Main Countdown Card Box -->
         <main class="countdown-container" id="countdown-main-box">
-            <!-- Dải Thông Tin Ngày Giờ Hiện Tại & Lịch Tháng Âm Dương (Đồng Nhất Kích Thước Hoàng Gia) -->
+            <!-- Dải Tiện Ích Thời Tiết, Ngày Hôm Nay & Lịch Âm Dương (Tinh Gọn, Thoáng Mắt) -->
             <div class="current-datetime-strip">
                 <div class="current-datetime-left">
                     <div class="datetime-pill weather-pill" id="weather-status-pill">
                         <button type="button" class="weather-gps-btn" id="btn-weather-gps" title="Cập nhật vị trí chi tiết theo Xã/Phường (GPS)" aria-label="Cập nhật vị trí Xã/Phường theo GPS">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                                 <circle cx="12" cy="10" r="3"/>
                             </svg>
@@ -209,24 +209,38 @@
                             <span class="pill-icon" id="weather-icon" aria-hidden="true">🌤️</span>
                             <span class="pill-val weather-temp-val" id="weather-temp">--°C</span>
                             <span class="weather-city" id="weather-city">Thời tiết</span>
-                            <span class="weather-cta-chip" aria-hidden="true"><span>Chi tiết</span><span class="weather-cta-arrow">↗</span></span>
+                            <span class="weather-cta-chip" aria-hidden="true"><span class="weather-cta-arrow">↗</span></span>
                         </a>
                     </div>
                     <div class="datetime-pill date-combo-pill" title="Ngày Dương lịch và Âm lịch hiện tại">
                         <span class="date-combo-part date-combo-solar">
-                            <span class="pill-icon" aria-hidden="true">📅</span>
+                            <svg class="date-combo-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
                             <span class="pill-val" id="clock-solar-date">Đang cập nhật...</span>
                         </span>
                         <span class="date-combo-sep" aria-hidden="true">•</span>
                         <span class="date-combo-part date-combo-lunar">
-                            <span class="pill-icon" aria-hidden="true">🌙</span>
+                            <svg class="date-combo-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                            </svg>
                             <span class="pill-val" id="clock-lunar-date">Đang tính âm lịch...</span>
                         </span>
                     </div>
                 </div>
 
                 <button type="button" id="btn-open-lunar-calendar" class="btn-lunar-calendar" title="Xem lịch tháng Âm - Dương đầy đủ chi tiết">
-                    <span aria-hidden="true">🗓️</span> Lịch Âm – Dương
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                        <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+                    </svg>
+                    <span>Lịch Âm – Dương</span>
                 </button>
             </div>
 

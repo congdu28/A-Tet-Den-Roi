@@ -2117,42 +2117,43 @@ body.light-mode .countdown-container::before {
     opacity: 0.9;
 }
 
-/* Real-time Clock & Solar-Lunar Date Strip (Đồng nhất kích thước hoàn hảo) */
+/* Real-time Utility Strip: Thời tiết - Ngày Dương/Âm - Lịch Âm Dương (Phẳng, Thoáng Mắt) */
 .current-datetime-strip {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1.5px solid rgba(255, 215, 0, 0.35);
-    border-radius: 18px;
-    padding: 8px 12px;
-    margin-bottom: 14px;
-    gap: 10px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.22);
+    border-radius: 0;
+    padding: 0 2px 12px 2px;
+    margin-bottom: 16px;
+    gap: 12px;
 }
 
 body.light-mode .current-datetime-strip {
-    background: rgba(255, 255, 255, 0.9);
-    border-color: rgba(225, 29, 72, 0.25);
-    box-shadow: 0 4px 14px rgba(185, 28, 28, 0.08);
+    background: transparent;
+    border-bottom-color: rgba(225, 29, 72, 0.16);
+    box-shadow: none;
 }
 
 .current-datetime-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     flex: 1;
     min-width: 0;
 }
 
-/* Thẻ Pill đồng kích thước, đồng chiều cao, đồng độ dày viền */
+/* Thẻ tiện ích phẳng, không đóng khung nặng nề */
 .datetime-pill {
-    flex: 1 1 0;
+    flex: 0 1 auto;
     min-width: 0;
-    height: 42px;
-    padding: 0 14px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.07);
-    border: 1.5px solid rgba(255, 215, 0, 0.35);
+    height: 36px;
+    padding: 0 8px;
+    border-radius: 10px;
+    background: transparent;
+    border: 1px solid transparent;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2163,14 +2164,13 @@ body.light-mode .current-datetime-strip {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 2px 6px rgba(0, 0, 0, 0.2);
+    box-shadow: none;
     transition: all 0.2s ease;
 }
 
 .datetime-pill:hover {
-    border-color: #ffd700;
-    background: rgba(255, 255, 255, 0.12);
-    transform: translateY(-1px);
+    border-color: rgba(255, 215, 0, 0.35);
+    background: rgba(255, 255, 255, 0.06);
 }
 
 .live-clock-dot {
@@ -2208,23 +2208,24 @@ body.light-mode .current-datetime-strip {
 }
 
 .datetime-pill.weather-pill {
-    flex: 0.25 0.6 auto;
+    flex: 0 0 auto;
     min-width: 0;
     gap: 6px;
-    padding: 0 7px 0 6px;
-    justify-content: center;
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.22), rgba(245, 158, 11, 0.16));
-    border: 1.5px solid rgba(56, 189, 248, 0.6);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 3px 10px rgba(14, 165, 233, 0.22);
+    padding: 0 10px 0 5px;
+    justify-content: flex-start;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 215, 0, 0.24);
+    border-radius: 999px;
+    box-shadow: none;
 }
 
 .weather-gps-btn {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    border: 1px solid rgba(56, 189, 248, 0.38);
-    background: rgba(56, 189, 248, 0.14);
-    color: #7dd3fc;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 215, 0, 0.28);
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--color-accent-gold-light);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2235,15 +2236,15 @@ body.light-mode .current-datetime-strip {
 }
 
 .weather-gps-btn:hover {
-    background: rgba(56, 189, 248, 0.28);
-    border-color: #7dd3fc;
+    background: rgba(255, 215, 0, 0.24);
+    border-color: var(--color-accent-gold);
     color: #ffffff;
     transform: scale(1.06);
 }
 
 .weather-gps-btn.is-gps {
-    background: rgba(16, 185, 129, 0.22);
-    border-color: rgba(52, 211, 153, 0.75);
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(52, 211, 153, 0.68);
     color: #34d399;
 }
 
@@ -2253,8 +2254,8 @@ body.light-mode .current-datetime-strip {
 
 .weather-gps-btn.is-loading {
     opacity: 0.9;
-    border-color: #38bdf8;
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
+    border-color: var(--color-accent-gold);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.35);
 }
 
 .weather-gps-btn.is-loading svg {
@@ -2262,20 +2263,20 @@ body.light-mode .current-datetime-strip {
 }
 
 body.light-mode .weather-gps-btn {
-    background: rgba(2, 132, 199, 0.1);
-    border-color: rgba(2, 132, 199, 0.3);
-    color: #0284c7;
+    background: rgba(225, 29, 72, 0.07);
+    border-color: rgba(225, 29, 72, 0.22);
+    color: #be123c;
 }
 
 body.light-mode .weather-gps-btn:hover {
-    background: rgba(2, 132, 199, 0.2);
-    border-color: #0284c7;
-    color: #0369a1;
+    background: rgba(225, 29, 72, 0.14);
+    border-color: #e11d48;
+    color: #9f1239;
 }
 
 body.light-mode .weather-gps-btn.is-gps {
-    background: rgba(16, 185, 129, 0.16);
-    border-color: rgba(5, 150, 105, 0.55);
+    background: rgba(16, 185, 129, 0.14);
+    border-color: rgba(5, 150, 105, 0.5);
     color: #059669;
 }
 
@@ -2290,16 +2291,26 @@ body.light-mode .weather-gps-btn.is-gps svg path {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
+    gap: 6px;
     text-decoration: none;
     color: inherit;
     padding-left: 2px;
 }
 
+/* Ngày Dương • Ngày Âm dạng dòng chữ sạch ở giữa, bỏ hộp đóng khung */
 .datetime-pill.date-combo-pill {
     flex: 1 1 auto;
-    padding: 0 14px;
+    padding: 0 8px;
     gap: 10px;
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.datetime-pill.date-combo-pill:hover {
+    transform: none;
+    background: transparent !important;
+    border-color: transparent !important;
 }
 
 .date-combo-part {
@@ -2309,8 +2320,14 @@ body.light-mode .weather-gps-btn.is-gps svg path {
     min-width: 0;
 }
 
+.date-combo-svg {
+    flex-shrink: 0;
+    opacity: 0.85;
+    color: var(--color-accent-gold-light);
+}
+
 .date-combo-sep {
-    color: rgba(255, 215, 0, 0.55);
+    color: rgba(255, 215, 0, 0.5);
     font-weight: 800;
     flex-shrink: 0;
 }
@@ -2320,15 +2337,15 @@ body.light-mode .weather-gps-btn.is-gps svg path {
 }
 
 .datetime-pill.weather-pill:hover {
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.34), rgba(245, 158, 11, 0.24));
-    border-color: #7dd3fc;
-    box-shadow: 0 5px 16px rgba(56, 189, 248, 0.38);
-    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 215, 0, 0.55);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+    transform: translateY(-1px);
 }
 
 .weather-temp-val {
     font-family: var(--font-heading);
-    font-size: 1.06rem;
+    font-size: 1rem;
     font-weight: 900;
     color: #fde047;
     flex-shrink: 0;
@@ -2346,48 +2363,48 @@ body.light-mode .weather-gps-btn.is-gps svg path {
 .weather-cta-chip {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
-    padding: 4px 9px;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #0284c7, #0ea5e9);
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    color: #ffffff;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255, 215, 0, 0.14);
+    border: 1px solid rgba(255, 215, 0, 0.35);
+    color: var(--color-accent-gold-light);
     font-size: 0.72rem;
     font-weight: 800;
-    letter-spacing: 0.2px;
-    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.45);
     flex-shrink: 0;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 
 .weather-cta-arrow {
     display: inline-block;
+    line-height: 1;
     transition: transform 0.2s ease;
 }
 
 .datetime-pill.weather-pill:hover .weather-cta-chip {
-    background: linear-gradient(135deg, #0369a1, #38bdf8);
-    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.65);
+    background: rgba(255, 215, 0, 0.28);
+    border-color: var(--color-accent-gold);
 }
 
 .datetime-pill.weather-pill:hover .weather-cta-arrow {
-    transform: translate(2px, -2px);
+    transform: translate(1px, -1px);
 }
 
 body.light-mode .datetime-pill.weather-pill {
-    background: linear-gradient(135deg, #eff6ff, #fff7ed);
-    border-color: rgba(2, 132, 199, 0.45);
-    box-shadow: 0 3px 10px rgba(2, 132, 199, 0.14);
+    background: rgba(225, 29, 72, 0.04);
+    border-color: rgba(225, 29, 72, 0.18);
+    box-shadow: none;
 }
 
 body.light-mode .datetime-pill.weather-pill:hover {
-    background: linear-gradient(135deg, #dbeafe, #ffedd5);
-    border-color: #0284c7;
-    box-shadow: 0 5px 15px rgba(2, 132, 199, 0.25);
+    background: rgba(225, 29, 72, 0.08);
+    border-color: rgba(225, 29, 72, 0.38);
+    box-shadow: 0 2px 8px rgba(185, 28, 28, 0.1);
 }
 
 body.light-mode .weather-temp-val {
-    color: #c2410c;
+    color: #b45309;
 }
 
 body.light-mode .weather-city {
@@ -2395,32 +2412,31 @@ body.light-mode .weather-city {
 }
 
 body.light-mode .weather-cta-chip {
-    background: linear-gradient(135deg, #0284c7, #2563eb);
-    border-color: rgba(255, 255, 255, 0.75);
-    color: #ffffff;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+    background: rgba(225, 29, 72, 0.08);
+    border-color: rgba(225, 29, 72, 0.24);
+    color: #be123c;
 }
 
 .pill-icon {
     font-size: 0.95rem;
 }
 
-/* Nút Xem Lịch Tháng Âm - Dương: Cùng chiều cao 42px và bo tròn 12px đồng bộ */
+/* Nút Xem Lịch Âm - Dương: Outline pill tinh tế, nhường tiêu điểm cho đồng hồ */
 .btn-lunar-calendar {
-    height: 42px;
+    height: 36px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: #fff;
-    border: 1.5px solid #ffd700;
-    border-radius: 12px;
-    padding: 0 18px;
-    font-size: 0.88rem;
-    font-weight: 800;
+    gap: 7px;
+    background: rgba(255, 215, 0, 0.12);
+    color: var(--color-accent-gold-light);
+    border: 1px solid rgba(255, 215, 0, 0.45);
+    border-radius: 999px;
+    padding: 0 14px;
+    font-size: 0.84rem;
+    font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+    box-shadow: none;
     transition: all 0.2s ease;
     user-select: none;
     white-space: nowrap;
@@ -2428,22 +2444,24 @@ body.light-mode .weather-cta-chip {
 }
 
 .btn-lunar-calendar:hover {
-    transform: translateY(-1px) scale(1.02);
-    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.55);
-    border-color: #fff;
+    transform: translateY(-1px);
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    border-color: #ffd700;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
 }
 
 /* Light mode cho cụm ngày giờ */
 body.light-mode .datetime-pill {
-    background: #ffffff;
-    border-color: rgba(225, 29, 72, 0.22);
+    background: transparent;
+    border-color: transparent;
     color: #1e293b;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    box-shadow: none;
 }
 
 body.light-mode .datetime-pill:hover {
-    border-color: #e11d48;
-    background: #fff1f2;
+    border-color: transparent;
+    background: transparent;
 }
 
 body.light-mode .pill-label {
@@ -2454,8 +2472,13 @@ body.light-mode .pill-val {
     color: var(--color-text-main);
 }
 
+body.light-mode .date-combo-svg {
+    color: #be123c;
+    opacity: 0.78;
+}
+
 body.light-mode .date-combo-sep {
-    color: rgba(225, 29, 72, 0.35);
+    color: rgba(225, 29, 72, 0.32);
 }
 
 body.light-mode .date-combo-lunar .pill-val {
@@ -2467,10 +2490,17 @@ body.light-mode .pill-val.time-val {
 }
 
 body.light-mode .btn-lunar-calendar {
+    background: rgba(225, 29, 72, 0.06);
+    border-color: rgba(225, 29, 72, 0.32);
+    color: #9f1239;
+    box-shadow: none;
+}
+
+body.light-mode .btn-lunar-calendar:hover {
     background: var(--btn-primary-bg);
     border-color: var(--color-accent-gold);
     color: var(--btn-primary-color);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+    box-shadow: 0 4px 12px rgba(185, 28, 28, 0.16);
 }
 
 .timer-grid {
@@ -2533,8 +2563,8 @@ body.light-mode .timer-card {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding-top: 10px;
-    border-top: 1px solid rgba(255, 215, 0, 0.2);
+    padding-top: 12px;
+    border-top: none;
 }
 
 .timer-fireworks-hint {
@@ -2575,26 +2605,26 @@ body.light-mode .timer-fireworks-hint {
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    gap: 10px;
-    padding: 6px 8px;
+    gap: 6px;
+    padding: 4px;
     border-radius: 999px;
-    background: rgba(20, 4, 8, 0.42);
-    border: 1.5px solid rgba(255, 215, 0, 0.45);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28), 0 0 14px rgba(255, 215, 0, 0.14);
+    background: rgba(0, 0, 0, 0.24);
+    border: 1px solid rgba(255, 215, 0, 0.28);
+    box-shadow: none;
 }
 
 .target-switch-btn {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    padding: 9px 20px;
+    padding: 8px 18px;
     border-radius: 999px;
-    border: 1px solid rgba(255, 215, 0, 0.28);
-    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid transparent;
+    background: transparent;
     color: #fde68a;
     font-family: inherit;
-    font-size: 0.94rem;
-    font-weight: 800;
+    font-size: 0.9rem;
+    font-weight: 700;
     letter-spacing: 0.2px;
     cursor: pointer;
     transition: transform 0.18s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
@@ -2602,48 +2632,44 @@ body.light-mode .timer-fireworks-hint {
 
 .target-switch-btn:hover {
     color: #ffffff;
-    background: rgba(255, 215, 0, 0.2);
-    border-color: rgba(255, 215, 0, 0.6);
-    transform: translateY(-1px);
+    background: rgba(255, 215, 0, 0.14);
 }
 
 .target-switch-btn.active {
     background: linear-gradient(135deg, #f59e0b 0%, #dc2626 55%, #b91c1c 100%);
     color: #ffffff;
-    border: 1.5px solid #ffd700;
-    box-shadow: 0 4px 16px rgba(220, 38, 38, 0.48), 0 0 12px rgba(255, 215, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-    transform: translateY(-1px);
+    border: 1px solid rgba(255, 215, 0, 0.85);
+    box-shadow: 0 3px 12px rgba(220, 38, 38, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 body.light-mode .countdown-target-switcher {
-    background: rgba(255, 241, 242, 0.92);
-    border: 1.5px solid rgba(225, 29, 72, 0.38);
-    box-shadow: 0 6px 18px rgba(185, 28, 28, 0.14), 0 0 0 3px rgba(255, 215, 0, 0.14);
+    background: rgba(225, 29, 72, 0.05);
+    border: 1px solid rgba(225, 29, 72, 0.18);
+    box-shadow: none;
 }
 
 body.light-mode .target-switch-btn {
-    background: rgba(255, 255, 255, 0.92);
-    border-color: rgba(225, 29, 72, 0.24);
+    background: transparent;
+    border-color: transparent;
     color: #991b1b;
-    box-shadow: 0 2px 6px rgba(153, 27, 27, 0.08);
+    box-shadow: none;
 }
 
 body.light-mode .target-switch-btn:hover {
-    background: #fff1f2;
-    border-color: rgba(225, 29, 72, 0.5);
+    background: rgba(225, 29, 72, 0.08);
     color: #7f1d1d;
 }
 
 body.light-mode .target-switch-btn.active {
     background: linear-gradient(135deg, #e11d48 0%, #b91c1c 100%);
     color: #ffffff;
-    border: 1.5px solid #f59e0b;
-    box-shadow: 0 5px 16px rgba(225, 29, 72, 0.38), 0 0 10px rgba(245, 158, 11, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(245, 158, 11, 0.75);
+    box-shadow: 0 4px 12px rgba(225, 29, 72, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 @media (max-width: 560px) {
     .countdown-target-switcher {
-        border-radius: 18px;
+        border-radius: 16px;
         width: 100%;
     }
     .target-switch-btn {
@@ -2655,30 +2681,32 @@ body.light-mode .target-switch-btn.active {
 }
 
 /* ==========================================================
-   THANH TIẾN TRÌNH NĂM CŨ ĐẾN TẾT ĐINH MÙI (NỔI BẬT + KIM TUYẾN BẮN RA)
+   THANH TIẾN TRÌNH NĂM CŨ ĐẾN TẾT ĐINH MÙI (PHẲNG, THANH THOÁT + KIM TUYẾN)
    ========================================================== */
 .year-progress-wrapper {
     margin-top: 14px;
-    padding: 10px 14px 12px 14px;
-    border-radius: 18px;
-    background: rgba(0, 0, 0, 0.24);
-    border: 1px solid rgba(255, 215, 0, 0.26);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    padding: 12px 2px 2px 2px;
+    border-radius: 0;
+    background: transparent;
+    border: none;
+    border-top: 1px solid rgba(255, 215, 0, 0.18);
+    box-shadow: none;
 }
 
 body.light-mode .year-progress-wrapper {
-    background: rgba(255, 255, 255, 0.72);
-    border-color: rgba(225, 29, 72, 0.2);
-    box-shadow: 0 4px 14px rgba(185, 28, 28, 0.06);
+    background: transparent;
+    border: none;
+    border-top: 1px solid rgba(225, 29, 72, 0.14);
+    box-shadow: none;
 }
 
 .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.88rem;
+    font-size: 0.86rem;
     color: var(--color-accent-gold-light);
-    margin-bottom: 9px;
+    margin-bottom: 8px;
     font-weight: 700;
     flex-wrap: wrap;
     gap: 8px;
@@ -2703,11 +2731,13 @@ body.light-mode .year-progress-wrapper {
 .progress-dest-badge {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    background: rgba(255, 215, 0, 0.12);
-    border: 1px solid rgba(255, 215, 0, 0.35);
-    padding: 3px 10px;
-    border-radius: 12px;
+    gap: 5px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    border-radius: 0;
+    font-size: 0.84rem;
+    opacity: 0.92;
 }
 
 .progress-dest-badge strong {
@@ -2732,15 +2762,14 @@ body.light-mode .year-progress-wrapper {
 
 .progress-track {
     width: 100%;
-    height: 22px;
-    background: rgba(0, 0, 0, 0.62);
+    height: 16px;
+    background: rgba(0, 0, 0, 0.56);
     border-radius: 999px;
     overflow: hidden;
-    border: 2px solid rgba(255, 215, 0, 0.58);
+    border: 1.5px solid rgba(255, 215, 0, 0.45);
     box-shadow:
-        inset 0 2px 7px rgba(0, 0, 0, 0.85),
-        0 0 18px rgba(255, 215, 0, 0.25),
-        0 3px 10px rgba(0, 0, 0, 0.35);
+        inset 0 2px 5px rgba(0, 0, 0, 0.75),
+        0 0 12px rgba(255, 215, 0, 0.16);
     position: relative;
     z-index: 1;
 }
@@ -2873,8 +2902,9 @@ body.light-mode .progress-header {
 }
 
 body.light-mode .progress-dest-badge {
-    background: rgba(225, 29, 72, 0.08);
-    border-color: rgba(225, 29, 72, 0.25);
+    background: transparent;
+    border-color: transparent;
+    color: #9f1239;
 }
 
 body.light-mode .progress-dest-badge strong {
@@ -2883,11 +2913,10 @@ body.light-mode .progress-dest-badge strong {
 
 body.light-mode .progress-track {
     background: rgba(254, 226, 226, 0.85);
-    border-color: rgba(225, 29, 72, 0.45);
+    border-color: rgba(225, 29, 72, 0.38);
     box-shadow:
-        inset 0 2px 6px rgba(225, 29, 72, 0.16),
-        0 0 16px rgba(245, 158, 11, 0.25),
-        0 3px 10px rgba(0, 0, 0, 0.08);
+        inset 0 2px 5px rgba(225, 29, 72, 0.14),
+        0 0 12px rgba(245, 158, 11, 0.18);
 }
 
 body.light-mode .progress-fill {
@@ -7975,15 +8004,15 @@ body.light-mode .hd-pill {
         display: flex;
         flex-direction: column;
         gap: 8px;
-        padding: 9px;
-        border-radius: 15px;
+        padding: 0 0 12px 0;
+        border-radius: 0;
         margin-bottom: 14px;
     }
 
     .current-datetime-left {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 7px;
+        gap: 6px;
         width: 100%;
     }
 
@@ -7991,8 +8020,8 @@ body.light-mode .hd-pill {
     .datetime-pill.weather-pill {
         grid-column: 1 / -1;
         height: auto;
-        min-height: 40px;
-        padding: 6px 10px;
+        min-height: 38px;
+        padding: 5px 10px 5px 6px;
         font-size: 0.84rem;
         justify-content: flex-start;
     }
@@ -8011,8 +8040,8 @@ body.light-mode .hd-pill {
         flex-wrap: wrap;
         gap: 4px 10px;
         height: auto;
-        min-height: 38px;
-        padding: 7px 12px;
+        min-height: 28px;
+        padding: 2px 4px;
         font-size: 0.82rem;
         text-align: center;
         white-space: normal;
@@ -8029,11 +8058,11 @@ body.light-mode .hd-pill {
 
     .btn-lunar-calendar {
         width: 100%;
-        height: 40px;
+        height: 38px;
         justify-content: center;
         padding: 0 12px;
         font-size: 0.84rem;
-        border-radius: 12px;
+        border-radius: 999px;
     }
 
     /* Giữ nguyên 4 cột đồng đều trên 1 hàng như bản Desktop */
@@ -8079,8 +8108,8 @@ body.light-mode .hd-pill {
     }
 
     .year-progress-wrapper {
-        padding: 10px 12px 12px 12px;
-        border-radius: 16px;
+        padding: 10px 0 2px 0;
+        border-radius: 0;
         margin-top: 10px;
     }
 
@@ -8544,8 +8573,8 @@ body.light-mode .hd-pill {
         padding: 14px 20px;
     }
     .current-datetime-strip {
-        margin-bottom: 10px;
-        padding: 6px 10px;
+        margin-bottom: 12px;
+        padding: 0 2px 10px 2px;
     }
     .timer-grid {
         gap: 12px;
@@ -9019,8 +9048,10 @@ html {
         font-size: 0.78rem;
     }
     .weather-cta-chip {
-        font-size: 0.68rem;
-        padding: 3px 7px;
+        width: 18px;
+        height: 18px;
+        font-size: 0.66rem;
+        padding: 0;
     }
 }
 
