@@ -1076,7 +1076,7 @@ class TetCountdown {
                 const leapSuffix = lunar.isLeap ? ' Nhuận' : '';
                 const leapShort = lunar.isLeap ? 'N' : '';
                 if (this.elements.lunarDate) {
-                    this.elements.lunarDate.textContent = `Ngày ${lunarD}/${lunarM}${leapSuffix} (Năm ${canChiYear})`;
+                    this.elements.lunarDate.textContent = `${lunarD}/${lunarM}${leapSuffix} (${canChiYear})`;
                 }
                 if (this.elements.navClockLunar) {
                     this.elements.navClockLunar.textContent = `(Âm: ${lunarD}/${lunarM}${leapShort})`;

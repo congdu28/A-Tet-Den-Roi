@@ -2296,11 +2296,27 @@ body.light-mode .weather-gps-btn.is-gps svg path {
     padding-left: 2px;
 }
 
-.datetime-pill.solar-pill,
-.datetime-pill.lunar-pill {
-    flex: 1 1.4 auto;
-    padding: 0 11px;
+.datetime-pill.date-combo-pill {
+    flex: 1 1 auto;
+    padding: 0 14px;
+    gap: 10px;
+}
+
+.date-combo-part {
+    display: inline-flex;
+    align-items: center;
     gap: 6px;
+    min-width: 0;
+}
+
+.date-combo-sep {
+    color: rgba(255, 215, 0, 0.55);
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.date-combo-lunar .pill-val {
+    color: var(--color-accent-gold-light);
 }
 
 .datetime-pill.weather-pill:hover {
@@ -2436,6 +2452,14 @@ body.light-mode .pill-label {
 
 body.light-mode .pill-val {
     color: var(--color-text-main);
+}
+
+body.light-mode .date-combo-sep {
+    color: rgba(225, 29, 72, 0.35);
+}
+
+body.light-mode .date-combo-lunar .pill-val {
+    color: var(--color-text-sub);
 }
 
 body.light-mode .pill-val.time-val {
@@ -7982,21 +8006,21 @@ body.light-mode .hd-pill {
         margin-left: auto;
     }
 
-    .datetime-pill.solar-pill,
-    .datetime-pill.lunar-pill {
+    .datetime-pill.date-combo-pill {
         justify-content: center;
+        flex-wrap: wrap;
+        gap: 4px 10px;
         height: auto;
-        min-height: 36px;
-        padding: 6px 12px;
+        min-height: 38px;
+        padding: 7px 12px;
         font-size: 0.82rem;
         text-align: center;
         white-space: normal;
         overflow: visible;
     }
 
-    .datetime-pill.solar-pill .pill-val,
-    .datetime-pill.lunar-pill .pill-val {
-        font-size: 0.83rem;
+    .datetime-pill.date-combo-pill .pill-val {
+        font-size: 0.82rem;
         white-space: normal;
         overflow: visible;
         text-overflow: clip;

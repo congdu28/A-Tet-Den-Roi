@@ -212,18 +212,21 @@
                             <span class="weather-cta-chip" aria-hidden="true"><span>Chi tiết</span><span class="weather-cta-arrow">↗</span></span>
                         </a>
                     </div>
-                    <div class="datetime-pill solar-pill" title="Ngày Dương lịch hiện tại">
-                        <span class="pill-icon">📅</span>
-                        <span class="pill-val" id="clock-solar-date">Đang cập nhật...</span>
-                    </div>
-                    <div class="datetime-pill lunar-pill" title="Ngày Âm lịch hiện tại">
-                        <span class="pill-icon">🌙</span>
-                        <span class="pill-val" id="clock-lunar-date">Đang tính âm lịch...</span>
+                    <div class="datetime-pill date-combo-pill" title="Ngày Dương lịch và Âm lịch hiện tại">
+                        <span class="date-combo-part date-combo-solar">
+                            <span class="pill-icon" aria-hidden="true">📅</span>
+                            <span class="pill-val" id="clock-solar-date">Đang cập nhật...</span>
+                        </span>
+                        <span class="date-combo-sep" aria-hidden="true">•</span>
+                        <span class="date-combo-part date-combo-lunar">
+                            <span class="pill-icon" aria-hidden="true">🌙</span>
+                            <span class="pill-val" id="clock-lunar-date">Đang tính âm lịch...</span>
+                        </span>
                     </div>
                 </div>
 
                 <button type="button" id="btn-open-lunar-calendar" class="btn-lunar-calendar" title="Xem lịch tháng Âm - Dương đầy đủ chi tiết">
-                    <span>🗓️</span> Xem Lịch Tháng Âm – Dương
+                    <span aria-hidden="true">🗓️</span> Lịch Âm – Dương
                 </button>
             </div>
 
