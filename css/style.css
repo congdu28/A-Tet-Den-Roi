@@ -2299,7 +2299,8 @@ body.light-mode .weather-gps-btn.is-gps svg path {
 
 /* Ngày Dương • Ngày Âm dạng dòng chữ sạch ở giữa, bỏ hộp đóng khung */
 .datetime-pill.date-combo-pill {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
+    margin: 0 auto;
     padding: 0 8px;
     gap: 10px;
     background: transparent !important;
@@ -2363,17 +2364,18 @@ body.light-mode .weather-gps-btn.is-gps svg path {
 .weather-cta-chip {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: rgba(255, 215, 0, 0.14);
-    border: 1px solid rgba(255, 215, 0, 0.35);
-    color: var(--color-accent-gold-light);
+    gap: 3px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #0284c7, #0ea5e9);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #ffffff;
     font-size: 0.72rem;
     font-weight: 800;
+    letter-spacing: 0.2px;
+    box-shadow: 0 2px 7px rgba(14, 165, 233, 0.38);
     flex-shrink: 0;
-    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .weather-cta-arrow {
@@ -2383,12 +2385,12 @@ body.light-mode .weather-gps-btn.is-gps svg path {
 }
 
 .datetime-pill.weather-pill:hover .weather-cta-chip {
-    background: rgba(255, 215, 0, 0.28);
-    border-color: var(--color-accent-gold);
+    background: linear-gradient(135deg, #0369a1, #38bdf8);
+    box-shadow: 0 3px 10px rgba(56, 189, 248, 0.55);
 }
 
 .datetime-pill.weather-pill:hover .weather-cta-arrow {
-    transform: translate(1px, -1px);
+    transform: translate(1.5px, -1.5px);
 }
 
 body.light-mode .datetime-pill.weather-pill {
@@ -2412,31 +2414,37 @@ body.light-mode .weather-city {
 }
 
 body.light-mode .weather-cta-chip {
-    background: rgba(225, 29, 72, 0.08);
-    border-color: rgba(225, 29, 72, 0.24);
-    color: #be123c;
+    background: linear-gradient(135deg, #0284c7, #2563eb);
+    border-color: rgba(255, 255, 255, 0.75);
+    color: #ffffff;
+    box-shadow: 0 2px 7px rgba(37, 99, 235, 0.28);
+}
+
+body.light-mode .datetime-pill.weather-pill:hover .weather-cta-chip {
+    background: linear-gradient(135deg, #0369a1, #1d4ed8);
+    box-shadow: 0 3px 10px rgba(37, 99, 235, 0.42);
 }
 
 .pill-icon {
     font-size: 0.95rem;
 }
 
-/* Nút Xem Lịch Âm - Dương: Outline pill tinh tế, nhường tiêu điểm cho đồng hồ */
+/* Nút Xem Lịch Âm - Dương: Nổi bật rõ ràng để người dùng dễ nhận biết và bấm */
 .btn-lunar-calendar {
-    height: 36px;
+    height: 38px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 7px;
-    background: rgba(255, 215, 0, 0.12);
-    color: var(--color-accent-gold-light);
-    border: 1px solid rgba(255, 215, 0, 0.45);
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    border: 1.5px solid #ffd700;
     border-radius: 999px;
-    padding: 0 14px;
-    font-size: 0.84rem;
-    font-weight: 700;
+    padding: 0 16px;
+    font-size: 0.85rem;
+    font-weight: 800;
     cursor: pointer;
-    box-shadow: none;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.38);
     transition: all 0.2s ease;
     user-select: none;
     white-space: nowrap;
@@ -2444,11 +2452,9 @@ body.light-mode .weather-cta-chip {
 }
 
 .btn-lunar-calendar:hover {
-    transform: translateY(-1px);
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: #ffffff;
-    border-color: #ffd700;
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.55);
+    border-color: #ffffff;
 }
 
 /* Light mode cho cụm ngày giờ */
@@ -2490,17 +2496,15 @@ body.light-mode .pill-val.time-val {
 }
 
 body.light-mode .btn-lunar-calendar {
-    background: rgba(225, 29, 72, 0.06);
-    border-color: rgba(225, 29, 72, 0.32);
-    color: #9f1239;
-    box-shadow: none;
+    background: var(--btn-primary-bg);
+    border: 1.5px solid var(--color-accent-gold);
+    color: var(--btn-primary-color);
+    box-shadow: 0 4px 12px rgba(185, 28, 28, 0.22);
 }
 
 body.light-mode .btn-lunar-calendar:hover {
-    background: var(--btn-primary-bg);
-    border-color: var(--color-accent-gold);
-    color: var(--btn-primary-color);
-    box-shadow: 0 4px 12px rgba(185, 28, 28, 0.16);
+    filter: brightness(1.06);
+    box-shadow: 0 6px 16px rgba(185, 28, 28, 0.32);
 }
 
 .timer-grid {
@@ -9048,10 +9052,8 @@ html {
         font-size: 0.78rem;
     }
     .weather-cta-chip {
-        width: 18px;
-        height: 18px;
-        font-size: 0.66rem;
-        padding: 0;
+        font-size: 0.68rem;
+        padding: 2px 7px;
     }
 }
 
